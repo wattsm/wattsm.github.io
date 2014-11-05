@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
  <title>Usermaatre</title>
- <link href="http://wattsm.github.io/atom.xml" rel="self"/>
- <link href="http://wattsm.github.io/"/>
- <updated>2014-11-05T12:00:31+00:00</updated>
- <id>http://wattsm.github.io</id>
+ <link href="http://blog.usermaatre.co.uk/atom.xml" rel="self"/>
+ <link href="http://blog.usermaatre.co.uk/"/>
+ <updated>2014-11-05T16:20:27+00:00</updated>
+ <id>http://blog.usermaatre.co.uk</id>
  <author>
    <name>Mark Watts</name>
    <email></email>
@@ -14,9 +14,9 @@
  
  <entry>
    <title>Creating versioned installers using Wix and TFS 2010</title>
-   <link href="http://wattsm.github.io/programming/2014/05/16/tfs-2010-versioned-wix-installers/"/>
+   <link href="http://blog.usermaatre.co.uk/programming/2014/05/16/tfs-2010-versioned-wix-installers/"/>
    <updated>2014-05-16T00:00:00+01:00</updated>
-   <id>http://wattsm.github.io/programming/2014/05/16/tfs-2010-versioned-wix-installers</id>
+   <id>http://blog.usermaatre.co.uk/programming/2014/05/16/tfs-2010-versioned-wix-installers</id>
    <content type="html">&lt;p&gt;Recently I created a Wix installer for a product and wanted to include the version number in the installer name – e.g. “My Product.1.2.3.msi”. 
 I found this post which describes how to edit the .wixproj file to add a pre-build task to update the output filename to include a version. 
 This worked perfectly when building the project locally, but not as a part of our TFS 2010 automated build. The reason for this is that TFS 2010 
@@ -150,9 +150,9 @@ access to methods like IndexOf and Substring.&lt;/p&gt;
  
  <entry>
    <title>Running xUnit tests as a part of a TFS 2010 build</title>
-   <link href="http://wattsm.github.io/programming/2014/02/03/tfs-2010-xunit/"/>
+   <link href="http://blog.usermaatre.co.uk/programming/2014/02/03/tfs-2010-xunit/"/>
    <updated>2014-02-03T00:00:00+00:00</updated>
-   <id>http://wattsm.github.io/programming/2014/02/03/tfs-2010-xunit</id>
+   <id>http://blog.usermaatre.co.uk/programming/2014/02/03/tfs-2010-xunit</id>
    <content type="html">&lt;p&gt;Getting TFS 2010 to include xUnit tests in its build process can be a tricky process. 
 &lt;a href=&quot;http://blog.strobaek.org/2011/10/03/howto-team-foundation-server-and-xunit/&quot;&gt;I recently used this post by Karsten Strøbæk&lt;/a&gt; 
 to edit several of our continuous integration builds to do just that and thought I would expand upon and update Karsten’s process.&lt;/p&gt;
@@ -244,9 +244,9 @@ this will cause an error. Updating the build numbers to include a project refere
  
  <entry>
    <title>Serialising F#'s Option type using DataContractSerialiser</title>
-   <link href="http://wattsm.github.io/programming/2013/11/19/fsharp-serialising-option/"/>
+   <link href="http://blog.usermaatre.co.uk/programming/2013/11/19/fsharp-serialising-option/"/>
    <updated>2013-11-19T00:00:00+00:00</updated>
-   <id>http://wattsm.github.io/programming/2013/11/19/fsharp-serialising-option</id>
+   <id>http://blog.usermaatre.co.uk/programming/2013/11/19/fsharp-serialising-option</id>
    <content type="html">&lt;p&gt;&lt;a href=&quot;http://msdn.microsoft.com/en-us/library/ms733127(v=vs.110).aspx&quot;&gt;Data contracts&lt;/a&gt; are a quick and relatively easy way of serialising objects to XML (or JSON, but we’ll stick to XML in this post) – e.g. for use as &lt;a href=&quot;http://en.wikipedia.org/wiki/Data_transfer_object&quot;&gt;DTOs&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Various attributes can be used to control aspects of the generated XML, meaning you can produce clean, simple XML quite easily. Using these attributes it is possible for the DataContractSerializer to serialise and deserialise F# record types, 
@@ -495,9 +495,9 @@ which can be really handy when writing web services. However, a few wrinkles ari
  
  <entry>
    <title>Creating F# collections via reflection</title>
-   <link href="http://wattsm.github.io/programming/2013/07/24/fsharp-collections-reflection/"/>
+   <link href="http://blog.usermaatre.co.uk/programming/2013/07/24/fsharp-collections-reflection/"/>
    <updated>2013-07-24T00:00:00+01:00</updated>
-   <id>http://wattsm.github.io/programming/2013/07/24/fsharp-collections-reflection</id>
+   <id>http://blog.usermaatre.co.uk/programming/2013/07/24/fsharp-collections-reflection</id>
    <content type="html">&lt;p&gt;During the course of a recent project I needed to instantiate some F# types via reflection. 
 This is a well documented and fairly simple process for C#, but F#’s immutable collections pose an interesting challenge.&lt;/p&gt;
 
