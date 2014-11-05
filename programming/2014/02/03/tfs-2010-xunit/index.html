@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>    
+	Usermaatre &middot; Running xUnit tests as a part of a TFS 2010 build    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-0b">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="/">
+          Usermaatre
+        </a>
+      </h1>
+      <p class="lead">Programming, science, history and gaming. Not necessarily in that order.</p>
+    </div>
+
+    <nav class="sidebar-nav">
+	  <a class="sidebar-nav-item" href="/">Home</a>
+	  <a class="sidebar-nav-item" href="/about">About</a>
+	  <a class="sidebar-nav-item" href="/archive">Archive</a>
+      <a class="sidebar-nav-item" href="https://twitter.com/m_d_watts" target="_blank">Twitter</a>	  
+      <a class="sidebar-nav-item" href="https://github.com/wattsm" target="_blank">GitHub</a>
+      <span class="sidebar-nav-item">Currently v0.9</span>
+    </nav>
+
+    <p>&copy; 2014. All rights reserved.</p>
+	
+	<p>
+		<a style='font-size: 70%' href='/tags/ci'>CI</a>
+<a style='font-size: 170%' href='/tags/fsharp'>F#</a>
+<a style='font-size: 70%' href='/tags/reflection'>Reflection</a>
+<a style='font-size: 170%' href='/tags/tfs'>TFS</a>
+<a style='font-size: 70%' href='/tags/wix'>Wix</a>
+<a style='font-size: 70%' href='/tags/xunit'>xUnit</a>
+
+	</p>
+  </div>
+</div>
+
+
+    <div class="content container">	
+      <div class="post">
+  <h1 class="post-title">Running xUnit tests as a part of a TFS 2010 build</h1>
+  <span class="post-date">
+	03 Feb 2014
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/tfs">TFS</a>, 	
+
+	
+	<a href="/tags/ci">CI</a>, 	
+
+	
+	<a href="/tags/xunit">xUnit</a>	
+	
+  </span>
+  <p>Getting TFS 2010 to include xUnit tests in its build process can be a tricky process. 
+<a href="http://blog.strobaek.org/2011/10/03/howto-team-foundation-server-and-xunit/">I recently used this post by Karsten Strøbæk</a> 
+to edit several of our continuous integration builds to do just that and thought I would expand upon and update Karsten’s process.</p>
+
+<!-- more -->
+
+<h2>Use the latest version of NUnit for Team Build</h2>
+
+<p>The first thing you’ll need to do is install <a href="http://xunit.codeplex.com/">xUnit</a> and <a href="http://nunit4teambuild.codeplex.com/">NUnit for Team Build</a>. Several changes have been made to the latter since the last release was done so I recommend you download the source code and do a build from that rather than downloading the binaries.</p>
+
+<h2>Use .Net 4 version of xUnit</h2>
+
+<p>If you’re using .Net 4 or above you’ll want to use xunit.console.clr4.exe instead of xunit.console.exe.</p>
+
+<h2>Target TFS 2010</h2>
+
+<p>One of the things that has been (re-)added to NUnit for Team Build is the version command line argument. This allows you to target either TFS 2008 or TFS 2010. We’ll assume you’re using TFS 2010, so you will need to change the arguments for the Nunit for Team Build invoke process activity in the build workflow, like so:</p>
+<div class="highlight"><pre><code class="language-vbnet" data-lang="vbnet">    <span class="kt">String</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span>
+        <span class="s">&quot;-n {0} -t {1} -p &quot;&quot;{2}&quot;&quot; -f {3} -b &quot;&quot;{4}&quot;&quot; -v 2010&quot;</span><span class="p">,</span>
+        <span class="s">&quot;results.xml&quot;</span><span class="p">,</span>
+        <span class="n">BuildDetail</span><span class="p">.</span><span class="n">TeamProject</span><span class="p">,</span>
+        <span class="n">BuildSettings</span><span class="p">.</span><span class="n">PlatformConfigurations</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">Platform</span><span class="p">,</span>
+        <span class="n">BuildSettings</span><span class="p">.</span><span class="n">PlatformConfigurations</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">Configuration</span><span class="p">,</span>
+        <span class="n">BuildDetail</span><span class="p">.</span><span class="n">BuildNumber</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2>Set build to Failed or Partial Success when tests fail</h2>
+
+<p>You can use the xUnitResult variable, which contains the return value from the xUnit console, to set the build phase status and build status. To do this, immediately after the NUnit for Team Build invoke process add an If activity with condition “xUnitResult &gt; 0″. In the “Then” area add a SetBuildProperties activity and set the following:</p>
+
+<ul>
+<li>PropertiesToSet: Status, TestStatus</li>
+<li>Status: BuildStatus.PartiallySucceeded or BuildStatus.Failed</li>
+<li>TestStatus: BuildPhaseStatus.Failed</li>
+</ul>
+
+<h2>Execute tests in multiple assemblies</h2>
+
+<p>The biggest change I made from Karsten’s original post was adding support for tests in multiple assemblies. The xUnit console can only run tests from a single assembly, so in order to do this you need to edit the build workflow to loop through your test assemblies, executing xUnit and NUnit for Team Build for each.</p>
+
+<p>The workflow becomes quite busy, but here is the basic structure of the “Run Tests” activity.</p>
+
+<p><a href="/public/img/2014-02-03-run-tests-workflow-large.jpg"><img src="/public/img/2014-02-03-run-tests-workflow-small.jpg" alt="Test Results"></a></p>
+
+<p>Firstly, a FindMatchingFiles activity is used to find test assemblies. I added an argument to the workflow called xUnitAssembly pattern and then used this in the MatchPattern property of the activity like so:</p>
+<div class="highlight"><pre><code class="language-vbnet" data-lang="vbnet">    <span class="kt">String</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span>
+        <span class="s">&quot;{0}\\{1}&quot;</span><span class="p">,</span>
+        <span class="n">outputDirectory</span><span class="p">,</span>
+        <span class="n">xUnitAssemblyPattern</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>I set the default value of the xUnitAssemblyPattern argument to “*.Tests.dll” as that matched the convention for most of our projects.</p>
+
+<p>Then we use a ForEach activity to loop through the found assemblies, executing xUnit console and NUnit for Team Build for each. The arguments for both of these activities are tweaked to take into account the fact there are now multiple test assemblies.</p>
+
+<p>The xUnit activity’s arguments now become:</p>
+<div class="highlight"><pre><code class="language-vbnet" data-lang="vbnet">    <span class="kt">String</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span>
+        <span class="s">&quot;&quot;&quot;{0}&quot;&quot; /silent /nunit &quot;&quot;{0}.xml&quot;&quot;&quot;</span><span class="p">,</span>
+        <span class="n">assemblyName</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>Where assemblyName is the current test assembly filenmae. Similarly NUnit for Team Build’s arguments are updated to read this file:</p>
+<div class="highlight"><pre><code class="language-vbnet" data-lang="vbnet">    <span class="kt">String</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span>
+        <span class="s">&quot;-n &quot;&quot;{0}.xml&quot;&quot; -t {1} -p &quot;&quot;{2}&quot;&quot; -f {3} -b &quot;&quot;{4}&quot;&quot; -v 2010&quot;</span><span class="p">,</span>
+        <span class="n">assemblyName</span><span class="p">,</span>
+        <span class="n">BuildDetail</span><span class="p">.</span><span class="n">TeamProject</span><span class="p">,</span>
+        <span class="n">BuildSettings</span><span class="p">.</span><span class="n">PlatformConfigurations</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">Platform</span><span class="p">,</span>
+        <span class="n">BuildSettings</span><span class="p">.</span><span class="n">PlatformConfigurations</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">Configuration</span><span class="p">,</span>
+        <span class="n">BuildDetail</span><span class="p">.</span><span class="n">BuildNumber</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>Finally, our logic to fail / partially succeed the build needs is tweaked so that it will only invoke the SetBuildProperties activity if the build hasn’t already been failed / partially succeeded.</p>
+
+<p>Now when your build completes you should see the results from all of your test assemblies listed:</p>
+
+<p><img src="/public/img/2014-02-03-test-results.jpg" alt="Test Results"></p>
+
+<p>(Tools exist that can combine the results of multiple NUnit test runs if you wanted all of your tests to appear as a single run.)</p>
+
+<h2>A warning about build numbers</h2>
+
+<p>One problem I ran into was that we have multiple solutions in a Team Project, 
+and they all use the same build number format meaning that builds from different definitions could have the 
+same build number. This caused problems for NUnit for Team Build which uses the build number to post your test results – 
+if multiple builds exist in the same team project with the same build number, even if they are from different build definitions, 
+this will cause an error. Updating the build numbers to include a project reference solved the issue easily enough.</p>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">
+            Creating versioned installers using Wix and TFS 2010
+            <small>16 May 2014</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/2013/11/19/fsharp-serialising-option/">
+            Serialising F#'s Option type using DataContractSerialiser
+            <small>19 Nov 2013</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/2013/07/24/fsharp-collections-reflection/">
+            Creating F# collections via reflection
+            <small>24 Jul 2013</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+    </div>
+
+  </body>
+</html>

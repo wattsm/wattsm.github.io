@@ -1,1 +1,202 @@
-Hello, World
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>    
+	Usermaatre &middot; Home    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-0b">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="/">
+          Usermaatre
+        </a>
+      </h1>
+      <p class="lead">Programming, science, history and gaming. Not necessarily in that order.</p>
+    </div>
+
+    <nav class="sidebar-nav">
+	  <a class="sidebar-nav-item active" href="/">Home</a>
+	  <a class="sidebar-nav-item" href="/about">About</a>
+	  <a class="sidebar-nav-item" href="/archive">Archive</a>
+      <a class="sidebar-nav-item" href="https://twitter.com/m_d_watts" target="_blank">Twitter</a>	  
+      <a class="sidebar-nav-item" href="https://github.com/wattsm" target="_blank">GitHub</a>
+      <span class="sidebar-nav-item">Currently v0.9</span>
+    </nav>
+
+    <p>&copy; 2014. All rights reserved.</p>
+	
+	<p>
+		<a style='font-size: 70%' href='/tags/ci'>CI</a>
+<a style='font-size: 170%' href='/tags/fsharp'>F#</a>
+<a style='font-size: 70%' href='/tags/reflection'>Reflection</a>
+<a style='font-size: 170%' href='/tags/tfs'>TFS</a>
+<a style='font-size: 70%' href='/tags/wix'>Wix</a>
+<a style='font-size: 70%' href='/tags/xunit'>xUnit</a>
+
+	</p>
+  </div>
+</div>
+
+
+    <div class="content container">	
+      <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">
+        Creating versioned installers using Wix and TFS 2010
+      </a>
+    </h1>
+
+    <span class="post-date">
+		16 May 2014
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/tfs">TFS</a>, 	
+
+	
+	<a href="/tags/wix">Wix</a>	
+
+	</span>
+
+    <p>Recently I created a Wix installer for a product and wanted to include the version number in the installer name – e.g. “My Product.1.2.3.msi”. 
+I found this post which describes how to edit the .wixproj file to add a pre-build task to update the output filename to include a version. 
+This worked perfectly when building the project locally, but not as a part of our TFS 2010 automated build. The reason for this is that TFS 2010 
+outputs builds to the /Binaries/ directory rather than their local /bin/, so the relative paths in the solution given break. In this post I describe how I 
+edited the .wixproj file to work both locally and as a part of a TFS 2010 automated build.</p>
+
+<p>I also wanted my MSI  to use a three part version number rather than the default four part used.</p>
+
+	
+	<a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">Continue reading &raquo;</a>	
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2014/02/03/tfs-2010-xunit/">
+        Running xUnit tests as a part of a TFS 2010 build
+      </a>
+    </h1>
+
+    <span class="post-date">
+		03 Feb 2014
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/tfs">TFS</a>, 	
+
+	
+	<a href="/tags/ci">CI</a>, 	
+
+	
+	<a href="/tags/xunit">xUnit</a>	
+
+	</span>
+
+    <p>Getting TFS 2010 to include xUnit tests in its build process can be a tricky process. 
+<a href="http://blog.strobaek.org/2011/10/03/howto-team-foundation-server-and-xunit/">I recently used this post by Karsten Strøbæk</a> 
+to edit several of our continuous integration builds to do just that and thought I would expand upon and update Karsten’s process.</p>
+
+	
+	<a href="/programming/2014/02/03/tfs-2010-xunit/">Continue reading &raquo;</a>	
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2013/11/19/fsharp-serialising-option/">
+        Serialising F#'s Option type using DataContractSerialiser
+      </a>
+    </h1>
+
+    <span class="post-date">
+		19 Nov 2013
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>	
+
+	</span>
+
+    <p><a href="http://msdn.microsoft.com/en-us/library/ms733127(v=vs.110).aspx">Data contracts</a> are a quick and relatively easy way of serialising objects to XML (or JSON, but we’ll stick to XML in this post) – e.g. for use as <a href="http://en.wikipedia.org/wiki/Data_transfer_object">DTOs</a>.</p>
+
+<p>Various attributes can be used to control aspects of the generated XML, meaning you can produce clean, simple XML quite easily. Using these attributes it is possible for the DataContractSerializer to serialise and deserialise F# record types, 
+which can be really handy when writing web services. However, a few wrinkles arise when using F#’s Option<T> type.</p>
+
+	
+	<a href="/programming/2013/11/19/fsharp-serialising-option/">Continue reading &raquo;</a>	
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2013/07/24/fsharp-collections-reflection/">
+        Creating F# collections via reflection
+      </a>
+    </h1>
+
+    <span class="post-date">
+		24 Jul 2013
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>, 	
+
+	
+	<a href="/tags/reflection">Reflection</a>	
+
+	</span>
+
+    <p>During the course of a recent project I needed to instantiate some F# types via reflection. 
+This is a well documented and fairly simple process for C#, but F#’s immutable collections pose an interesting challenge.</p>
+
+<p>In this post I will describe the process of creating and populating an F# list using reflection, as well as an F# sequence for good measure.</p>
+
+	
+	<a href="/programming/2013/07/24/fsharp-collections-reflection/">Continue reading &raquo;</a>	
+  </div>
+  
+</div>
+
+<div class="pagination">
+  
+    <span class="pagination-item older">Older</span>
+  
+  
+    <span class="pagination-item newer">Newer</span>
+  
+</div>
+    </div>
+
+  </body>
+</html>
