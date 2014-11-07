@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>    
+	Usermaatre &middot; Implementing a simple IHttpActionResult    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-0b">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="/">
+          Usermaatre
+        </a>
+      </h1>
+      <p class="lead">Programming, science, history and gaming. Not necessarily in that order.</p>
+    </div>
+
+    <nav class="sidebar-nav">
+	  <a class="sidebar-nav-item" href="/">Home</a>
+	  <a class="sidebar-nav-item" href="/about">About</a>
+	  <a class="sidebar-nav-item" href="/archive">Archive</a>
+      <a class="sidebar-nav-item" href="https://twitter.com/m_d_watts" target="_blank">Twitter</a>	  
+      <a class="sidebar-nav-item" href="https://github.com/wattsm" target="_blank">GitHub</a>
+      <span class="sidebar-nav-item">Currently v0.9</span>
+    </nav>
+
+    <p>&copy; 2014. All rights reserved.</p>
+	
+	<p>
+		<a style='font-size: 70%' href='/tags/ci'>CI</a>
+<a style='font-size: 170%' href='/tags/fsharp'>F#</a>
+<a style='font-size: 70%' href='/tags/reflection'>Reflection</a>
+<a style='font-size: 170%' href='/tags/tfs'>TFS</a>
+<a style='font-size: 70%' href='/tags/webapi'>WebAPI</a>
+<a style='font-size: 70%' href='/tags/wix'>Wix</a>
+<a style='font-size: 70%' href='/tags/xunit'>xUnit</a>
+
+	</p>
+  </div>
+</div>
+
+
+    <div class="content container">	
+      <div class="post">
+  <h1 class="post-title">Implementing a simple IHttpActionResult</h1>
+  <span class="post-date">
+	07 Nov 2014
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/webapi">WebAPI</a>	
+	
+  </span>
+  <p>I&#39;ve recently started a new project which uses <a href="http://www.asp.net/web-api">Microsoft&#39;s Web API framework</a> to create a RESTful version of our product&#39;s API. 
+We chose Web API because the team were familiar with it and it&#39;s quick and easy to get up and running. However, as with other Microsoft frameworks, things can get
+more complicated than they seemingly need to be when you try and move away from the simple &quot;Hello, World&quot; type examples on MSDN.</p>
+
+<p>I ran into one of these situations when I wanted to respond to a request with a status code other than 200 and include a message body. In this post I will explain
+the scenario, the available options and the solution I eventually arrived at.</p>
+
+<!-- more -->
+
+<h2>The scenario</h2>
+
+<p>In my scenario I have a controller that accepts a POST to create a new record in the system. </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">POST /api/widgets
+{
+  &quot;name&quot;: &quot;My Widget&quot;,
+  &quot;code&quot;: &quot;WIDGET&quot;,
+  &quot;price&quot;: -10,
+  &quot;stock&quot;: 150
+}
+</code></pre></div>
+<p>If there are validation errors I want to be able to reply to the client with a suitable status code (i.e. 400) and a message detailing the errors.</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">400 
+[
+ { &quot;property&quot;: &quot;code&quot;, &quot;message&quot;: &quot;A widget with this code already exists.&quot; },
+ { &quot;property&quot;: &quot;price&quot;, &quot;message&quot;: &quot;Price must be zero or greater.&quot; }
+]
+</code></pre></div>
+<p>So far, so simple.</p>
+
+<h2>What are the available options?</h2>
+
+<p>The <a href="http://msdn.microsoft.com/en-us/library/system.web.http.apicontroller(v=vs.118).aspx">ApiController</a> that I inherit from gives me three methods for 
+returning an HTTP 400 response to the client:</p>
+
+<ul>
+<li><code>BadRequest()</code></li>
+<li><code>BadRequest(String)</code></li>
+<li><code>BadRequest(ModelStateDictionary)</code></li>
+</ul>
+
+<p>There is no HTTP 400 equivalent of <code>Ok&lt;T&gt;(T)</code> which allows me to include an object representing the message body that I can find. Ideally I want to be able
+to do something like this:</p>
+<div class="highlight"><pre><code class="language-csharp" data-lang="csharp">  <span class="kt">var</span> <span class="n">errors</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">CreateErrorMessage</span><span class="p">(...);</span>
+  <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">BadRequest</span><span class="p">(</span><span class="n">errors</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</code></pre></div>
+<p>I had a look through the <a href="http://msdn.microsoft.com/en-us/library/system.web.http.results(v=vs.118).aspx">System.Web.Http.Results</a> namespace to see if there 
+was an implementation of <code>IHttpActionResult</code> that I could instantiate and return instead, but  there did not seem to be. So I decided to implement one myself.</p>
+
+<h2>Implementing IHttpActionResult</h2>
+
+<p>Implementing <code>IHttpActionResult</code> is fairly straight forward, although that unecessary complexity in Microsoft frameworks that I referred to earlier means
+that you will need a reference to the <code>HttpRequestMessage</code> for the request. </p>
+
+<p>My implementation of a simple result type which allows you to respond with any status code and an object representing the message body is shown below.</p>
+<div class="highlight"><pre><code class="language-csharp" data-lang="csharp">    <span class="k">public</span> <span class="k">class</span> <span class="nc">SimpleResult</span> <span class="p">:</span> <span class="n">IHttpActionResult</span> <span class="p">{</span>
+
+        <span class="k">private</span> <span class="k">readonly</span> <span class="n">HttpRequestMessage</span> <span class="n">_request</span><span class="p">;</span>
+        <span class="k">private</span> <span class="k">readonly</span> <span class="n">HttpStatusCode</span> <span class="n">_statusCode</span><span class="p">;</span>
+
+        <span class="k">public</span> <span class="nf">SimpleResult</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">HttpStatusCode</span> <span class="n">statusCode</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">_request</span> <span class="p">=</span> <span class="n">request</span><span class="p">;</span>
+            <span class="n">_statusCode</span> <span class="p">=</span> <span class="n">statusCode</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">protected</span> <span class="n">HttpRequestMessage</span> <span class="n">Request</span> <span class="p">{</span> <span class="k">get</span> <span class="p">{</span> <span class="k">return</span> <span class="n">_request</span><span class="p">;</span> <span class="p">}</span> <span class="p">}</span>
+        <span class="k">public</span> <span class="n">HttpStatusCode</span> <span class="n">StatusCode</span> <span class="p">{</span> <span class="k">get</span> <span class="p">{</span> <span class="k">return</span> <span class="n">_statusCode</span><span class="p">;</span> <span class="p">}</span> <span class="p">}</span>
+
+        <span class="k">protected</span> <span class="k">virtual</span> <span class="n">HttpResponseMessage</span> <span class="nf">CreateResponse</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">_request</span><span class="p">.</span><span class="n">CreateResponse</span><span class="p">(</span><span class="n">_statusCode</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="cp">#region IHttpActionResult Members</span>
+
+        <span class="k">public</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">HttpResponseMessage</span><span class="p">&gt;</span> <span class="n">ExecuteAsync</span><span class="p">(</span><span class="n">CancellationToken</span> <span class="n">cancellationToken</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span>
+                <span class="k">this</span><span class="p">.</span><span class="n">CreateResponse</span><span class="p">()</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="cp">#endregion</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">SimpleResult</span><span class="p">&lt;</span><span class="n">T</span><span class="p">&gt;</span> <span class="p">:</span> <span class="n">SimpleResult</span> <span class="p">{</span>
+
+        <span class="k">private</span> <span class="k">readonly</span> <span class="n">T</span> <span class="n">_message</span><span class="p">;</span>
+
+        <span class="k">public</span> <span class="nf">SimpleResult</span><span class="p">(</span><span class="n">HttpRequestMessage</span> <span class="n">request</span><span class="p">,</span> <span class="n">HttpStatusCode</span> <span class="n">statusCode</span><span class="p">,</span> <span class="n">T</span> <span class="n">message</span><span class="p">)</span> 
+            <span class="p">:</span> <span class="k">base</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">statusCode</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">_message</span> <span class="p">=</span> <span class="n">message</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">public</span> <span class="n">T</span> <span class="n">Message</span> <span class="p">{</span> <span class="k">get</span> <span class="p">{</span> <span class="k">return</span> <span class="n">_message</span><span class="p">;</span> <span class="p">}</span> <span class="p">}</span>
+
+        <span class="k">protected</span> <span class="k">override</span> <span class="n">HttpResponseMessage</span> <span class="nf">CreateResponse</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">_message</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span>
+                <span class="p">?</span> <span class="k">this</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">CreateResponse</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">StatusCode</span><span class="p">)</span>
+                <span class="p">:</span> <span class="k">this</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">CreateResponse</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">StatusCode</span><span class="p">,</span> <span class="n">_message</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>This means we can now tweak the code above to return HTTP 400 and our validation errors:</p>
+<div class="highlight"><pre><code class="language-csharp" data-lang="csharp">  <span class="kt">var</span> <span class="n">errors</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">CreateErrorMessage</span><span class="p">(...);</span>
+  <span class="kt">var</span> <span class="n">result</span> <span class="p">=</span> <span class="k">new</span> <span class="n">SimpleResult</span><span class="p">&lt;</span><span class="n">ErrorReport</span><span class="p">&gt;(</span><span class="n">errors</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</code></pre></div>
+<h2>Thoughts</h2>
+
+<p>Although the final implementation of <code>SimpleResult&lt;T&gt;</code> is, well, simple it did make me wonder about a few things.</p>
+
+<p>Firstly why are the methods on <code>ApiController</code> so specific; why is there no generic <code>CreateResult&lt;T&gt;(HttpStatusCode, T content)</code> method? I can&#39;t imagine
+that Microsoft thought that the available methods would cover all usage scenarios. It seems like an odd omission for a framework geared towards making
+things as easy as possible.</p>
+
+<p>Secondly why is <code>IHttpActionResult</code> apparently responsible for <a href="http://en.wikipedia.org/wiki/Content_negotiation">content negotiation</a>? The <code>HttpResponseMessage</code>
+indirectly returned by <code>IHttpActionResult</code> represents the low level HTTP response sent back to the client, with an instance of <code>HttpContent</code> representing
+the serialised message body. There are various subclasses of <code>HttpContent</code> that allow you to return strings etc., but if you want to include an object representing
+the message body then you also have to provide a formatter. (Thankfully helper methods on <code>HttpRequestMessage</code> will do this for you, but that then means that
+your result needs a reference to the original <code>HttpRequestMessage</code>.) Mixing low level functionality like content negotiation into high level types like controllers
+and their results feels like a violation of <a href="http://en.wikipedia.org/wiki/Separation_of_concerns">separation of concerns</a>. <a href="http://openrasta.org/">OpenRasta</a>&#39;s
+pipeline model is a good example of how proper separation of concerns leads to cleaner and more maintainable code that is easier to work with.</p>
+
+<p>I find that with a lot of Microsoft frameworks a lot of effort is put into making it as quick and easy as possible to get up and running but they occasionally
+drop the ball when it comes to making it easy to extend or customise. Having said all that I think that Web API is a very good framework and I&#39;m enjoying using it.</p>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/programming/2014/02/03/tfs-2010-xunit/">
+            Running xUnit tests as a part of a TFS 2010 build
+            <small>03 Feb 2014</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/2013/11/19/fsharp-serialising-option/">
+            Serialising F#'s Option type using DataContractSerialiser
+            <small>19 Nov 2013</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/2013/07/24/fsharp-collections-reflection/">
+            Creating F# collections via reflection
+            <small>24 Jul 2013</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+    </div>
+
+  </body>
+</html>
