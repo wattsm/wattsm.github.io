@@ -4,13 +4,209 @@
  <title>Usermaatre</title>
  <link href="http://blog.usermaatre.co.uk/atom.xml" rel="self"/>
  <link href="http://blog.usermaatre.co.uk/"/>
- <updated>2014-11-08T16:35:43+00:00</updated>
+ <updated>2014-11-18T18:09:56+00:00</updated>
  <id>http://blog.usermaatre.co.uk</id>
  <author>
    <name>Mark Watts</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Modeling Mars Rovers with F#</title>
+   <link href="http://blog.usermaatre.co.uk/programming/2014/11/18/modeling-mars-rovers-with-fsharp/"/>
+   <updated>2014-11-18T00:00:00+00:00</updated>
+   <id>http://blog.usermaatre.co.uk/programming/2014/11/18/modeling-mars-rovers-with-fsharp</id>
+   <content type="html">&lt;p&gt;Although currently somewhat overshadowed by &lt;a href=&quot;http://www.esa.int/Our_Activities/Space_Science/Rosetta&quot;&gt;ESA&amp;#39;s amazing Rosetta mission&lt;/a&gt;, &lt;a href=&quot;http://en.wikipedia.org/wiki/Sojourner_(rover)&quot;&gt;Mars rovers&lt;/a&gt; &lt;a href=&quot;http://en.wikipedia.org/wiki/Opportunity_(rover)&quot;&gt;are awesome&lt;/a&gt; &lt;a href=&quot;http://en.wikipedia.org/wiki/Spirit_(rover)&quot;&gt;in their&lt;/a&gt; &lt;a href=&quot;http://en.wikipedia.org/wiki/Curiosity_(rover)&quot;&gt;own right&lt;/a&gt;. 
+So when &lt;a href=&quot;http://www.readcopyupdate.com/&quot;&gt;a colleague&lt;/a&gt; pointed me in the direction of 
+&lt;a href=&quot;http://www.techinterviewpuzzles.com/2010/09/mars-rovers-thoughtworks-puzzles.html#Mars_Rovers_Puzzle&quot;&gt;an interview puzzle about modeling Mars rovers&lt;/a&gt;
+and mentioned that he was writing an (immutable) F# implementation I decided to follow suit and have a go myself.&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;h3&gt;The problem&lt;/h3&gt;
+
+&lt;p&gt;The basic problem described in the puzzle is modeling the movements of rovers on the surface of Mars. The surface is represented by a simple grid with the point (0,0) being
+at the left hand corner. Rovers land at a given point facing a given direction and are then commanded to either move in the direction they are facing or rotate 90&amp;deg; either to
+the left or the right.&lt;/p&gt;
+
+&lt;p&gt;The program should accept as an input a series of commands. The first defines the planet surface as a maximum value of the X and Y coordinates. Subsequent commands
+describe the landing position of rovers followed by their movements.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;5 5
+1 2 N
+LMLMLMLMM
+3 3 E
+MMRMMRMRRM
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this example the first line initialises the planet surface to have maximum X and Y coordinates of 5. Then a rover is added to (1,2), facing north. Instructions for this rover follow, with 
+L turning the rover 90&amp;deg; to the left, R turning it 90&amp;deg; to the right and M moving it forwards one place in the direction it is facing. The process is then repeated for another rover starting at (3,3) and facing
+east.&lt;/p&gt;
+
+&lt;p&gt;Once the input has been processed the final position and direction of the rovers should be printed.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;1 3 N
+5 1 E
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The original problem does not explicitly state error conditions but I think that at a minimum movement out of bounds and rover collisions should be covered. The original problem
+also does not state how the input should be processed. There are two possibilities:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Initialise the planet surface, place all rovers, circle through the rovers processing one movement instruction at a time.&lt;/li&gt;
+&lt;li&gt;Initialise the planet surface, place each rover in turn, processing its movement instructions immediately afterwards.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I decided to adopt the second approach as it is implied by the format of the input and is simpler.&lt;/p&gt;
+
+&lt;p&gt;Finally, for the sake of clarity I gave the rovers names, so the input now becomes:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;5 5
+Opportunity 1 2 N
+LMLMLMLMM
+Curiousity 3 3 E
+MMRMMRMRRM
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;The solution&lt;/h3&gt;
+
+&lt;p&gt;The solution I arrived at &lt;a href=&quot;https://github.com/wattsm/mars-rovers&quot;&gt;can be found on GitHub&lt;/a&gt;, with the majority of the interesting code in &lt;a href=&quot;https://github.com/wattsm/mars-rovers/blob/master/MarsRovers/Model.fs&quot;&gt;Model.fs&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4&gt;Basic design&lt;/h4&gt;
+
+&lt;p&gt;I decided to use single case unions when writing my model, as described in &lt;a href=&quot;http://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/&quot;&gt;this 
+post over at F# for fun and profit&lt;/a&gt;. I really like the elegance of this approach and was interested
+to see how it would work in practice. (I did not use &lt;code&gt;.fsi&lt;/code&gt; files as described in the post as I found them to be more trouble than they were worth.)&lt;/p&gt;
+
+&lt;p&gt;Using this approach is a nice compromise between &lt;a href=&quot;http://en.wikipedia.org/wiki/Encapsulation_(object-oriented_programming)&quot;&gt;object oriented style encapsulation&lt;/a&gt; and a more
+functional approach. &lt;/p&gt;
+
+&lt;p&gt;The article above defines an &lt;code&gt;apply&lt;/code&gt; method which grants a function access to the union&amp;#39;s underlying data. I also defined a &lt;code&gt;mutate&lt;/code&gt; function which creates a new
+value based on a function which updates the underlying data.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rover&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+  &lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;State&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;  
+  &lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Instance&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Rover&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;State&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;apply&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Rover&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;  
+  &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mutate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;apply&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Rover&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This function can then be used to create new values.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//Rover.Instance -&amp;gt; Rover.Instance&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;move&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mutate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;location&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Location&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;location&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;Errors&lt;/h4&gt;
+
+&lt;p&gt;In order to represent the success/failure of an operation I created a new union type, &lt;code&gt;Outcome&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt;. This is essentially the same as &lt;code&gt;Choice&amp;lt;&amp;#39;T,String&amp;gt;&lt;/code&gt; but with nicer
+semantics and syntax.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//Using Choice&amp;lt;&amp;#39;T,String&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Choice1Of2&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Choice2Of2&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//Using Outcome&amp;lt;&amp;#39;T&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Problem&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using the &lt;code&gt;Outcome&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; type I could represent errors without the need for exceptions.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;location&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;orientation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IsNullEmptyOrWhitespace&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Problem&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;The rover name cannot be null, empty or whitespace.&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(...)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;Composing functions&lt;/h4&gt;
+
+&lt;p&gt;In order to be able to compose multiple functions of the form &lt;code&gt;&amp;#39;a -&amp;gt; Outcome&amp;lt;&amp;#39;b&amp;gt;&lt;/code&gt; I created a &lt;code&gt;bind&lt;/code&gt; function and gave it an alias, &lt;code&gt;--&amp;gt;&lt;/code&gt;, as a custom
+operator.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;bind&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Outcome&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Outcome&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+  &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Problem&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Problem&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(--&amp;gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bind&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This allowed me to create composite functions where each component function was only called if the previous one had been successful, with error messages
+being propogated otherwise. A good example of this is the &lt;code&gt;validatedAdd&lt;/code&gt; function in &lt;code&gt;Planet.MissionControl&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//(Planet.State * Rover.Instance) -&amp;gt; Outcome&amp;lt;Planet.Instance&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validatedAdd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+  &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;checkBounds&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rover&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toPlanet&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;(This is an example of a monad. There are &lt;a href=&quot;https://www.haskell.org/haskellwiki/Monad_tutorials_timeline&quot;&gt;a lot of monad tutorials out there&lt;/a&gt; if you are interested in finding out more.)&lt;/p&gt;
+
+&lt;h4&gt;Issuing instructions&lt;/h4&gt;
+
+&lt;p&gt;Once the planet surface has been initialised there are two types of command:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Add a new rover.&lt;/li&gt;
+&lt;li&gt;Move an existing rover.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These commands share two validation rules regarding the state of the planet surface:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;No rover should be out of bounds.&lt;/li&gt;
+&lt;li&gt;No rover should occupy the same position as another.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The model of the planet surface is fairly straight forward.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Planet&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+  &lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;State&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Width&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Height&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Rovers&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rover&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Instance&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Rovers are responsible for keeping track of their current position.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rover&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;State&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Location&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Location&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Instance&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//X and Y coordinates&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Orientation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Orientation&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Instance&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//Direction the rover is facing&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In order make my solution as simple as possible I made the second command, moving a rover, a case of the new rover command. When modeling a move command
+a new planet &lt;code&gt;State&lt;/code&gt; is created minus the moving rover, the rover&amp;#39;s position is then updated and the rover re-added to the &lt;code&gt;State&lt;/code&gt; as if it were a new rover. This
+can be seen in the functions &lt;code&gt;touchdown&lt;/code&gt; and &lt;code&gt;instruct&lt;/code&gt; in the &lt;code&gt;Planet.MissionControl&lt;/code&gt; module.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validatedAdd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+  &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;checkBounds&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toPlanet&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Rover.Instance -&amp;gt; Planet.Instance -&amp;gt; Outcome&amp;lt;Planet.Instance&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;touchdown&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rover&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Planet&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;validatedAdd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rover&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///String -&amp;gt; (Rover.Instance -&amp;gt; Rover.Instance) -&amp;gt; Planet.Instance -&amp;gt; Outcome&amp;lt;Planet.Instance&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;instruct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;instruction&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Planet&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+  &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;extract&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;update&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;instruction&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validatedAdd&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Processing the input defined in the puzzle is now a case of simply creating the initial, empty, model of the planet and then folding over a list
+of instructions.&lt;/p&gt;
+
+&lt;h3&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;You can see the model in action in &lt;a href=&quot;https://github.com/wattsm/mars-rovers/blob/master/MarsRovers/Program.fs&quot;&gt;Program.fs&lt;/a&gt;, which is somewhat less elegant. I think that although the model could certainly be polished and expanded 
+it is a good solution to the problem. &lt;/p&gt;
+
+&lt;p&gt;Running the program with the standard input will give the following response.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;Rovers:
+Curiousity | (5, 1) | Facing East
+Opportunity | (1, 3) | Facing North
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;One of the things that really impressed me when writing this was how easy it is in F# to create a viable working solution without the missteps and gotchas 
+that you tend to associated with the same process in languages like C#. The single case union model also worked really well and allowed me to think broadly in
+terms of real world objects while using a functional style.&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Beyond Earth - the good, the bad and the ugly</title>
