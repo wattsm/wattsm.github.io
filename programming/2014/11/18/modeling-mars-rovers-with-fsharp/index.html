@@ -209,6 +209,7 @@ being propogated otherwise. A good example of this is the <code>validatedAdd</co
 <div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">//(Planet.State * Rover.Instance) -&gt; Outcome&lt;Planet.Instance&gt;</span>
 <span class="k">let</span> <span class="nv">private</span> <span class="n">validatedAdd</span> <span class="o">=</span> 
   <span class="nn">State</span><span class="p">.</span><span class="n">checkBounds</span>
+  <span class="o">--&gt;</span> <span class="nn">State</span><span class="p">.</span><span class="n">checkCollissions</span>
   <span class="o">--&gt;</span> <span class="nn">Rover</span><span class="p">.</span><span class="n">add</span>
   <span class="o">--&gt;</span> <span class="nn">State</span><span class="p">.</span><span class="n">toPlanet</span>
 </code></pre></div>
@@ -249,10 +250,11 @@ being propogated otherwise. A good example of this is the <code>validatedAdd</co
 <p>In order make my solution as simple as possible I made the second command, moving a rover, a case of the new rover command. When modeling a move command
 a new planet <code>State</code> is created minus the moving rover, the rover&#39;s position is then updated and the rover re-added to the <code>State</code> as if it were a new rover. This
 can be seen in the functions <code>touchdown</code> and <code>instruct</code> in the <code>Planet.MissionControl</code> module.</p>
-<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">private</span> <span class="n">validatedAdd</span> <span class="o">=</span> 
-  <span class="nn">State</span><span class="p">.</span><span class="n">checkBounds</span>
-  <span class="o">--&gt;</span> <span class="nn">Rovers</span><span class="p">.</span><span class="n">add</span>
-  <span class="o">--&gt;</span> <span class="nn">State</span><span class="p">.</span><span class="n">toPlanet</span>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">private</span> <span class="n">validatedAdd</span> <span class="o">=</span>   
+  <span class="nn">State</span><span class="p">.</span><span class="n">checkBounds</span>           <span class="c1">//Ensure within bounds</span>
+  <span class="o">--&gt;</span> <span class="nn">State</span><span class="p">.</span><span class="n">checkCollissions</span>  <span class="c1">//Ensure not at same location as another</span>
+  <span class="o">--&gt;</span> <span class="nn">Rovers</span><span class="p">.</span><span class="n">add</span>              <span class="c1">//Add to the surface</span>
+  <span class="o">--&gt;</span> <span class="nn">State</span><span class="p">.</span><span class="n">toPlanet</span> 
 
 <span class="sd">///Rover.Instance -&gt; Planet.Instance -&gt; Outcome&lt;Planet.Instance&gt;</span>
 <span class="k">let</span> <span class="nv">touchdown</span> <span class="n">rover</span> <span class="o">(</span><span class="n">Planet</span> <span class="n">state</span><span class="o">)</span> <span class="o">=</span>
@@ -261,10 +263,10 @@ can be seen in the functions <code>touchdown</code> and <code>instruct</code> in
 <span class="sd">///String -&gt; (Rover.Instance -&gt; Rover.Instance) -&gt; Planet.Instance -&gt; Outcome&lt;Planet.Instance&gt;</span>
 <span class="k">let</span> <span class="nv">instruct</span> <span class="n">name</span> <span class="n">instruction</span> <span class="o">(</span><span class="n">Planet</span> <span class="n">state</span><span class="o">)</span> <span class="o">=</span> 
   <span class="k">let</span> <span class="nv">f</span> <span class="o">=</span> 
-    <span class="nn">Rovers</span><span class="p">.</span><span class="n">find</span>
-    <span class="o">--&gt;</span> <span class="nn">Rovers</span><span class="p">.</span><span class="n">extract</span>
-    <span class="o">--&gt;</span> <span class="nn">Rovers</span><span class="p">.</span><span class="n">update</span> <span class="n">instruction</span>
-    <span class="o">--&gt;</span> <span class="n">validatedAdd</span>
+    <span class="nn">Rovers</span><span class="p">.</span><span class="n">find</span>                    <span class="c1">//Find by name</span>
+    <span class="o">--&gt;</span> <span class="nn">Rovers</span><span class="p">.</span><span class="n">extract</span>             <span class="c1">//Remove from planet surface</span>
+    <span class="o">--&gt;</span> <span class="nn">Rovers</span><span class="p">.</span><span class="n">update</span> <span class="n">instruction</span>  <span class="c1">//Issue the instruction</span>
+    <span class="o">--&gt;</span> <span class="n">validatedAdd</span>               <span class="c1">//Re-add to the planet surface</span>
   <span class="k">in</span> <span class="n">f</span> <span class="o">(</span><span class="n">state</span><span class="o">,</span> <span class="n">name</span><span class="o">)</span>
 </code></pre></div>
 <p>Processing the input defined in the puzzle is now a case of simply creating the initial, empty, model of the planet and then folding over a list

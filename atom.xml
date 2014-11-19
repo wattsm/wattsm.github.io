@@ -4,7 +4,7 @@
  <title>Usermaatre</title>
  <link href="http://blog.usermaatre.co.uk/atom.xml" rel="self"/>
  <link href="http://blog.usermaatre.co.uk/"/>
- <updated>2014-11-18T18:09:56+00:00</updated>
+ <updated>2014-11-19T06:56:01+00:00</updated>
  <id>http://blog.usermaatre.co.uk</id>
  <author>
    <name>Mark Watts</name>
@@ -131,6 +131,7 @@ being propogated otherwise. A good example of this is the &lt;code&gt;validatedA
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//(Planet.State * Rover.Instance) -&amp;gt; Outcome&amp;lt;Planet.Instance&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validatedAdd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
   &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;checkBounds&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;checkCollissions&lt;/span&gt;
   &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rover&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;
   &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toPlanet&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
@@ -171,10 +172,11 @@ being propogated otherwise. A good example of this is the &lt;code&gt;validatedA
 &lt;p&gt;In order make my solution as simple as possible I made the second command, moving a rover, a case of the new rover command. When modeling a move command
 a new planet &lt;code&gt;State&lt;/code&gt; is created minus the moving rover, the rover&amp;#39;s position is then updated and the rover re-added to the &lt;code&gt;State&lt;/code&gt; as if it were a new rover. This
 can be seen in the functions &lt;code&gt;touchdown&lt;/code&gt; and &lt;code&gt;instruct&lt;/code&gt; in the &lt;code&gt;Planet.MissionControl&lt;/code&gt; module.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validatedAdd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
-  &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;checkBounds&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toPlanet&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validatedAdd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;   
+  &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;checkBounds&lt;/span&gt;           &lt;span class=&quot;c1&quot;&gt;//Ensure within bounds&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;checkCollissions&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//Ensure not at same location as another&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;              &lt;span class=&quot;c1&quot;&gt;//Add to the surface&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toPlanet&lt;/span&gt; 
 
 &lt;span class=&quot;sd&quot;&gt;///Rover.Instance -&amp;gt; Planet.Instance -&amp;gt; Outcome&amp;lt;Planet.Instance&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;touchdown&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rover&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Planet&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
@@ -183,10 +185,10 @@ can be seen in the functions &lt;code&gt;touchdown&lt;/code&gt; and &lt;code&gt;
 &lt;span class=&quot;sd&quot;&gt;///String -&amp;gt; (Rover.Instance -&amp;gt; Rover.Instance) -&amp;gt; Planet.Instance -&amp;gt; Outcome&amp;lt;Planet.Instance&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;instruct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;instruction&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Planet&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
   &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
-    &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;extract&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;update&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;instruction&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validatedAdd&lt;/span&gt;
+    &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;find&lt;/span&gt;                    &lt;span class=&quot;c1&quot;&gt;//Find by name&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;extract&lt;/span&gt;             &lt;span class=&quot;c1&quot;&gt;//Remove from planet surface&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Rovers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;update&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;instruction&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//Issue the instruction&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validatedAdd&lt;/span&gt;               &lt;span class=&quot;c1&quot;&gt;//Re-add to the planet surface&lt;/span&gt;
   &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Processing the input defined in the puzzle is now a case of simply creating the initial, empty, model of the planet and then folding over a list
