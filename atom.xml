@@ -4,13 +4,49 @@
  <title>Usermaatre</title>
  <link href="http://blog.usermaatre.co.uk/atom.xml" rel="self"/>
  <link href="http://blog.usermaatre.co.uk/"/>
- <updated>2014-11-19T08:26:51+00:00</updated>
+ <updated>2014-11-20T15:20:22+00:00</updated>
  <id>http://blog.usermaatre.co.uk</id>
  <author>
    <name>Mark Watts</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>FSI, PsExec and Console.Clear</title>
+   <link href="http://blog.usermaatre.co.uk/programming/2014/11/20/psexec-fsi-console-clear/"/>
+   <updated>2014-11-20T00:00:00+00:00</updated>
+   <id>http://blog.usermaatre.co.uk/programming/2014/11/20/psexec-fsi-console-clear</id>
+   <content type="html">&lt;p&gt;I recently struggled with an error that I encountered during the process of setting up a continuous deployment TFS build
+and I thought that I would write briefly about it in the hope of helping anyone else running into the same issue. The issue arises running &lt;a href=&quot;http://msdn.microsoft.com/en-us/library/dd233175.aspx&quot;&gt;FSI&lt;/a&gt;
+remotely using &lt;a href=&quot;http://technet.microsoft.com/en-gb/sysinternals/bb897553.aspx&quot;&gt;PsExec&lt;/a&gt;.&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;p&gt;As a part of our continuous deployment build process I had created an F# script responsible for running the installer and performing environment specific
+configuration. My plan was to have the TFS build process remotely run this script on the deployment machine using PsExec. The script had been tested manually
+and worked as expected, so running it via PsExec should have been fairly straight forward.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;PsExec.exe \\machine -h -accepteula &amp;quot;C:\Program Files (x86)\Microsoft SDKs\F#\3.0\Framework\v4.0\fsi.exe&amp;quot; &amp;quot;C:\Path\To\My\Script.fsx&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;However, I immediately ran into problems. Whenever I tried to run the script using PsExec I was greeted with the error &lt;code&gt;System.IO.IOException: The handle is invalid&lt;/code&gt;.
+Google suggested a number of possible issues from administrative access to writing to the console. After what felt like an eternity of tweaking command line options,
+changes to the deployment script and installer I stumbled upon the cause by reducing the script to &amp;quot;Hello, World&amp;quot; and re-introducing functionality piece by piece.&lt;/p&gt;
+
+&lt;p&gt;So what was the cause of this error? Running an MSI? Tweaking the registry? Starting and stopping websites in IIS? No, the culprit was this line.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;nn&quot;&gt;Console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Clear&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;At the beginning of the script I clear the console to make the output more readable. It turns out that clearing the console in a PsExec context is not 
+allowed (although &lt;code&gt;Console.WriteLine&lt;/code&gt; etc. all still work as expected), presumably because it is a remote console &amp;quot;nested&amp;quot; inside PsExec on a local console.&lt;/p&gt;
+
+&lt;p&gt;You can see this effect for yourself by attempting to run this fairly inoffensive script using PsExec.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;open&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;System&lt;/span&gt;
+
+&lt;span class=&quot;nn&quot;&gt;Console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Clear&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;nn&quot;&gt;Console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;WriteLine&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Hello, World&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you found your way here after running into the same issue I hope this helped!&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Modeling Mars rovers with F#</title>

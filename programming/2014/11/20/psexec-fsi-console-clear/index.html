@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>    
+	Usermaatre &middot; FSI, PsExec and Console.Clear    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+  
+  <!-- Google analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-56516871-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+</head>
+
+
+  <body class="theme-base-0b">
+  
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="/">
+          Usermaatre
+        </a>
+      </h1>
+      <p class="lead">Programming, science, history and gaming. Not necessarily in that order.</p>
+    </div>
+
+    <nav class="sidebar-nav">
+	  <a class="sidebar-nav-item" href="/">Home</a>
+	  <a class="sidebar-nav-item" href="/about">About</a>
+	  <a class="sidebar-nav-item" href="/archive">Archive</a>
+      <a class="sidebar-nav-item" href="https://twitter.com/m_d_watts" target="_blank">Twitter</a>	  
+      <a class="sidebar-nav-item" href="https://github.com/wattsm" target="_blank">GitHub</a>      
+    </nav>
+
+    <p>&copy; 2014. All rights reserved.</p>
+	
+	<p>
+		<a style='font-size: 70%' href='/tags/beyond-earth'>Beyond Earth</a>
+<a style='font-size: 70%' href='/tags/ci'>CI</a>
+<a style='font-size: 70%' href='/tags/civilization'>Civilization</a>
+<a style='font-size: 70%' href='/tags/design'>Design</a>
+<a style='font-size: 170%' href='/tags/fsharp'>F#</a>
+<a style='font-size: 70%' href='/tags/psexec'>PsExec</a>
+<a style='font-size: 70%' href='/tags/reflection'>Reflection</a>
+<a style='font-size: 120%' href='/tags/tfs'>TFS</a>
+<a style='font-size: 70%' href='/tags/webapi'>WebAPI</a>
+<a style='font-size: 70%' href='/tags/wix'>Wix</a>
+<a style='font-size: 70%' href='/tags/xunit'>xUnit</a>
+
+	</p>
+  </div>
+</div>
+
+
+    <div class="content container">	
+      <div class="post">
+  <h1 class="post-title">FSI, PsExec and Console.Clear</h1>
+  <span class="post-date">
+	20 Nov 2014
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>, 	
+
+	
+	<a href="/tags/psexec">PsExec</a>	
+	
+  </span>
+  <p>I recently struggled with an error that I encountered during the process of setting up a continuous deployment TFS build
+and I thought that I would write briefly about it in the hope of helping anyone else running into the same issue. The issue arises running <a href="http://msdn.microsoft.com/en-us/library/dd233175.aspx">FSI</a>
+remotely using <a href="http://technet.microsoft.com/en-gb/sysinternals/bb897553.aspx">PsExec</a>.</p>
+
+<!-- more -->
+
+<p>As a part of our continuous deployment build process I had created an F# script responsible for running the installer and performing environment specific
+configuration. My plan was to have the TFS build process remotely run this script on the deployment machine using PsExec. The script had been tested manually
+and worked as expected, so running it via PsExec should have been fairly straight forward.</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">PsExec.exe \\machine -h -accepteula &quot;C:\Program Files (x86)\Microsoft SDKs\F#\3.0\Framework\v4.0\fsi.exe&quot; &quot;C:\Path\To\My\Script.fsx&quot;
+</code></pre></div>
+<p>However, I immediately ran into problems. Whenever I tried to run the script using PsExec I was greeted with the error <code>System.IO.IOException: The handle is invalid</code>.
+Google suggested a number of possible issues from administrative access to writing to the console. After what felt like an eternity of tweaking command line options,
+changes to the deployment script and installer I stumbled upon the cause by reducing the script to &quot;Hello, World&quot; and re-introducing functionality piece by piece.</p>
+
+<p>So what was the cause of this error? Running an MSI? Tweaking the registry? Starting and stopping websites in IIS? No, the culprit was this line.</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="nn">Console</span><span class="p">.</span><span class="n">Clear</span> <span class="bp">()</span>
+</code></pre></div>
+<p>At the beginning of the script I clear the console to make the output more readable. It turns out that clearing the console in a PsExec context is not 
+allowed (although <code>Console.WriteLine</code> etc. all still work as expected), presumably because it is a remote console &quot;nested&quot; inside PsExec on a local console.</p>
+
+<p>You can see this effect for yourself by attempting to run this fairly inoffensive script using PsExec.</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">open</span> <span class="nn">System</span>
+
+<span class="nn">Console</span><span class="p">.</span><span class="n">Clear</span> <span class="bp">()</span>
+<span class="nn">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="o">(</span><span class="s">&quot;Hello, World&quot;</span><span class="o">)</span>
+</code></pre></div>
+<p>If you found your way here after running into the same issue I hope this helped!</p>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/programming/2014/02/03/tfs-2010-xunit/">
+            Running xUnit tests as a part of a TFS 2010 build
+            <small>03 Feb 2014</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/2014/11/18/modeling-mars-rovers-with-fsharp/">
+            Modeling Mars rovers with F#
+            <small>18 Nov 2014</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">
+            Creating versioned installers using Wix and TFS 2010
+            <small>16 May 2014</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+    </div>
+
+  </body>
+</html>
