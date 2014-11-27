@@ -65,6 +65,7 @@
 	
 	<p>
 		<a style='font-size: 70%' href='/tags/beyond-earth'>Beyond Earth</a>
+<a style='font-size: 70%' href='/tags/castle-windsor'>Castle Windsor</a>
 <a style='font-size: 70%' href='/tags/ci'>CI</a>
 <a style='font-size: 70%' href='/tags/civilization'>Civilization</a>
 <a style='font-size: 70%' href='/tags/design'>Design</a>
@@ -74,7 +75,7 @@
 <a style='font-size: 120%' href='/tags/tfs'>TFS</a>
 <a style='font-size: 70%' href='/tags/webapi'>WebAPI</a>
 <a style='font-size: 70%' href='/tags/wix'>Wix</a>
-<a style='font-size: 70%' href='/tags/xunit'>xUnit</a>
+<a style='font-size: 120%' href='/tags/xunit'>xUnit</a>
 
 	</p>
   </div>
@@ -83,6 +84,38 @@
 
     <div class="content container">	
       <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">
+        Creating versioned installers using Wix and TFS 2010
+      </a>
+    </h1>
+
+    <span class="post-date">
+		16 May 2014
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/tfs">TFS</a>, 	
+
+	
+	<a href="/tags/wix">Wix</a>	
+
+	</span>
+
+    <p>Recently I created a Wix installer for a product and wanted to include the version number in the installer name – e.g. “My Product.1.2.3.msi”. 
+I found this post which describes how to edit the .wixproj file to add a pre-build task to update the output filename to include a version. 
+This worked perfectly when building the project locally, but not as a part of our TFS 2010 automated build. The reason for this is that TFS 2010 
+outputs builds to the /Binaries/ directory rather than their local /bin/, so the relative paths in the solution given break. In this post I describe how I 
+edited the .wixproj file to work both locally and as a part of a TFS 2010 automated build.</p>
+
+<p>I also wanted my MSI  to use a three part version number rather than the default four part used.</p>
+
+	
+	<a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">Continue reading &raquo;</a>	
+  </div>
   
   <div class="post">
     <h1 class="post-title">
