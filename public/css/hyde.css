@@ -99,6 +99,11 @@ a.sidebar-nav-item:focus {
   font-weight: bold;
 }
 
+.sidebar hr {
+	margin: 1rem 0;
+	border-bottom:1px solid rgba(255, 255, 255, 0.25);
+}
+
 /* Sticky sidebar
  *
  * Add the `sidebar-sticky` class to the sidebar's container to affix it the
