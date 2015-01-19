@@ -17,6 +17,7 @@
 /*
  * Contents
  *
+ * Tweaks
  * Body resets
  * Custom type
  * Messages
@@ -78,6 +79,7 @@ a:hover,
 a:focus {
   text-decoration: underline;
 }
+
 
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
@@ -330,7 +332,7 @@ tbody tr:nth-child(odd) th {
 
 .page,
 .post {
-  margin-bottom: 4em;
+  margin-bottom: 2em;
 }
 
 /* Blog post or page title */
@@ -354,7 +356,7 @@ tbody tr:nth-child(odd) th {
 
 /* Related posts */
 .related {
-  padding-top: 2rem;
+  padding-top: 1rem;
   padding-bottom: 2rem;
   border-top: 1px solid #eee;
 }

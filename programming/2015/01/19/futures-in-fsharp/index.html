@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>    
+	Usermaatre &middot; Futures in F#    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+  
+  <!-- Google analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-56516871-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+</head>
+
+
+  <body class="theme-base-0b">
+  
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="/">
+          Usermaatre
+        </a>
+      </h1>
+      <p class="lead">Programming, science, history and gaming. Not necessarily in that order.</p>
+    </div>
+
+    <nav class="sidebar-nav">
+	  <a class="sidebar-nav-item" href="/">Home</a>
+	  <a class="sidebar-nav-item" href="/about">About</a>
+	  <a class="sidebar-nav-item" href="/archive">Archive</a>
+      <a class="sidebar-nav-item" href="https://twitter.com/m_d_watts" target="_blank">Twitter</a>	  
+      <a class="sidebar-nav-item" href="https://github.com/wattsm" target="_blank">GitHub</a>      
+    </nav>
+	
+	<p>&copy; 2015. All rights reserved.</p>
+	
+	<hr />
+	
+	<p style="font-size:80%;">
+		<a style='font-size: 70%' href='/tags/beyond-earth'>Beyond Earth</a>
+<a style='font-size: 70%' href='/tags/castle-windsor'>Castle Windsor</a>
+<a style='font-size: 70%' href='/tags/ci'>CI</a>
+<a style='font-size: 70%' href='/tags/civilization'>Civilization</a>
+<a style='font-size: 70%' href='/tags/design'>Design</a>
+<a style='font-size: 70%' href='/tags/entity-framework'>Entity Framework</a>
+<a style='font-size: 170%' href='/tags/fsharp'>F#</a>
+<a style='font-size: 70%' href='/tags/moq'>Moq</a>
+<a style='font-size: 70%' href='/tags/odata'>OData</a>
+<a style='font-size: 70%' href='/tags/psexec'>PsExec</a>
+<a style='font-size: 70%' href='/tags/reflection'>Reflection</a>
+<a style='font-size: 113%' href='/tags/tfs'>TFS</a>
+<a style='font-size: 138%' href='/tags/unit-testing'>Unit Testing</a>
+<a style='font-size: 113%' href='/tags/webapi'>WebAPI</a>
+<a style='font-size: 70%' href='/tags/wix'>Wix</a>
+<a style='font-size: 138%' href='/tags/xunit'>xUnit</a>
+
+	</p>	
+	
+  </div>
+</div>
+
+
+    <div class="content container">	
+      <div class="post">
+  <h1 class="post-title">Futures in F#</h1>
+  <span class="post-date">
+	19 Jan 2015
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>	
+	
+  </span>
+  <p>My first exposure to the concept of <a href="http://en.wikipedia.org/wiki/Futures_and_promises">futures (or promises)</a> was probably JavaScript&#39;s <a href="https://github.com/kriskowal/q/wiki/API-Reference">Q API</a> and AngularJS&#39; <a href="https://docs.angularjs.org/api/ng/service/$q">$q service</a>, but it was only after reading Twitter&#39;s 
+&quot;<a href="https://engineering.twitter.com/research/publication/your-server-as-a-function">Your Server as a Function</a>&quot; paper that their usefulness really sank in. The closest thing that .Net has to the Scala futures illustrated in the paper are <code>Task&lt;T&gt;</code> and 
+F#&#39;s <code>Async&lt;&#39;T&gt;</code>. Although these types are useful they do not provide all of the functionality of Scala&#39;s <code>Future[T]</code>, nor are they as elegant.</p>
+
+<p>In this post I will describe an approach to creating something akin to Scala&#39;s <code>Future[T]</code> in F#.</p>
+
+<!-- more -->
+
+<h3>Defining a future</h3>
+
+<p>A broad definition of a future would be an asynchronous computation which may or may not succeed. As this post is about F# we will base our solution on the 
+<code>Async&lt;&#39;T&gt;</code> type (<code>Async.AwaitTask</code> function can be used to convert a <code>Task&lt;T&gt;</code> to <code>Async&lt;&#39;T&gt;</code> if required).</p>
+
+<p>We can define a discriminated union to represent the result of a future:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">type</span> <span class="nc">Outcome</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">a</span><span class="o">&gt;</span> <span class="o">=</span> 
+    <span class="o">|</span> <span class="n">Success</span> <span class="k">of</span> <span class="k">&#39;</span><span class="n">a</span>
+    <span class="o">|</span> <span class="n">Failure</span> <span class="k">of</span> <span class="n">Exception</span>
+</code></pre></div>
+<p>Using this we can define a future as:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">type</span> <span class="nc">Future</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">a</span><span class="o">&gt;</span> <span class="o">=</span> <span class="n">Async</span><span class="o">&lt;</span><span class="n">Outcome</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">a</span><span class="o">&gt;&gt;</span>
+</code></pre></div>
+<h3>Creating a future</h3>
+
+<p>Now that we have a definition of a future, we can think about ways that we might want to create them in our code. </p>
+
+<p>We could create a future explicitly:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">future</span> <span class="o">=</span> 
+    <span class="n">async</span> <span class="o">{</span>
+        <span class="k">try</span>
+            <span class="k">return</span> <span class="o">(</span><span class="nn">Success</span> <span class="p">...</span><span class="o">)</span>
+        <span class="k">with</span>
+        <span class="o">|</span> <span class="n">e</span> <span class="o">-&gt;</span> <span class="k">return</span> <span class="o">(</span><span class="n">Failure</span> <span class="n">e</span><span class="o">)</span>
+    <span class="o">}</span>
+</code></pre></div>
+<p>However, in order to reduce the amount of boilerplate required and generally neaten our code we can create a helper function to wrap
+an <code>Async&lt;&#39;T&gt;</code> to create a future:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">//Async&lt;&#39;a&gt; -&gt; Future&lt;&#39;a&gt;</span>
+<span class="k">let</span> <span class="nv">wrap</span> <span class="n">computation</span> <span class="o">=</span> 
+    <span class="n">async</span> <span class="o">{</span>
+
+        <span class="k">let!</span> <span class="nv">choice</span> <span class="o">=</span> <span class="o">(</span><span class="nn">Async</span><span class="p">.</span><span class="n">Catch</span> <span class="n">computation</span><span class="o">)</span>
+
+        <span class="k">return</span> <span class="o">(</span><span class="nn">Outcome</span><span class="p">.</span><span class="n">ofChoice</span> <span class="n">choice</span><span class="o">)</span>
+    <span class="o">}</span>
+</code></pre></div>
+<p>This function accepts an <code>Async&lt;&#39;T&gt;</code> and returns a <code>Future&lt;&#39;T&gt;</code>. We use <code>Async.Catch</code> for exception handling which converts the <code>Async&lt;&#39;T&gt;</code> to <code>Aync&lt;Choice&lt;&#39;T, exn&gt;&gt;</code>. This <code>Choice</code> is
+then converted to an <code>Outcome&lt;&#39;T&gt;</code> using a simple conversion function:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">ofChoice</span> <span class="o">=</span> <span class="k">function</span>
+    <span class="o">|</span> <span class="n">Choice1Of2</span> <span class="n">value</span> <span class="o">-&gt;</span> <span class="n">Success</span> <span class="n">value</span>
+    <span class="o">|</span> <span class="n">Choice2Of2</span> <span class="n">e</span> <span class="o">-&gt;</span> <span class="n">Failure</span> <span class="n">e</span>
+</code></pre></div>
+<p>You may be asking why I did not just define <code>Future&lt;&#39;T&gt;</code> using <code>Choice&lt;&#39;T, exn&gt;</code>? My main reason is that I think <code>Outcome&lt;&#39;T&gt;</code> has better
+semantics - <code>Success</code> and <code>Failure</code> have a clearer meaning than <code>Choice1Of2</code> and <code>Choice2Of2</code>.</p>
+
+<p>We can now create futures with minimal boilerplate and built-in exception handling:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">future</span> <span class="o">=</span> 
+    <span class="nn">Future</span><span class="p">.</span><span class="n">wrap</span> <span class="o">(</span><span class="n">async</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="o">...</span>
+    <span class="o">})</span>
+</code></pre></div>
+<p>Occasionally we may also want to create a future from a value:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">value</span> <span class="n">x</span> <span class="o">=</span> <span class="n">wrap</span> <span class="o">(</span><span class="n">async</span> <span class="o">{</span> <span class="k">return</span> <span class="n">x</span> <span class="o">})</span>
+</code></pre></div>
+<p>This allows us to do this:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">//Future&lt;int&gt;</span>
+<span class="k">let</span> <span class="nv">future</span> <span class="o">=</span> <span class="nn">Future</span><span class="p">.</span><span class="n">value</span> <span class="mi">10</span> 
+</code></pre></div>
+<h3>Working with futures</h3>
+
+<p>The <a href="https://engineering.twitter.com/research/publication/your-server-as-a-function">Twitter paper</a> uses several handy functions for working with futures. This section outlines how to implement those functions, as well as a few others which may come in handy.</p>
+
+<h5>flatMap</h5>
+
+<p>This function allows you to take the <code>Success</code> value of one future and create a new future by applying a mapping function to that value. This is analagous to the single argument
+case of the <code>then</code> function of AngularJS&#39; <a href="https://docs.angularjs.org/api/ng/service/$q">$q service</a>.</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">val</span> <span class="n">flatMap</span> <span class="o">=</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="n">Future</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">b</span><span class="o">&gt;)</span> <span class="o">-&gt;</span> <span class="n">Future</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">a</span><span class="o">&gt;</span> <span class="o">-&gt;</span> <span class="n">Future</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">b</span><span class="o">&gt;</span>
+</code></pre></div>
+<p>For our definition of a future <code>flatMap</code> looks like this:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">flatMap</span> <span class="n">f</span> <span class="n">future</span> <span class="o">=</span> 
+    <span class="n">async</span> <span class="o">{</span>
+
+        <span class="c1">//Evaluate the outcome of the first future</span>
+        <span class="k">let!</span> <span class="nv">outcome</span> <span class="o">=</span> <span class="n">future</span>
+
+        <span class="c1">//Apply the mapping on success</span>
+        <span class="k">match</span> <span class="n">outcome</span> <span class="k">with</span>
+        <span class="o">|</span> <span class="n">Success</span> <span class="n">value</span> <span class="o">-&gt;</span> <span class="k">return</span><span class="o">!</span> <span class="o">(</span><span class="n">f</span> <span class="n">value</span><span class="o">)</span>
+        <span class="o">|</span> <span class="n">Failure</span> <span class="n">e</span> <span class="o">-&gt;</span> <span class="n">Failure</span> <span class="n">e</span>
+    <span class="o">}</span>
+</code></pre></div>
+<p>Futures can now be mapped like this:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">createRequest</span> <span class="n">url</span> <span class="o">=</span> <span class="o">...</span>   <span class="c1">//String -&gt; Future&lt;HttpWebRequest&gt;</span>
+<span class="k">let</span> <span class="nv">parseResponse</span> <span class="n">req</span> <span class="o">=</span> <span class="o">...</span>   <span class="c1">//HttpWebRequest -&gt; Data</span>
+
+<span class="c1">//String -&gt; Future&lt;Data&gt;</span>
+<span class="k">let</span> <span class="nv">getData</span> <span class="o">=</span> <span class="n">createRequest</span> <span class="o">&gt;&gt;</span> <span class="o">(</span><span class="nn">Future</span><span class="p">.</span><span class="n">flatMap</span> <span class="n">parseRequest</span><span class="o">)</span>
+</code></pre></div>
+<h5>map</h5>
+
+<p>This function allows us to perform simpler mappings on futures, and is similar to <code>flatMap</code> but instead of using a mapping function with 
+signature <code>&#39;a -&gt; Future&lt;&#39;b&gt;</code> we use one that has signature <code>&#39;a -&gt; &#39;b</code>.</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">//(&#39;a -&gt; &#39;b) -&gt; Future&lt;&#39;a&gt; -&gt; Future&lt;&#39;b&gt;</span>
+<span class="k">let</span> <span class="nv">map</span> <span class="n">f</span> <span class="o">=</span> 
+    <span class="k">let</span> <span class="nv">f</span><span class="k">&#39;</span> <span class="n">value</span> <span class="o">=</span> <span class="n">wrap</span> <span class="o">(</span><span class="n">async</span> <span class="o">{</span> <span class="k">return</span> <span class="o">(</span><span class="n">f</span> <span class="n">value</span><span class="o">)</span> <span class="o">})</span>
+    <span class="k">in</span> <span class="n">flatMap</span> <span class="n">f&#39;</span>
+</code></pre></div>
+<p>This function creates an asychronous version of <code>f</code> and then uses <code>wrap</code> to convert its application to a future. We can now perform simple mappings on futures:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">getOrder</span> <span class="n">orderId</span> <span class="o">=</span> <span class="o">...</span>     <span class="c1">//Int32 -&gt; Future&lt;Order&gt;</span>
+<span class="k">let</span> <span class="nv">getTotalCost</span> <span class="n">order</span> <span class="o">=</span> <span class="o">...</span>   <span class="c1">//Order -&gt; Decimal</span>
+
+<span class="c1">//Int32 -&gt; Future&lt;Decimal&gt;</span>
+<span class="k">let</span> <span class="nv">getOrderCost</span> <span class="o">=</span> <span class="n">getOrder</span> <span class="o">&gt;&gt;</span> <span class="o">(</span><span class="nn">Future</span><span class="p">.</span><span class="n">map</span> <span class="n">getTotalCost</span><span class="o">)</span>
+</code></pre></div>
+<h5>rescue</h5>
+
+<p>As described in the <a href="https://engineering.twitter.com/research/publication/your-server-as-a-function">Twitter paper</a> it is sometimes possible to recover from a failure in a future and to continue as normal. The <code>rescue</code> functions works in a similar
+way to the <code>flatMap</code> function, allowing us to map a <code>Failure</code> outcome:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">//(Exception -&gt; Future&lt;&#39;a&gt;) -&gt; Future&lt;&#39;a&gt; -&gt; Future&lt;&#39;a&gt;</span>
+<span class="k">let</span> <span class="nv">rescue</span> <span class="n">f</span> <span class="n">future</span> <span class="o">=</span> 
+    <span class="n">async</span> <span class="o">{</span>
+
+        <span class="k">let!</span> <span class="nv">outcome</span> <span class="o">=</span> <span class="n">future</span>
+
+        <span class="k">match</span> <span class="n">outcome</span> <span class="k">with</span>
+        <span class="o">|</span> <span class="n">Success</span> <span class="n">value</span> <span class="o">-&gt;</span> <span class="k">return</span> <span class="o">(</span><span class="n">Success</span> <span class="n">value</span><span class="o">)</span>
+        <span class="o">|</span> <span class="n">Failure</span> <span class="n">e</span> <span class="o">-&gt;</span> <span class="k">return</span><span class="o">!</span> <span class="o">(</span><span class="n">f</span> <span class="n">e</span><span class="o">)</span>
+    <span class="o">}</span>
+</code></pre></div>
+<p>In use <code>rescue</code> looks like this:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">createRequest</span> <span class="n">url</span> <span class="o">=</span> <span class="o">...</span>     <span class="c1">//String -&gt; Future&lt;HttpWebRequest&gt;</span>
+<span class="k">let</span> <span class="nv">getResponse</span> <span class="n">req</span> <span class="o">=</span> <span class="o">...</span>       <span class="c1">//HttpWebRequest -&gt; Future&lt;HttpWebResponse&gt;</span>
+<span class="k">let</span> <span class="nv">handleWebException</span> <span class="n">e</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1">//Exception -&gt; Future&lt;HttpWebResponse&gt;</span>
+
+<span class="c1">//String -&gt; Future&lt;HttpWebResponse&gt;</span>
+<span class="k">let</span> <span class="nv">getData</span> <span class="o">=</span> 
+    <span class="n">createRequest</span> 
+    <span class="o">&gt;&gt;</span> <span class="o">(</span><span class="nn">Future</span><span class="p">.</span><span class="n">flatMap</span> <span class="n">getResponse</span><span class="o">)</span> 
+    <span class="o">&gt;&gt;</span> <span class="o">(</span><span class="nn">Future</span><span class="p">.</span><span class="n">rescue</span> <span class="n">handleWebException</span><span class="o">)</span>
+</code></pre></div>
+<p>Here, if <code>getResponse</code> results in a <code>Failure</code> outcome then <code>handleWebException</code> will be used to attempt to recover.</p>
+
+<h5>bind</h5>
+
+<p>The <code>bind</code> function allows us to combine two functions which return futures:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">//(&#39;a -&gt; Future&lt;&#39;b&gt;) -&gt; (&#39;b -&gt; Future&lt;&#39;c&gt;) -&gt; (&#39;a -&gt; Future&lt;&#39;c&gt;)</span>
+<span class="k">let</span> <span class="nv">bind</span> <span class="n">f</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span> <span class="o">&gt;&gt;</span> <span class="o">(</span><span class="n">flatMap</span> <span class="n">g</span><span class="o">)</span>
+</code></pre></div>
+<p>You will notice that I have used the <code>&gt;&gt; (flatMap g)</code> pattern in several examples already. This can now be replaced with <code>bind</code>, for example using the code from
+the section on <code>flatMap</code>:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">//String -&gt; Future&lt;Data&gt;</span>
+<span class="k">let</span> <span class="nv">getData</span> <span class="o">=</span> <span class="nn">Future</span><span class="p">.</span><span class="n">bind</span> <span class="n">createRequest</span> <span class="n">parseResponse</span>
+</code></pre></div>
+<h5>chain</h5>
+
+<p>The <code>chain</code> function simply extends <code>bind</code> to accept any number of futures operating on the same type. This can be handy for creating
+piplines. In order to do this I use <code>List.fold</code> and <code>bind</code> to combine futures, with the <code>value</code> function being used as the starting point to accept
+the starting value.</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">//(&#39;a -&gt; Future&lt;&#39;a&gt;) list -&gt; (&#39;a -&gt; Future&lt;&#39;a&gt;)</span>
+<span class="k">let</span> <span class="nv">chain</span> <span class="n">futures</span> <span class="o">=</span> 
+    <span class="n">futures</span>
+    <span class="o">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">fold</span> <span class="n">bind</span> <span class="n">value</span>
+</code></pre></div>
+<p><strong>Note</strong> that writing this as simply <code>let chain = List.fold bind value</code> causes the compiler to prompt for type annotations which are more verbose than explicitly adding the <code>futures</code>
+parameter.</p>
+
+<p>An example of using <code>chain</code>:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">setAuthenticationHeader</span> <span class="n">req</span> <span class="o">=</span> <span class="o">...</span>   <span class="c1">//HttpWebRequest -&gt; Future&lt;HttpWebRequest&gt;</span>
+<span class="k">let</span> <span class="nv">setContentTypes</span> <span class="n">req</span> <span class="o">=</span> <span class="o">...</span>           <span class="c1">//HttpWebRequest -&gt; Future&lt;HttpWebRequest&gt;</span>
+<span class="k">let</span> <span class="nv">writeBody</span> <span class="n">body</span> <span class="n">req</span> <span class="o">=</span> <span class="o">...</span>            <span class="c1">//object -&gt; HttpWebRequest -&gt; Future&lt;HttpWebRequest&gt;</span>
+
+<span class="c1">//object -&gt; HttpWebRequest -&gt; Future&lt;HttpWebRequest&gt;</span>
+<span class="k">let</span> <span class="nv">configureRequest</span> <span class="n">body</span> <span class="o">=</span> 
+    <span class="k">let</span> <span class="nv">writeBody</span><span class="k">&#39;</span> <span class="o">=</span> <span class="n">writeBody</span> <span class="n">body</span> 
+    <span class="k">in</span> <span class="nn">Future</span><span class="p">.</span><span class="n">chain</span> <span class="o">[</span>
+        <span class="n">setAuthenticationHeader</span><span class="o">;</span>
+        <span class="n">setContentTypes</span><span class="o">;</span>
+        <span class="n">writeBody&#39;</span><span class="o">;</span>
+    <span class="o">]</span>
+</code></pre></div>
+<h4>Operators</h4>
+
+<p>We can make our futures easier to use and more elegant by defining a few <a href="http://www.readcopyupdate.com/blog/2014/09/10/custom-ops-associativity-precedence.html">custom operators</a> for <code>bind</code>, <code>map</code> and <code>rescue</code>:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp">    <span class="c1">//(&#39;a -&gt; Future&lt;&#39;b&gt;) -&gt; (&#39;b -&gt; Future&lt;&#39;c&gt;) -&gt; (a&#39; -&gt; Future&lt;&#39;c&gt;)</span>
+    <span class="k">let</span> <span class="o">(-&gt;&gt;)</span> <span class="o">=</span> <span class="n">bind</span>
+
+    <span class="c1">//(&#39;a -&gt; Future&lt;&#39;b&gt;) -&gt; (&#39;b -&gt; &#39;c) -&gt; (&#39;a -&gt; Future&lt;&#39;c&gt;)</span>
+    <span class="k">let</span> <span class="o">(--&gt;)</span> <span class="n">f</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span> <span class="o">&gt;&gt;</span> <span class="o">(</span><span class="n">map</span> <span class="n">g</span><span class="o">)</span>
+
+    <span class="c1">//(&#39;a -&gt; Future&lt;&#39;b&gt;) -&gt; (Exception -&gt; Future&lt;&#39;b&gt;) -&gt; (&#39;a -&gt; Future&lt;&#39;b&gt;)</span>
+    <span class="k">let</span> <span class="o">(--|)</span> <span class="n">f</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span> <span class="o">&gt;&gt;</span> <span class="o">(</span><span class="n">rescue</span> <span class="n">g</span><span class="o">)</span>
+</code></pre></div>
+<p>These three operators let us build complex functions that return futures by composing several smaller functions that also return futures. This allows us to keep 
+each function small and concise, as well as individually testable. </p>
+
+<p>An example:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">createRequest</span> <span class="n">url</span> <span class="o">=</span> <span class="o">...</span>     <span class="c1">//String -&gt; Future&lt;HttpWebRequest&gt;</span>
+<span class="k">let</span> <span class="nv">configureRequest</span> <span class="n">req</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1">//HttpWebRequest -&gt; Future&lt;HttpWebRequest&gt;</span>
+<span class="k">let</span> <span class="nv">getResponse</span> <span class="n">req</span> <span class="o">=</span> <span class="o">...</span>       <span class="c1">//HttpWebRequest -&gt; Future&lt;HttpWebResponse&gt;</span>
+<span class="k">let</span> <span class="nv">handleException</span> <span class="n">e</span> <span class="o">=</span> <span class="o">...</span>     <span class="c1">//Exception -&gt; Future&lt;HttpWebResponse&gt;</span>
+<span class="k">let</span> <span class="nv">verifyStatus</span> <span class="n">res</span> <span class="o">=</span> <span class="o">...</span>      <span class="c1">//HttpWebResponse -&gt; Future&lt;HttpWebResponse&gt;</span>
+<span class="k">let</span> <span class="nv">parseResponse</span> <span class="n">res</span> <span class="o">=</span> <span class="o">...</span>     <span class="c1">//HttpWebResponse -&gt; Future&lt;Json&gt;</span>
+<span class="k">let</span> <span class="nv">extractData</span> <span class="n">json</span> <span class="o">=</span> <span class="o">...</span>      <span class="c1">//Json -&gt; Data</span>
+
+<span class="c1">//String -&gt; Future&lt;Data&gt;</span>
+<span class="k">let</span> <span class="nv">getData</span> <span class="o">=</span> 
+    <span class="n">createRequest</span>               <span class="c1">//Create the request</span>
+    <span class="o">-&gt;&gt;</span> <span class="n">configureRequest</span>        <span class="c1">//Set headers etc.</span>
+    <span class="o">-&gt;&gt;</span> <span class="n">getResponse</span>             <span class="c1">//Get the response</span>
+    <span class="o">--|</span> <span class="n">handleException</span>         <span class="c1">//Handle exceptions</span>
+    <span class="o">-&gt;&gt;</span> <span class="n">verifyStatus</span>            <span class="c1">//Verify the status code</span>
+    <span class="o">-&gt;&gt;</span> <span class="n">parseResponse</span>           <span class="c1">//Parse the response to JSON</span>
+    <span class="o">--&gt;</span> <span class="n">extractData</span>             <span class="c1">//Extract the pertinent data from the JSON</span>
+</code></pre></div>
+<p>Here we create a future returning function by binding, rescuing and mapping using our three operators. A working example using the GitHub API can be found <a href="https://github.com/wattsm/fsharp-futures">here on GitHub</a>.</p>
+
+<h4>Conclusions</h4>
+
+<p>Futures are a useful programming tool, and in this post I have outlined how I have implemented futures in F#, taking inspiration from Scala&#39;s 
+<code>Future[T]</code> type. A small set of utility functions and operators then allow you to create complex functions by composing smaller, more consise functions.</p>
+
+<p>All of the code is available <a href="https://github.com/wattsm/fsharp-futures">here on GitHub</a>.</p>
+
+</div>
+
+<div class="related">
+  <h3>Related Posts</h3>
+  <ul class="related-posts">
+    
+      <li>
+        <h5>
+          <a href="/programming/2014/11/18/modeling-mars-rovers-with-fsharp/">
+            Modeling Mars rovers with F#
+            <small>18 Nov 2014</small>
+          </a>
+        </h5>
+      </li>
+    
+      <li>
+        <h5>
+          <a href="/programming/2014/12/12/testing-web-api-odata-controllers/">
+            Testing Web API OData controllers
+            <small>12 Dec 2014</small>
+          </a>
+        </h5>
+      </li>
+    
+      <li>
+        <h5>
+          <a href="/programming/2013/11/19/fsharp-serialising-option/">
+            Serialising F#'s Option type using DataContractSerialiser
+            <small>19 Nov 2013</small>
+          </a>
+        </h5>
+      </li>
+    
+  </ul>
+</div>
+    </div>
+
+  </body>
+</html>

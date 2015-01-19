@@ -4,13 +4,242 @@
  <title>Usermaatre</title>
  <link href="http://blog.usermaatre.co.uk/atom.xml" rel="self"/>
  <link href="http://blog.usermaatre.co.uk/"/>
- <updated>2014-12-12T16:12:29+00:00</updated>
+ <updated>2015-01-19T18:53:33+00:00</updated>
  <id>http://blog.usermaatre.co.uk</id>
  <author>
    <name>Mark Watts</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Futures in F#</title>
+   <link href="http://blog.usermaatre.co.uk/programming/2015/01/19/futures-in-fsharp/"/>
+   <updated>2015-01-19T00:00:00+00:00</updated>
+   <id>http://blog.usermaatre.co.uk/programming/2015/01/19/futures-in-fsharp</id>
+   <content type="html">&lt;p&gt;My first exposure to the concept of &lt;a href=&quot;http://en.wikipedia.org/wiki/Futures_and_promises&quot;&gt;futures (or promises)&lt;/a&gt; was probably JavaScript&amp;#39;s &lt;a href=&quot;https://github.com/kriskowal/q/wiki/API-Reference&quot;&gt;Q API&lt;/a&gt; and AngularJS&amp;#39; &lt;a href=&quot;https://docs.angularjs.org/api/ng/service/$q&quot;&gt;$q service&lt;/a&gt;, but it was only after reading Twitter&amp;#39;s 
+&amp;quot;&lt;a href=&quot;https://engineering.twitter.com/research/publication/your-server-as-a-function&quot;&gt;Your Server as a Function&lt;/a&gt;&amp;quot; paper that their usefulness really sank in. The closest thing that .Net has to the Scala futures illustrated in the paper are &lt;code&gt;Task&amp;lt;T&amp;gt;&lt;/code&gt; and 
+F#&amp;#39;s &lt;code&gt;Async&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt;. Although these types are useful they do not provide all of the functionality of Scala&amp;#39;s &lt;code&gt;Future[T]&lt;/code&gt;, nor are they as elegant.&lt;/p&gt;
+
+&lt;p&gt;In this post I will describe an approach to creating something akin to Scala&amp;#39;s &lt;code&gt;Future[T]&lt;/code&gt; in F#.&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;h3&gt;Defining a future&lt;/h3&gt;
+
+&lt;p&gt;A broad definition of a future would be an asynchronous computation which may or may not succeed. As this post is about F# we will base our solution on the 
+&lt;code&gt;Async&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; type (&lt;code&gt;Async.AwaitTask&lt;/code&gt; function can be used to convert a &lt;code&gt;Task&amp;lt;T&amp;gt;&lt;/code&gt; to &lt;code&gt;Async&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; if required).&lt;/p&gt;
+
+&lt;p&gt;We can define a discriminated union to represent the result of a future:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Outcome&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Failure&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Exception&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using this we can define a future as:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Async&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Outcome&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;Creating a future&lt;/h3&gt;
+
+&lt;p&gt;Now that we have a definition of a future, we can think about ways that we might want to create them in our code. &lt;/p&gt;
+
+&lt;p&gt;We could create a future explicitly:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;future&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;n&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Failure&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;However, in order to reduce the amount of boilerplate required and generally neaten our code we can create a helper function to wrap
+an &lt;code&gt;Async&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; to create a future:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//Async&amp;lt;&amp;#39;a&amp;gt; -&amp;gt; Future&amp;lt;&amp;#39;a&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;wrap&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;computation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;n&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;let!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;choice&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Async&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Catch&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;computation&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Outcome&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ofChoice&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;choice&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This function accepts an &lt;code&gt;Async&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; and returns a &lt;code&gt;Future&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt;. We use &lt;code&gt;Async.Catch&lt;/code&gt; for exception handling which converts the &lt;code&gt;Async&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; to &lt;code&gt;Aync&amp;lt;Choice&amp;lt;&amp;#39;T, exn&amp;gt;&amp;gt;&lt;/code&gt;. This &lt;code&gt;Choice&lt;/code&gt; is
+then converted to an &lt;code&gt;Outcome&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; using a simple conversion function:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;ofChoice&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Choice1Of2&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Choice2Of2&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Failure&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You may be asking why I did not just define &lt;code&gt;Future&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; using &lt;code&gt;Choice&amp;lt;&amp;#39;T, exn&amp;gt;&lt;/code&gt;? My main reason is that I think &lt;code&gt;Outcome&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; has better
+semantics - &lt;code&gt;Success&lt;/code&gt; and &lt;code&gt;Failure&lt;/code&gt; have a clearer meaning than &lt;code&gt;Choice1Of2&lt;/code&gt; and &lt;code&gt;Choice2Of2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;We can now create futures with minimal boilerplate and built-in exception handling:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;future&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;nn&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;wrap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Occasionally we may also want to create a future from a value:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wrap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This allows us to do this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//Future&amp;lt;int&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;future&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt; 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;Working with futures&lt;/h3&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://engineering.twitter.com/research/publication/your-server-as-a-function&quot;&gt;Twitter paper&lt;/a&gt; uses several handy functions for working with futures. This section outlines how to implement those functions, as well as a few others which may come in handy.&lt;/p&gt;
+
+&lt;h5&gt;flatMap&lt;/h5&gt;
+
+&lt;p&gt;This function allows you to take the &lt;code&gt;Success&lt;/code&gt; value of one future and create a new future by applying a mapping function to that value. This is analagous to the single argument
+case of the &lt;code&gt;then&lt;/code&gt; function of AngularJS&amp;#39; &lt;a href=&quot;https://docs.angularjs.org/api/ng/service/$q&quot;&gt;$q service&lt;/a&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flatMap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For our definition of a future &lt;code&gt;flatMap&lt;/code&gt; looks like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;flatMap&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;future&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;n&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;//Evaluate the outcome of the first future&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;let!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;outcome&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;future&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;//Apply the mapping on success&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outcome&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Failure&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Failure&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Futures can now be mapped like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createRequest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;//String -&amp;gt; Future&amp;lt;HttpWebRequest&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;parseResponse&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;//HttpWebRequest -&amp;gt; Data&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//String -&amp;gt; Future&amp;lt;Data&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getData&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;createRequest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flatMap&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parseRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h5&gt;map&lt;/h5&gt;
+
+&lt;p&gt;This function allows us to perform simpler mappings on futures, and is similar to &lt;code&gt;flatMap&lt;/code&gt; but instead of using a mapping function with 
+signature &lt;code&gt;&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;b&amp;gt;&lt;/code&gt; we use one that has signature &lt;code&gt;&amp;#39;a -&amp;gt; &amp;#39;b&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//(&amp;#39;a -&amp;gt; &amp;#39;b) -&amp;gt; Future&amp;lt;&amp;#39;a&amp;gt; -&amp;gt; Future&amp;lt;&amp;#39;b&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wrap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;})&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flatMap&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This function creates an asychronous version of &lt;code&gt;f&lt;/code&gt; and then uses &lt;code&gt;wrap&lt;/code&gt; to convert its application to a future. We can now perform simple mappings on futures:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getOrder&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;orderId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;//Int32 -&amp;gt; Future&amp;lt;Order&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getTotalCost&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;order&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;//Order -&amp;gt; Decimal&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//Int32 -&amp;gt; Future&amp;lt;Decimal&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getOrderCost&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getOrder&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getTotalCost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h5&gt;rescue&lt;/h5&gt;
+
+&lt;p&gt;As described in the &lt;a href=&quot;https://engineering.twitter.com/research/publication/your-server-as-a-function&quot;&gt;Twitter paper&lt;/a&gt; it is sometimes possible to recover from a failure in a future and to continue as normal. The &lt;code&gt;rescue&lt;/code&gt; functions works in a similar
+way to the &lt;code&gt;flatMap&lt;/code&gt; function, allowing us to map a &lt;code&gt;Failure&lt;/code&gt; outcome:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//(Exception -&amp;gt; Future&amp;lt;&amp;#39;a&amp;gt;) -&amp;gt; Future&amp;lt;&amp;#39;a&amp;gt; -&amp;gt; Future&amp;lt;&amp;#39;a&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;rescue&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;future&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;n&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;let!&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;outcome&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;future&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outcome&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Failure&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In use &lt;code&gt;rescue&lt;/code&gt; looks like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createRequest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;//String -&amp;gt; Future&amp;lt;HttpWebRequest&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getResponse&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;       &lt;span class=&quot;c1&quot;&gt;//HttpWebRequest -&amp;gt; Future&amp;lt;HttpWebResponse&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handleWebException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//Exception -&amp;gt; Future&amp;lt;HttpWebResponse&amp;gt;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//String -&amp;gt; Future&amp;lt;HttpWebResponse&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getData&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;n&quot;&gt;createRequest&lt;/span&gt; 
+    &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flatMap&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getResponse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 
+    &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rescue&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handleWebException&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here, if &lt;code&gt;getResponse&lt;/code&gt; results in a &lt;code&gt;Failure&lt;/code&gt; outcome then &lt;code&gt;handleWebException&lt;/code&gt; will be used to attempt to recover.&lt;/p&gt;
+
+&lt;h5&gt;bind&lt;/h5&gt;
+
+&lt;p&gt;The &lt;code&gt;bind&lt;/code&gt; function allows us to combine two functions which return futures:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//(&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;b&amp;gt;) -&amp;gt; (&amp;#39;b -&amp;gt; Future&amp;lt;&amp;#39;c&amp;gt;) -&amp;gt; (&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;c&amp;gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;bind&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flatMap&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You will notice that I have used the &lt;code&gt;&amp;gt;&amp;gt; (flatMap g)&lt;/code&gt; pattern in several examples already. This can now be replaced with &lt;code&gt;bind&lt;/code&gt;, for example using the code from
+the section on &lt;code&gt;flatMap&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//String -&amp;gt; Future&amp;lt;Data&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getData&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bind&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;createRequest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parseResponse&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h5&gt;chain&lt;/h5&gt;
+
+&lt;p&gt;The &lt;code&gt;chain&lt;/code&gt; function simply extends &lt;code&gt;bind&lt;/code&gt; to accept any number of futures operating on the same type. This can be handy for creating
+piplines. In order to do this I use &lt;code&gt;List.fold&lt;/code&gt; and &lt;code&gt;bind&lt;/code&gt; to combine futures, with the &lt;code&gt;value&lt;/code&gt; function being used as the starting point to accept
+the starting value.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//(&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;a&amp;gt;) list -&amp;gt; (&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;a&amp;gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;chain&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;futures&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;n&quot;&gt;futures&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fold&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bind&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt; that writing this as simply &lt;code&gt;let chain = List.fold bind value&lt;/code&gt; causes the compiler to prompt for type annotations which are more verbose than explicitly adding the &lt;code&gt;futures&lt;/code&gt;
+parameter.&lt;/p&gt;
+
+&lt;p&gt;An example of using &lt;code&gt;chain&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;setAuthenticationHeader&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;//HttpWebRequest -&amp;gt; Future&amp;lt;HttpWebRequest&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;setContentTypes&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;           &lt;span class=&quot;c1&quot;&gt;//HttpWebRequest -&amp;gt; Future&amp;lt;HttpWebRequest&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;writeBody&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;            &lt;span class=&quot;c1&quot;&gt;//object -&amp;gt; HttpWebRequest -&amp;gt; Future&amp;lt;HttpWebRequest&amp;gt;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//object -&amp;gt; HttpWebRequest -&amp;gt; Future&amp;lt;HttpWebRequest&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;configureRequest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;writeBody&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;writeBody&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Future&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;chain&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;setAuthenticationHeader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;setContentTypes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;writeBody&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;Operators&lt;/h4&gt;
+
+&lt;p&gt;We can make our futures easier to use and more elegant by defining a few &lt;a href=&quot;http://www.readcopyupdate.com/blog/2014/09/10/custom-ops-associativity-precedence.html&quot;&gt;custom operators&lt;/a&gt; for &lt;code&gt;bind&lt;/code&gt;, &lt;code&gt;map&lt;/code&gt; and &lt;code&gt;rescue&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;    &lt;span class=&quot;c1&quot;&gt;//(&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;b&amp;gt;) -&amp;gt; (&amp;#39;b -&amp;gt; Future&amp;lt;&amp;#39;c&amp;gt;) -&amp;gt; (a&amp;#39; -&amp;gt; Future&amp;lt;&amp;#39;c&amp;gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(-&amp;gt;&amp;gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bind&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//(&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;b&amp;gt;) -&amp;gt; (&amp;#39;b -&amp;gt; &amp;#39;c) -&amp;gt; (&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;c&amp;gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(--&amp;gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//(&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;b&amp;gt;) -&amp;gt; (Exception -&amp;gt; Future&amp;lt;&amp;#39;b&amp;gt;) -&amp;gt; (&amp;#39;a -&amp;gt; Future&amp;lt;&amp;#39;b&amp;gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(--|)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rescue&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;These three operators let us build complex functions that return futures by composing several smaller functions that also return futures. This allows us to keep 
+each function small and concise, as well as individually testable. &lt;/p&gt;
+
+&lt;p&gt;An example:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createRequest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;//String -&amp;gt; Future&amp;lt;HttpWebRequest&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;configureRequest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//HttpWebRequest -&amp;gt; Future&amp;lt;HttpWebRequest&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getResponse&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;       &lt;span class=&quot;c1&quot;&gt;//HttpWebRequest -&amp;gt; Future&amp;lt;HttpWebResponse&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;handleException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;//Exception -&amp;gt; Future&amp;lt;HttpWebResponse&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;verifyStatus&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;      &lt;span class=&quot;c1&quot;&gt;//HttpWebResponse -&amp;gt; Future&amp;lt;HttpWebResponse&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;parseResponse&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;//HttpWebResponse -&amp;gt; Future&amp;lt;Json&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;extractData&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;json&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;      &lt;span class=&quot;c1&quot;&gt;//Json -&amp;gt; Data&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//String -&amp;gt; Future&amp;lt;Data&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getData&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;n&quot;&gt;createRequest&lt;/span&gt;               &lt;span class=&quot;c1&quot;&gt;//Create the request&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;configureRequest&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;//Set headers etc.&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getResponse&lt;/span&gt;             &lt;span class=&quot;c1&quot;&gt;//Get the response&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;--|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handleException&lt;/span&gt;         &lt;span class=&quot;c1&quot;&gt;//Handle exceptions&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;verifyStatus&lt;/span&gt;            &lt;span class=&quot;c1&quot;&gt;//Verify the status code&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;-&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parseResponse&lt;/span&gt;           &lt;span class=&quot;c1&quot;&gt;//Parse the response to JSON&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;--&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extractData&lt;/span&gt;             &lt;span class=&quot;c1&quot;&gt;//Extract the pertinent data from the JSON&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here we create a future returning function by binding, rescuing and mapping using our three operators. A working example using the GitHub API can be found &lt;a href=&quot;https://github.com/wattsm/fsharp-futures&quot;&gt;here on GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4&gt;Conclusions&lt;/h4&gt;
+
+&lt;p&gt;Futures are a useful programming tool, and in this post I have outlined how I have implemented futures in F#, taking inspiration from Scala&amp;#39;s 
+&lt;code&gt;Future[T]&lt;/code&gt; type. A small set of utility functions and operators then allow you to create complex functions by composing smaller, more consise functions.&lt;/p&gt;
+
+&lt;p&gt;All of the code is available &lt;a href=&quot;https://github.com/wattsm/fsharp-futures&quot;&gt;here on GitHub&lt;/a&gt;.&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Testing Web API OData controllers</title>
