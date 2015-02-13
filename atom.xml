@@ -4,13 +4,326 @@
  <title>Usermaatre</title>
  <link href="http://blog.usermaatre.co.uk/atom.xml" rel="self"/>
  <link href="http://blog.usermaatre.co.uk/"/>
- <updated>2015-01-19T18:53:33+00:00</updated>
+ <updated>2015-02-13T22:21:11+00:00</updated>
  <id>http://blog.usermaatre.co.uk</id>
  <author>
    <name>Mark Watts</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Using DBSCAN for fun and (mostly) profit in Elite:Dangerous</title>
+   <link href="http://blog.usermaatre.co.uk/programming/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/"/>
+   <updated>2015-02-13T00:00:00+00:00</updated>
+   <id>http://blog.usermaatre.co.uk/programming/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous</id>
+   <content type="html">&lt;p&gt;&lt;a href=&quot;https://www.elitedangerous.com/&quot;&gt;Elite:Dangerous&lt;/a&gt; is the reboot of the classic 1984 space trading, combat and exploration game &lt;a href=&quot;http://en.wikipedia.org/wiki/Elite_%28video_game%29&quot;&gt;Elite&lt;/a&gt; and it has been out for a few months now. After some initial aimless wandering I, like a lot of
+people, settled on a career trading rare goods. These goods, as their name suggests, are rare and available in limited quantities and can bring in huge profits if sold sufficiently far away from 
+their system of origin. &lt;/p&gt;
+
+&lt;p&gt;In order to maximise profits it is desirable to circulate as much as possible between systems that supply rare goods, buying and selling at each stop. One popular strategy
+is to follow a circular route, periodically selling and buying. Another, and the one I favour, is to ferry cargo between clusters of systems that supply rare goods - zipping around one cluster buying 
+goods and then travelling to another to sell before repeating the process.&lt;/p&gt;
+
+&lt;p&gt;The Elite:Dangerous community has done a good job of exploring the game&amp;#39;s trade network and documenting what rare goods are available where, but it can be hard to visualise the systems relative to each
+other, even using the in-game galaxy map. So I thought it would be interesting to see if I could take that community generated data and group the systems together into clusters programmatically.&lt;/p&gt;
+
+&lt;p&gt;This post details how I used an immutable &lt;a href=&quot;http://en.wikipedia.org/wiki/DBSCAN&quot;&gt;DBSCAN&lt;/a&gt; implementation to identify rare goods clusters in Elite:Dangerous.&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;h3&gt;DBSCAN&lt;/h3&gt;
+
+&lt;p&gt;I pondered approaches to clustering rare good systems on and off for a few days, coming up with various approaches before realising that the abstract problem of clustering points in 3D 
+space must have already been thoroughly addressed. &lt;/p&gt;
+
+&lt;p&gt;Some cursory internet research lead me to the &lt;a href=&quot;http://en.wikipedia.org/wiki/DBSCAN&quot;&gt;DBSCAN&lt;/a&gt; algorithm which is one of the most commonly used clustering algorithms in the scientific literature
+with the added bonus that it is both compact and elegant. The Wikipedia article also handily included &lt;a href=&quot;http://en.wikipedia.org/wiki/DBSCAN#Algorithm&quot;&gt;pseudo-code&lt;/a&gt;. &lt;/p&gt;
+
+&lt;p&gt;The algorithm takes three parameters - a data set, the maximum distance between points in a cluster and the minimum number of points required to form a cluster. It then iterates over all points in the data set
+and uses neighbouring points within the maximum distance to create clusters. &lt;/p&gt;
+
+&lt;h3&gt;Modelling rare goods in Elite:Dangerous&lt;/h3&gt;
+
+&lt;p&gt;Before I could implement any clustering algorithm I would need something to cluster. So I wrote a simple model that represents rare goods in Elite:Dangerous. The item that would eventually
+be clustered was the rare good &lt;code&gt;Manifest&lt;/code&gt; of a aystem:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Represents rare goods information for a system&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Manifest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Commodities&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Station&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Commodity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You can see the &lt;a href=&quot;https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/Model.fs&quot;&gt;rest of the model here&lt;/a&gt;, but to summarise:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;A &lt;code&gt;System&lt;/code&gt; has a set of 3D coordinates and is assigned an incremental integer id for use in comparisons.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;Commodity&lt;/code&gt; (rare good) has a name, price etc.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;Station&lt;/code&gt; has a name and orbital radius (I&amp;#39;m looking at you, &lt;a href=&quot;http://i.imgur.com/pWWNQbu.jpg&quot;&gt;Hutton Orbital&lt;/a&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I then took local copies of the systems and rare goods data from &lt;a href=&quot;https://docs.google.com/spreadsheets/d/1QvYs16qagtkYbJkizpYnmLoyVeSW3XY-7dP5TCJnSKg/edit?pli=1#gid=1595245292&quot;&gt;Phil Hibbs&amp;#39; excellent Google spreadsheet&lt;/a&gt;, added the CSV files to my project and loaded the data into my model. If you are interested 
+in the raw data you can see the &lt;a href=&quot;https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/Systems.csv&quot;&gt;systems data here&lt;/a&gt; and the &lt;a href=&quot;https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/Goods.csv&quot;&gt;rare goods data here&lt;/a&gt;, while the &lt;a href=&quot;https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/IO.fs&quot;&gt;data parsing is here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3&gt;Immutable DBSCAN implementation&lt;/h3&gt;
+
+&lt;p&gt;After writing a model and settling on DBSCAN as the clustering algorithm I had a quick look around to see what existing implementations I could find. I tend to avoid mutable state in F# as 
+much as possible so wanted an immutable solution. However, &lt;a href=&quot;http://www.fssnip.net/jo&quot;&gt;the only implementation I could find&lt;/a&gt; was mutable. So, armed with the pseudo-code from Wikipedia 
+I set out to create an immutable version.&lt;/p&gt;
+
+&lt;p&gt;I knew the function was going to be recursive, so the first thing I did was create a simple model of the state of the function that I could easily modify between calls:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Represents the current state of the algorithm&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;State&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ClusterNo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Clusters&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Manifest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Noise&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Manifest&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Visited&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;member&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Empty&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+        &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;ClusterNo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;Clusters&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;Noise&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;Visited&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This allowed me to keep track of the current cluster, what clusters manifests had already been assigned to, what manifests had been marked as noise (potential outliers) and what manifests had already
+been visited.&lt;/p&gt;
+
+&lt;p&gt;I created a separate model for the algorithm settings which would be the input for any code calling the algorithm:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Represents the settings that can be used for this DBSCAN implementation&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Manifests&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Manifest&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;MaxDistance&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Decimal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;MinSize&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Various utility functions aside, my implementation closely followed the pseudo-code example. The function which does the majority of the heavy lifting is &lt;code&gt;expandCluster&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//Expand a cluster by recursively moving out from core points&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;expandCluster&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//Partially apply some functions with settings where appropriate&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getLocalGroup&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getLocalGroup&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;isCore&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;isCore&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;union&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+        &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;append&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;distinctBy&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toList&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;rec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;expandLocalGroup&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifests&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;when&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;visited&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; 
+
+            &lt;span class=&quot;c1&quot;&gt;//Manifest has already been visited; simply add to the current cluster if &lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;//it has not already been clustered.&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+                &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clustered&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;addToCluster&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+
+            &lt;span class=&quot;n&quot;&gt;expandLocalGroup&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifests&lt;/span&gt;
+
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifests&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+
+            &lt;span class=&quot;c1&quot;&gt;//Manifest has not been visited, so add to the visited list. As it has not been visited&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;//it also cannot be clustered, so add to the current cluster. Expand the local group and&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;//if this manifest represents a core point then add the local group to the list of&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;//manifests to consider and recurse.&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;                     
+                &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;recordVisit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;addToCluster&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt;                      
+
+            &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;localGroup&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getLocalGroup&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//Includes self&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;manifests&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+                &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;isCore&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localGroup&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;union&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifests&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localGroup&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;manifests&lt;/span&gt;
+
+            &lt;span class=&quot;n&quot;&gt;expandLocalGroup&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifests&amp;#39;&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localGroup&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;//Increment the cluster, add the current manifest and expand&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;startNewCluster&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;expandLocalGroup&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localGroup&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This function accepts a &lt;code&gt;Settings&lt;/code&gt; input, defines some internal helper functions and returns another function with signature &lt;code&gt;Manifest -&amp;gt; Manifest list -&amp;gt; State -&amp;gt; State&lt;/code&gt; where the parameters
+are the manifest being considered, the list of manifests within the maximum distance (the local group) and the initial state and returning an updated state. This gives the function an 
+effective signature of &lt;code&gt;Settings -&amp;gt; Manifest -&amp;gt; Manifest list -&amp;gt; State -&amp;gt; State&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The function is used to create and expand a cluster, and works by first creating the new cluster by incrementing the &lt;code&gt;ClusterNo&lt;/code&gt; of the state and and assigning the current manifest to that cluster, 
+then an internal recursive function, &lt;code&gt;expandLocalGroup&lt;/code&gt;, is used to evaluate each manifest in the local group - adding and expanding as appropriate.&lt;/p&gt;
+
+&lt;p&gt;You will notice at several points in this algorithm that it is possible for the same manifest to be considered multiple times. In these scenarios the &lt;code&gt;visited&lt;/code&gt; and &lt;code&gt;clustered&lt;/code&gt; functions are used
+to decide whether the manifest can be safely ignored.&lt;/p&gt;
+
+&lt;p&gt;Once I had an implementation of &lt;code&gt;expandCluster&lt;/code&gt; the rest was fairly straight forward:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Runs the DBSCAN algorithm against a list of manifests using the given settings&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;rec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;run&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//Partially apply some functions with settings where appropriate&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getLocalGroup&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getLocalGroup&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;expandCluster&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;expandCluster&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;isCore&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;isCore&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifests&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+                &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;visited&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+
+                    &lt;span class=&quot;c1&quot;&gt;//Point has already been visited, so it can be ignored &lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+
+                    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;localGroup&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getLocalGroup&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt;
+
+                    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;isCore&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localGroup&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+
+                        &lt;span class=&quot;c1&quot;&gt;//Point is core, so it can be used to create a new cluster&lt;/span&gt;
+
+                        &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+                        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;recordVisit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt;
+                        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;expandCluster&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localGroup&lt;/span&gt;
+
+                    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+
+                        &lt;span class=&quot;c1&quot;&gt;//Point is not core, so mark as noise. &lt;/span&gt;
+
+                        &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+                        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;recordVisit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt;
+                        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;markAsNoise&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt;
+
+            &lt;span class=&quot;n&quot;&gt;run&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&amp;#39;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifests&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Again, this function accepts a &lt;code&gt;Settings&lt;/code&gt; and uses it to partially apply some utility functions before returning a function with signature &lt;code&gt;State -&amp;gt; Manifest list -&amp;gt; State&lt;/code&gt;, giving the
+function the effective signature &lt;code&gt;Settings -&amp;gt; Manifest list -&amp;gt; State -&amp;gt; State&lt;/code&gt;. &lt;/p&gt;
+
+&lt;p&gt;Code that calls the DBSCAN implementation is only likely to care about the clustered manifests, and possibly the list of manifests marked as noise. So I wrote another function to keep everything tidy. This
+function is the only publicly visible function in the &lt;code&gt;DBSCAN&lt;/code&gt; module.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Apply the DBSCAN to the given settings, returning the clusters and noise &lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;apply&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;run&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;State&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Empty&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Manifests&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;clusters&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+        &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Clusters&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;groupBy&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fst&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clusterNo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;members&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;manifests&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+                    &lt;span class=&quot;n&quot;&gt;members&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;snd&lt;/span&gt; 
+                    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sortBy&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toList&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clusterNo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;manifests&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sortBy&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fst&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toList&lt;/span&gt;
+
+    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clusters&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Noise&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The function has the signature &lt;code&gt;Settings -&amp;gt; ((Int32 * Manifest list) list * Manifest list)&lt;/code&gt;.
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h3&gt;Putting it all together&lt;/h3&gt;
+
+&lt;p&gt;Now that I had the raw data and the algorithm all I needed to do was put it all together into a usable format. For the sake of brevity I chose a simple console app which prompts
+the user for the maximum distance between systems in a cluster and the minimum number of systems required to make a cluster and then uses the algorithm to generate a list. &lt;/p&gt;
+
+&lt;p&gt;I used the centroid of each cluster to calculate a ballbark figure of the distance between them and then displayed which clusters were further than 100 LY away for each.&lt;/p&gt;
+
+&lt;p&gt;The list of clusters is then formatted and printed to the screen. The user can optionally save to a file that they can refer to later. You can see the &lt;a href=&quot;https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/Program.fs&quot;&gt;source of the console application here&lt;/a&gt;. &lt;/p&gt;
+
+&lt;p&gt;If you are interested in seeing the results without building from source then here are some examples:&lt;/p&gt;
+
+&lt;table style=&quot;text-align:center;&quot;&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Max. distance&lt;/th&gt;
+            &lt;th&gt;Min. size&lt;/th&gt;
+            &lt;th&gt;Clusters&lt;/th&gt;
+            &lt;th&gt;Avg. size&lt;/th&gt;
+            &lt;th&gt;Report&lt;/th&gt;
+        &lt;/tr&gt;       
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;td&gt;40 LY&lt;/td&gt;
+            &lt;td&gt;3&lt;/td&gt;
+            &lt;td&gt;7&lt;/td&gt;
+            &lt;td&gt;8.14&lt;/td&gt;
+            &lt;td&gt;
+                &lt;a href=&quot;/public/ed-rare-reports/40-3.txt&quot; target=&quot;_blank&quot;&gt;Click here&lt;/a&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;30 LY&lt;/td&gt;
+            &lt;td&gt;3&lt;/td&gt;
+            &lt;td&gt;5&lt;/td&gt;
+            &lt;td&gt;6.2&lt;/td&gt;
+            &lt;td&gt;
+                &lt;a href=&quot;/public/ed-rare-reports/30-3.txt&quot; target=&quot;_blank&quot;&gt;Click here&lt;/a&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;30 LY&lt;/td&gt;
+            &lt;td&gt;2&lt;/td&gt;
+            &lt;td&gt;13&lt;/td&gt;
+            &lt;td&gt;3.62&lt;/td&gt;
+            &lt;td&gt;
+                &lt;a href=&quot;/public/ed-rare-reports/30-2.txt&quot; target=&quot;_blank&quot;&gt;Click here&lt;a/&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;25 LY&lt;/td&gt;
+            &lt;td&gt;3&lt;/td&gt;
+            &lt;td&gt;4&lt;/td&gt;
+            &lt;td&gt;5&lt;/td&gt;
+            &lt;td&gt;
+                &lt;a href=&quot;/public/ed-rare-reports/25-3.txt&quot; target=&quot;_blank&quot;&gt;Click here&lt;/a&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;       
+        &lt;tr&gt;
+            &lt;td&gt;25 LY&lt;/td&gt;
+            &lt;td&gt;2&lt;/td&gt;
+            &lt;td&gt;10&lt;/td&gt;
+            &lt;td&gt;3.2&lt;/td&gt;
+            &lt;td&gt;
+                &lt;a href=&quot;/public/ed-rare-reports/25-2.txt&quot; target=&quot;_blank&quot;&gt;Click here&lt;/a&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;       
+        &lt;tr&gt;
+            &lt;td&gt;20 LY&lt;/td&gt;
+            &lt;td&gt;2&lt;/td&gt;
+            &lt;td&gt;10&lt;/td&gt;
+            &lt;td&gt;2.8&lt;/td&gt;
+            &lt;td&gt;
+                &lt;a href=&quot;/public/ed-rare-reports/20-2.txt&quot; target=&quot;_blank&quot;&gt;Click here&lt;/a&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;       
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3&gt;Conclusions&lt;/h3&gt;
+
+&lt;p&gt;In this post I have described how I created an immutable F# implementation of the DBSCAN algorithm, primarily for the purposes of making money in Elite:Dangerous. I enjoyed the combination
+of programming and gaming as it allowed me to play around with concepts that I would not usually encounter during my every day work and was fun to think about, implement and test.&lt;/p&gt;
+
+&lt;p&gt;In the future I may expand the console application to read its data directly from the various community spreadsheets using the Google API, maybe add in some route planning or convert it to a
+web API but for now I have another 4M credits to earn before I can afford an Asp, so if you&amp;#39;ll excuse me...&lt;/p&gt;
+
+&lt;p&gt;(You can view the project &lt;a href=&quot;https://github.com/wattsm/elite-dangerous-rares&quot;&gt;here on GitHub&lt;/a&gt;.)&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Futures in F#</title>

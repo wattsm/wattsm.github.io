@@ -1,0 +1,175 @@
+Configuration
+  Maximum distance: 25 LY
+  Minimum size: 3
+
+Summary
+  Clusters: 4
+  Systems: 20
+  Avg. Systems / Cluster: 5
+
+Commodity clusters (4)
+
+  Cluster 1 (7 systems)
+    System: 39 Tauri
+      Station: Porta (~991.00 ls)
+      Item: Tauri Chimes
+      Price: 938 cr
+      Allowance: 17 T
+      Supply: 1 - 15 T
+
+    System: Fujin
+      Station: Futen Spaceport (~559.00 ls)
+      Item: Fujin Tea
+      Price: 1003 cr
+      Allowance: 10 T
+      Supply: 2 - 10 T
+
+    System: Geras
+      Station: Yurchikhin Port (~1052931.00 ls)
+      Item: Gerasian Gueuze Beer
+      Price: 456 cr
+      Allowance: 29 T
+      Supply: 9 - 14 T
+
+    System: LDS 883
+      Station: Smith Reserve (~54480.00 ls)
+      Item: Chameleon Cloth
+      Price: 1664 cr
+      Allowance: 7 T
+      Supply: 3 - 5 T
+
+    System: Momus Reach
+      Station: Tartarus Point (~413.00 ls)
+      Item: Momus Bog Spaniel
+      Price: 1836 cr
+      Allowance: 7 T
+      Supply: 3 - 7 T
+
+    System: Witchhaul
+      Station: Hornby Terminal (~219.00 ls)
+      Item: Witchhaul Kobe Beef
+      Price: 4520 cr
+      Allowance: 9 T
+      Supply: 2 - 5 T
+
+    System: Wolf 1301
+      Station: Saunders's Dive (~415.00 ls)
+      Item: Wolf Fesh
+      Price: 712 cr
+      Allowance: 13 T
+      Supply: 2 - 4 T
+
+    Potential partner clusters:
+      Cluster 3 @ 182.09 LY
+
+  Cluster 2 (4 systems)
+    System: Alpha Centauri
+      Station: Hutton Oribtal (~6942523.71 ls)
+      Item: Centauri Mega Gin
+      Price: 3319 cr
+      Allowance: 7 T
+      Supply: 1 - 6 T
+
+    System: Altair
+      Station: Solo Orbiter (~661.00 ls)
+      Item: Altairian Skin
+      Price: 489 cr
+      Allowance: 14 T
+      Supply: 2 - 26 T
+
+    System: Epsilon Indi
+      Station: Mansfield Orbiter (~143.00 ls)
+      Item: Indi Bourbon
+      Price: 978 cr
+      Allowance: 11 T
+      Supply: 3 - 8 T
+
+    System: Vega
+      Station: Taylor City (~1100.00 ls)
+      Item: Vega Slimweed
+      Price: 2398 cr
+      Allowance: 8 T
+      Supply: 2 - 6 T
+
+    Potential partner clusters:
+      Cluster 3 @ 114.08 LY
+
+  Cluster 3 (6 systems)
+    System: Diso
+      Station: Shifnalport (~284.00 ls)
+      Item: Diso Ma Corn
+      Price: 340 cr
+      Allowance: 15 T
+      Supply: 1 - 10 T
+
+    System: Lave
+      Station: Lave Station (~302.00 ls)
+      Item: Lavian Brandy
+      Price: 3543 cr
+      Allowance: 7 T
+      Supply: 4 - 7 T
+
+    System: Leesti
+      Station: George Lucas (~257.00 ls)
+      Item: Leestian Evil Juice
+      Price: 462 cr
+      Allowance: 14 T
+      Supply: 1 - 9 T
+
+      Station: George Lucas (~257.00 ls)
+      Item: Azure Milk
+      Price: 4164 cr
+      Allowance: 7 T
+      Supply: 2 - 7 T
+
+    System: Orrere
+      Station: Sharon Lee Free Market (~963.00 ls)
+      Item: Orrerian Vicious Brew
+      Price: 533 cr
+      Allowance: 16 T
+      Supply: 6 - 7 T
+
+    System: Uszaa
+      Station: Guest Installation (~4350.00 ls)
+      Item: Uszaian Tree Grub
+      Price: 965 cr
+      Allowance: 14 T
+      Supply: 3 - 11 T
+
+    System: Zaonce
+      Station: Ridley Scott (~400.00 ls)
+      Item: Leathery Eggs
+      Price: 24590 cr
+      Allowance: 1 T
+      Supply: ?
+
+    Potential partner clusters:
+      Cluster 1 @ 182.09 LY
+      Cluster 2 @ 114.08 LY
+      Cluster 4 @ 172.97 LY
+
+  Cluster 4 (3 systems)
+    System: Kappa Fornacis
+      Station: Harvestport (~918.00 ls)
+      Item: Onion Head
+      Price: 773 cr
+      Allowance: 17 T
+      Supply: 1 - 10 T
+
+    System: Tanmark
+      Station: Cassie-L-Peia (~414.00 ls)
+      Item: Tanmark Tranquil Tea
+      Price: 1814 cr
+      Allowance: 9 T
+      Supply: 1 - 5 T
+
+    System: Tarach Tor
+      Station: Tranquillity (~359.00 ls)
+      Item: Tarach Spice
+      Price: 1056 cr
+      Allowance: 8 T
+      Supply: 1 - 7 T
+
+    Potential partner clusters:
+      Cluster 3 @ 172.97 LY
+

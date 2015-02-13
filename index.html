@@ -26,6 +26,7 @@
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
   
+  
   <!-- Google analytics -->
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -37,6 +38,7 @@
     ga('send', 'pageview');
 
   </script>
+  
 </head>
 
 
@@ -63,27 +65,6 @@
 	
 	<p>&copy; 2015. All rights reserved.</p>
 	
-	<hr />
-	
-	<p style="font-size:80%;">
-		<a style='font-size: 70%' href='/tags/beyond-earth'>Beyond Earth</a>
-<a style='font-size: 70%' href='/tags/castle-windsor'>Castle Windsor</a>
-<a style='font-size: 70%' href='/tags/ci'>CI</a>
-<a style='font-size: 70%' href='/tags/civilization'>Civilization</a>
-<a style='font-size: 70%' href='/tags/design'>Design</a>
-<a style='font-size: 70%' href='/tags/entity-framework'>Entity Framework</a>
-<a style='font-size: 170%' href='/tags/fsharp'>F#</a>
-<a style='font-size: 70%' href='/tags/moq'>Moq</a>
-<a style='font-size: 70%' href='/tags/odata'>OData</a>
-<a style='font-size: 70%' href='/tags/psexec'>PsExec</a>
-<a style='font-size: 70%' href='/tags/reflection'>Reflection</a>
-<a style='font-size: 113%' href='/tags/tfs'>TFS</a>
-<a style='font-size: 138%' href='/tags/unit-testing'>Unit Testing</a>
-<a style='font-size: 113%' href='/tags/webapi'>WebAPI</a>
-<a style='font-size: 70%' href='/tags/wix'>Wix</a>
-<a style='font-size: 138%' href='/tags/xunit'>xUnit</a>
-
-	</p>	
 	
   </div>
 </div>
@@ -91,6 +72,43 @@
 
     <div class="content container">	
       <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">
+        Using DBSCAN for fun and (mostly) profit in Elite:Dangerous
+      </a>
+    </h1>
+
+    <span class="post-date">
+		13 Feb 2015
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>, 	
+
+	
+	<a href="/tags/elite-dangerous">Elite Dangerous</a>	
+
+	</span>
+
+    <p><a href="https://www.elitedangerous.com/">Elite:Dangerous</a> is the reboot of the classic 1984 space trading, combat and exploration game <a href="http://en.wikipedia.org/wiki/Elite_%28video_game%29">Elite</a> and it has been out for a few months now. After some initial aimless wandering I, like a lot of
+people, settled on a career trading rare goods. These goods, as their name suggests, are rare and available in limited quantities and can bring in huge profits if sold sufficiently far away from 
+their system of origin. </p>
+
+<p>In order to maximise profits it is desirable to circulate as much as possible between systems that supply rare goods, buying and selling at each stop. One popular strategy
+is to follow a circular route, periodically selling and buying. Another, and the one I favour, is to ferry cargo between clusters of systems that supply rare goods - zipping around one cluster buying 
+goods and then travelling to another to sell before repeating the process.</p>
+
+<p>The Elite:Dangerous community has done a good job of exploring the game&#39;s trade network and documenting what rare goods are available where, but it can be hard to visualise the systems relative to each
+other, even using the in-game galaxy map. So I thought it would be interesting to see if I could take that community generated data and group the systems together into clusters programmatically.</p>
+
+<p>This post details how I used an immutable <a href="http://en.wikipedia.org/wiki/DBSCAN">DBSCAN</a> implementation to identify rare goods clusters in Elite:Dangerous.</p>
+
+	
+	<a href="/programming/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">Continue reading &raquo;</a>	
+  </div>
   
   <div class="post">
     <h1 class="post-title">
@@ -226,35 +244,6 @@ remotely using <a href="http://technet.microsoft.com/en-gb/sysinternals/bb897553
 
 	
 	<a href="/programming/2014/11/20/psexec-fsi-console-clear/">Continue reading &raquo;</a>	
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/programming/2014/11/18/modeling-mars-rovers-with-fsharp/">
-        Modeling Mars rovers with F#
-      </a>
-    </h1>
-
-    <span class="post-date">
-		18 Nov 2014
-&middot;
-Programming 
-
-	&middot;
-	<a href="/tags/fsharp">F#</a>, 	
-
-	
-	<a href="/tags/design">Design</a>	
-
-	</span>
-
-    <p>Although currently somewhat overshadowed by <a href="http://www.esa.int/Our_Activities/Space_Science/Rosetta">ESA&#39;s amazing Rosetta mission</a>, <a href="http://en.wikipedia.org/wiki/Sojourner_(rover)">Mars rovers</a> <a href="http://en.wikipedia.org/wiki/Opportunity_(rover)">are awesome</a> <a href="http://en.wikipedia.org/wiki/Spirit_(rover)">in their</a> <a href="http://en.wikipedia.org/wiki/Curiosity_(rover)">own right</a>. 
-So when <a href="http://www.readcopyupdate.com/">a colleague</a> pointed me in the direction of 
-<a href="http://www.techinterviewpuzzles.com/2010/09/mars-rovers-thoughtworks-puzzles.html#Mars_Rovers_Puzzle">an interview puzzle about modeling Mars rovers</a>
-and mentioned that he was writing an (immutable) F# implementation I decided to follow suit and have a go myself.</p>
-
-	
-	<a href="/programming/2014/11/18/modeling-mars-rovers-with-fsharp/">Continue reading &raquo;</a>	
   </div>
   
 </div>
