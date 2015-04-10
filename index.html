@@ -75,6 +75,37 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/programming/2015/04/10/odata-graph-delta/">
+        WebAPI OData GraphDelta<T>
+      </a>
+    </h1>
+
+    <span class="post-date">
+		10 Apr 2015
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/webapi">WebAPI</a>, 	
+
+	
+	<a href="/tags/odata">OData</a>	
+
+	</span>
+
+    <p>In the course of a recent project I ran into a problem with the standard <code>Delta&lt;T&gt;</code> included in Microsoft WebAPI&#39;s OData functionality: it treats complex properties as atomic 
+values meaning that instead of applying the delta to the existing value of the complex property it will create a new, blank value, apply the delta to that
+and then set the complex property to the result. </p>
+
+<p><a href="http://stackoverflow.com/questions/27963113/using-deltat-with-complex-objects">I asked about this behaviour on StackOverflow</a> and it turns out that it&#39;s a <a href="https://github.com/OData/WebApi/issues/135">known issue</a>. This post briefly outlines how I implemented an alternative to <code>Delta&lt;T&gt;</code> that handled changes to 
+complex types the same way as changes are handled for entities. The post will feature minimal code but source code is <a href="https://github.com/wattsm/odata-graph-delta">available on GitHub</a>.</p>
+
+	
+	<a href="/programming/2015/04/10/odata-graph-delta/">Continue reading &raquo;</a>	
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/programming/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">
         Using DBSCAN for fun and (mostly) profit in Elite:Dangerous
       </a>
@@ -216,34 +247,6 @@ I was pleasantly surprised then to find out that <a href="http://docs.castleproj
 
 	
 	<a href="/programming/2014/11/27/testing-dependency-registrations-with-castle-windsor/">Continue reading &raquo;</a>	
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/programming/2014/11/20/psexec-fsi-console-clear/">
-        FSI, PsExec and Console.Clear
-      </a>
-    </h1>
-
-    <span class="post-date">
-		20 Nov 2014
-&middot;
-Programming 
-
-	&middot;
-	<a href="/tags/fsharp">F#</a>, 	
-
-	
-	<a href="/tags/psexec">PsExec</a>	
-
-	</span>
-
-    <p>I recently struggled with an error that I encountered during the process of setting up a continuous deployment TFS build
-and I thought that I would write briefly about it in the hope of helping anyone else running into the same issue. The issue arises running <a href="http://msdn.microsoft.com/en-us/library/dd233175.aspx">FSI</a>
-remotely using <a href="http://technet.microsoft.com/en-gb/sysinternals/bb897553.aspx">PsExec</a>.</p>
-
-	
-	<a href="/programming/2014/11/20/psexec-fsi-console-clear/">Continue reading &raquo;</a>	
   </div>
   
 </div>

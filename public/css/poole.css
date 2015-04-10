@@ -55,7 +55,7 @@ html {
 }
 @media (min-width: 38em) {
   html {
-    font-size: 20px;
+    font-size: 18px;
   }
 }
 
@@ -155,8 +155,7 @@ pre {
   font-family: Menlo, Monaco, "Courier New", monospace;
 }
 code {
-  padding: .25em .5em;
-  font-size: 85%;
+  padding: .25em .5em;  
   color: #bf616a;
   background-color: #F3F3F3;
   border-radius: 3px;
@@ -176,7 +175,7 @@ pre {
 }
 pre code {
   padding: 0;
-  font-size: 80%;
+  font-size: 85%;
   color: inherit;
   background-color: transparent;
 }
