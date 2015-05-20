@@ -19,9 +19,21 @@
   <link rel="stylesheet" href="/public/css/hyde.css">
   <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
   
+  <style type="text/css">
+	
+	.left-align {
+		text-align:left;
+	}
+	
+	.header-bug {
+		font-size:0px;
+	}
+	
+  </style>
+  
   <!-- Icons -->
   <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
-                                 <link rel="shortcut icon" href="/public/favicon.ico">
+  <link rel="shortcut icon" href="/public/favicon.ico">
 
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
@@ -72,6 +84,36 @@
 
     <div class="content container">	
       <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2015/05/20/modeling-historical-dates/">
+        Modeling historical dates
+      </a>
+    </h1>
+
+    <span class="post-date">
+		20 May 2015
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>	
+
+&middot;
+<a data-disqus-identifier="Modeling historical dates" href="/programming/2015/05/20/modeling-historical-dates/#disqus_thread">0 Comments</a>
+	</span>
+
+    <p>As a part of a side project I continually fail to actually start I would need the ability to sort events based on a date. Sounds simple, right? And so it would be if 
+all of the dates were CE (or AD if you prefer) or if .Net&#39;s DateTime type supported BCE dates. Unfortunately these dates could be BCE or CE and System.DateTime&#39;s 
+minimum value is 1st Jan 1 CE. Further complicating the matter is the fact that these dates come from historical sources which can be extremely vague (e.g. &quot;before January 17 BCE&quot;).</p>
+
+<p>In this post I will look at modeling historical dates using F#. I&#39;ll look at creating a model that captures the vagueness of historical dates and a method for sorting them which is 
+further complicated by the surprisingly chequered history of leap years.</p>
+
+	
+	<a href="/programming/2015/05/20/modeling-historical-dates/">Continue reading &raquo;</a>	
+  </div>
   
   <div class="post">
     <h1 class="post-title">
@@ -213,44 +255,6 @@ on EF from my controllers.</p>
 
 	
 	<a href="/programming/2014/12/12/testing-web-api-odata-controllers/">Continue reading &raquo;</a>	
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/programming/2014/11/27/testing-dependency-registrations-with-castle-windsor/">
-        Testing dependency registrations with Castle Windsor
-      </a>
-    </h1>
-
-    <span class="post-date">
-		27 Nov 2014
-&middot;
-Programming 
-
-	&middot;
-	<a href="/tags/castle-windsor">Castle Windsor</a>, 	
-
-	
-	<a href="/tags/xunit">xUnit</a>, 	
-
-	
-	<a href="/tags/unit-testing">Unit Testing</a>	
-
-&middot;
-<a data-disqus-identifier="Testing dependency registrations with Castle Windsor" href="/programming/2014/11/27/testing-dependency-registrations-with-castle-windsor/#disqus_thread">0 Comments</a>
-	</span>
-
-    <p>Until recently one of the most frustrating bugs I have routinely found in my own code is incomplete dependency registrations. </p>
-
-<p>It&#39;s a scenario I&#39;m sure everyone is familiar with - you&#39;ve just written some new components and got the unit tests passing, so now it&#39;s time to fire up the 
-application and see your creations in action. Then as soon as the application starts it falls over because you forgot to add your new components to the <a href="http://en.wikipedia.org/wiki/Inversion_of_control">IOC</a> container,
-leaving you with unresolvable dependencies.</p>
-
-<p>I would curse my own forgetfulness as I fixed the problem and would often think to myself that it would be really handy if there was a way to test your dependency registrations.
-I was pleasantly surprised then to find out that <a href="http://docs.castleproject.org/Default.aspx?Page=MainPage&amp;NS=Windsor&amp;AspxAutoDetectCookieSupport=1">Castle Windsor</a> supports exactly these kinds of tests.</p>
-
-	
-	<a href="/programming/2014/11/27/testing-dependency-registrations-with-castle-windsor/">Continue reading &raquo;</a>	
   </div>
   
 </div>

@@ -19,9 +19,21 @@
   <link rel="stylesheet" href="/public/css/hyde.css">
   <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
   
+  <style type="text/css">
+	
+	.left-align {
+		text-align:left;
+	}
+	
+	.header-bug {
+		font-size:0px;
+	}
+	
+  </style>
+  
   <!-- Icons -->
   <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
-                                 <link rel="shortcut icon" href="/public/favicon.ico">
+  <link rel="shortcut icon" href="/public/favicon.ico">
 
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
@@ -72,6 +84,40 @@
 
     <div class="content container">	
       <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">
+        Creating versioned installers using Wix and TFS 2010
+      </a>
+    </h1>
+
+    <span class="post-date">
+		16 May 2014
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/tfs">TFS</a>, 	
+
+	
+	<a href="/tags/wix">Wix</a>	
+
+&middot;
+<a data-disqus-identifier="Creating versioned installers using Wix and TFS 2010" href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/#disqus_thread">0 Comments</a>
+	</span>
+
+    <p>Recently I created a Wix installer for a product and wanted to include the version number in the installer name – e.g. “My Product.1.2.3.msi”. 
+I found this post which describes how to edit the .wixproj file to add a pre-build task to update the output filename to include a version. 
+This worked perfectly when building the project locally, but not as a part of our TFS 2010 automated build. The reason for this is that TFS 2010 
+outputs builds to the /Binaries/ directory rather than their local /bin/, so the relative paths in the solution given break. In this post I describe how I 
+edited the .wixproj file to work both locally and as a part of a TFS 2010 automated build.</p>
+
+<p>I also wanted my MSI  to use a three part version number rather than the default four part used.</p>
+
+	
+	<a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">Continue reading &raquo;</a>	
+  </div>
   
   <div class="post">
     <h1 class="post-title">

@@ -4,13 +4,439 @@
  <title>Usermaatre</title>
  <link href="http://blog.usermaatre.co.uk/atom.xml" rel="self"/>
  <link href="http://blog.usermaatre.co.uk/"/>
- <updated>2015-05-06T15:56:20+01:00</updated>
+ <updated>2015-05-20T19:18:15+01:00</updated>
  <id>http://blog.usermaatre.co.uk</id>
  <author>
    <name>Mark Watts</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Modeling historical dates</title>
+   <link href="http://blog.usermaatre.co.uk/programming/2015/05/20/modeling-historical-dates/"/>
+   <updated>2015-05-20T00:00:00+01:00</updated>
+   <id>http://blog.usermaatre.co.uk/programming/2015/05/20/modeling-historical-dates</id>
+   <content type="html">&lt;p&gt;As a part of a side project I continually fail to actually start I would need the ability to sort events based on a date. Sounds simple, right? And so it would be if 
+all of the dates were CE (or AD if you prefer) or if .Net&amp;#39;s DateTime type supported BCE dates. Unfortunately these dates could be BCE or CE and System.DateTime&amp;#39;s 
+minimum value is 1st Jan 1 CE. Further complicating the matter is the fact that these dates come from historical sources which can be extremely vague (e.g. &amp;quot;before January 17 BCE&amp;quot;).&lt;/p&gt;
+
+&lt;p&gt;In this post I will look at modeling historical dates using F#. I&amp;#39;ll look at creating a model that captures the vagueness of historical dates and a method for sorting them which is 
+further complicated by the surprisingly chequered history of leap years.&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;h3&gt;Setting the scene&lt;/h3&gt;
+
+&lt;p&gt;To put the issues with historical dates into some context, consider the following list of dates taken from this &lt;a href=&quot;http://en.wikipedia.org/wiki/List_of_Roman_battles&quot;&gt;list of Roman battles&lt;/a&gt;:&lt;/p&gt;
+
+&lt;table style=&quot;text-align:left;&quot;&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+        &lt;th&gt;Date&lt;/th&gt;
+        &lt;th&gt;Description&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+        &lt;td&gt;June 58 BCE&lt;/td&gt;
+        &lt;td&gt;Battle of Arar&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;9th August 48 BCE&lt;/td&gt;
+        &lt;td&gt;Battle of Pharsalus&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;43 CE&lt;/td&gt;
+        &lt;td&gt;Battle of the Medway&lt;/td&gt;
+    &lt;/tr&gt;   
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;As you can see, the dates range from complete to just the year. In addition you will frequently see events described as occuring &amp;quot;some time before July 77 CE&amp;quot; or &amp;quot;some time
+between March and May 1872 CE&amp;quot;.&lt;/p&gt;
+
+&lt;p&gt;There are three challenges here:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;System.DateTime cannot be used as it does not support anything prior to 01/01/0001.&lt;/li&gt;
+&lt;li&gt;Need to support partial dates.&lt;/li&gt;
+&lt;li&gt;Need to support concepts like &amp;quot;before&amp;quot;, &amp;quot;after&amp;quot; and &amp;quot;between&amp;quot;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There are some .Net libraries out there that look to address the first point (e.g. &lt;a href=&quot;http://nodatime.org/&quot;&gt;nodatime&lt;/a&gt;) but on balance it would seem that a custom date model is in order.&lt;/p&gt;
+
+&lt;h3&gt;Modeling dates&lt;/h3&gt;
+
+&lt;p&gt;Our first task is to create a model which captures both the partial nature of some dates - e.g. Jun 865 CE - and the vagueness of an event&amp;#39;s relation to a date - e.g. before 
+Jun 865 CE. We can do this by splitting these concepts between two model types.&lt;/p&gt;
+
+&lt;p&gt;Firstly, let&amp;#39;s tackle partial dates by creating a &lt;code&gt;FuzzyDate&lt;/code&gt; model. I am broadly using the &lt;a href=&quot;http://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/&quot;&gt;single case union&lt;/a&gt; approach to models in F#.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Discriminated union for the two eras&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Era&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BCE&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CE&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Contains functions and types for working with &amp;quot;fuzzy&amp;quot; historical dates&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RequireQualifiedAccess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;]&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;sd&quot;&gt;///Describes a basic fuzzy date&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Day&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;option&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Month&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;option&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Era&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Era&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;member&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Empty&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+            &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;Day&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;Month&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;Year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;Era&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Era&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;///Instance union type&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Instance&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FuzzyDate&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Data&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All dates using this model must have an era and year but the month and day are optional. We can define some functions to act as constructors for the patterns we want
+to support. I have created a &lt;code&gt;Outcome&amp;lt;T&amp;gt;&lt;/code&gt; type to represent success/failure conditions and will use it here to return either a &lt;code&gt;FuzzyDate.Instance&lt;/code&gt; or an error message.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Validate a given date&amp;#39;s components&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;validate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;day&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;month&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unwrap&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;day&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unwrap&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;day&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt; 
+        &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Some&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;The year cannot be less than 1.&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;month&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;month&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt; 
+        &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Some&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;The month must be between 1 and 12.&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;day&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;day&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Month&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getDayCount&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt; 
+        &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Some&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;The day is not valid for the given month and year.&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;None&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Validate a date&amp;#39;s components and then create a success result if valid&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;day&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(_&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;validate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;day&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Some&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Error&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;message&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; 
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;date&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+            &lt;span class=&quot;n&quot;&gt;FuzzyDate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Empty&lt;/span&gt; 
+                    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; 
+                        &lt;span class=&quot;n&quot;&gt;Day&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;day&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; 
+                        &lt;span class=&quot;n&quot;&gt;Month&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; 
+                        &lt;span class=&quot;n&quot;&gt;Year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; 
+                        &lt;span class=&quot;n&quot;&gt;Era&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; 
+                &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Create a day, or fully specified date - e.g. 31st Jan 42B CE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createDay&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;day&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Some&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Some&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;day&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Create a month - e.g. Jan 42 BCE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createMonth&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Some&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;None&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Create a year - e.g. 42 BCE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;None&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;None&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now we can create full or partial dates in the three basic formats:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//Jun 20 1832 CE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;complete&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createDay&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CE&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1832&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;20&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//May 7 BCE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;quiteVague&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createMonth&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BCE&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//766 BCE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;reallyVague&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BCE&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;766&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now that we have support for partial dates we can start thinking about how to model on/before/after/between type dates. &lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;In this context between means that an event occurred at some point between two dates, but depending on your use case it could also be taken to mean 
+that an event started and finished on the dates given.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To model on/before/after/between event dates I created an &lt;code&gt;EventDate&lt;/code&gt; model which builds upon &lt;code&gt;FuzzyDate&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Contains functions and types for historical event dates&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RequireQualifiedAccess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;]&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;EventDate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;///Union describing various types of event date&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Specific&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Instance&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Before&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Instance&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;After&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Instance&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Between&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Instance&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Instance&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;///Instance union type&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Instance&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EventDate&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Data&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using this model we can represent events that occurred on a specific date, before a date, after a date or at some point between two dates. Again we can add some constructor functions.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Creates a single specific date - e.g. 18th Apr 1472 CE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createSpecific&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EventDate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Specific&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Creates a &amp;quot;some time before&amp;quot; date - e.g. &amp;lt; 13 BCE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createBefore&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EventDate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Before&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Creates a &amp;quot;some time after&amp;quot; date - e.g. &amp;gt; 13 BCE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createAfter&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EventDate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;After&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Creates a date range - e.g. 13BCE - 14th Jun 34 CE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;createBetween&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;first&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;last&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;firstValue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getSortValue&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;first&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;secondValue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getSortValue&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;last&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;firstValue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;secondValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Error&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;The second date cannot come before the first.&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;        
+        &lt;span class=&quot;n&quot;&gt;Success&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;EventDate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Between&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;last&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We can now model a variety of vague historical dates.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//On 25th Dec 800 CE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;exact&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;EventDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createSpecific&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createDay&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CE&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;800&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//Between Jan and 3rd Feb 1701 CE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;quiteVague&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;nn&quot;&gt;EventDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createRange&lt;/span&gt; 
+    &lt;span class=&quot;o&quot;&gt;&amp;lt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createMonth&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CE&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1701&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 
+    &lt;span class=&quot;o&quot;&gt;&amp;lt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createDay&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CE&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1701&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//Before 700 BCE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;reallyVague&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;EventDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createBefore&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;createYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BCE&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;700&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I also created a module for parsing both &lt;code&gt;FuzzyDate&lt;/code&gt; and &lt;code&gt;EventDate&lt;/code&gt; from strings - you can see the &lt;a href=&quot;https://github.com/wattsm/historical-dates/blob/master/HistoricalDates.App/Parser.fs&quot;&gt;source code here on GitHub&lt;/a&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;date&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Parser&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;readEventDate&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;19 Oct 1691 CE&amp;quot;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//Outcome&amp;lt;EventDate&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;Sorting dates&lt;/h3&gt;
+
+&lt;p&gt;As I mentioned in the introduction my hypothetical app would need to be able to sort a series of events into chronological order. The vague nature of the dates
+and the mix of BCE and CE dates complicate sorting somewhat.&lt;/p&gt;
+
+&lt;p&gt;In order to support sorting of &lt;code&gt;FuzzyDate&lt;/code&gt; I added the &lt;code&gt;getSortValue&lt;/code&gt; function which returns an integer which can used when sorting - e.g. using &lt;code&gt;Seq.sortBy&lt;/code&gt;. The value 
+returned is the difference, in days, between the date provided and 1st Jan 1 BCE (the beginning of &lt;a href=&quot;http://en.wikipedia.org/wiki/Astronomical_year_numbering&quot;&gt;astronomical year&lt;/a&gt; zero).  When dealing with partial dates a default value of 1 is simply used 
+for the missing part(s) of the date so both Jan 1 BCE and 1 BCE become 1st Jan 1 BCE. The table below contains examples of the result of &lt;code&gt;FuzzyDate.getSortValue&lt;/code&gt;,&lt;/p&gt;
+
+&lt;table class=&quot;left-align&quot;&gt;
+    &lt;thead&gt;
+        &lt;th&gt;Date&lt;/th&gt;       
+        &lt;th&gt;Sort value&lt;/th&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1 Jan 2 BCE&lt;/td&gt;
+            &lt;td&gt;-365&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;31st Dec 2 BCE&lt;/td&gt;
+            &lt;td&gt;-1&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1st Jan 1 BCE&lt;/td&gt;
+            &lt;td&gt;0&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;2nd Jan 1 BCE&lt;/td&gt;
+            &lt;td&gt;1&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1st Jan 1 CE&lt;/td&gt;
+            &lt;td&gt;365&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The method for calculating the number of days since 1st Jan 1 BCE for a date differs slightly depending on whether the date is BCE or CE. For CE dates we can simply sum 
+the number of days since 1st Jan 1 CE and then add the number of days in 1 BCE. &lt;/p&gt;
+
+&lt;p&gt;In the code below &lt;code&gt;data&lt;/code&gt; is of type &lt;code&gt;FuzzyDate.Data&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//The sum of all days to date in the CE era plus the number of days in 1 BCE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dayCountCe&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sumBy&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Year&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Year&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getDayNumber&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;day&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+                &lt;span class=&quot;nn&quot;&gt;Year&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getDayCount&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dayCountCe&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Year&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getDayCount&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BCE&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For BCE dates things are slightly different because the dates run &amp;quot;backwards&amp;quot; - i.e. 3 BCE comes &lt;em&gt;before&lt;/em&gt; 2 BCE. For dates in 1 BCE itself we simply count the days as per the CE
+method. For any other year, Y, we sum the number of days in the the years between 2 and (Y - 1), if appropriate, add the number of days &lt;em&gt;remaining&lt;/em&gt; in the year Y and add then 1 
+(because there are 0 days remaining in the year on 31st Dec, but we want the number of days to 1st Jan of the next year). &lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;c1&quot;&gt;//Remember that BCE dates are backwards - e.g. 31st Dec 3BCE moves to 1st Jan 2BCE. &lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sumBy&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Year&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Year&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getDaysRemaining&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BCE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;month&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;day&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+            &lt;span class=&quot;nn&quot;&gt;Year&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getDayCount&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BCE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The result is then negated for dates prior to 1st Jan 1 BCE. &lt;/p&gt;
+
+&lt;p&gt;This value allows us to chronologically sort a series of &lt;code&gt;FuzzyDate&lt;/code&gt; instances. To support chronological sorting of &lt;code&gt;EventDate&lt;/code&gt; instances I added a corresponding
+&lt;code&gt;getSortValue&lt;/code&gt; function which simply uses &lt;code&gt;FuzzyDate.getSortValue&lt;/code&gt; to get a baseline value, converts it to a decimal and then tweaks it slightly so that the before, after
+and between cases are placed appropriately - e.g. &amp;quot;before 18 BCE&amp;quot; should appear in the sorted list before &amp;quot;18 BCE&amp;quot;. The table below contains examples of the result of
+&lt;code&gt;EventDate.getSortValue&lt;/code&gt;.&lt;/p&gt;
+
+&lt;table class=&quot;left-align&quot;&gt;
+    &lt;thead&gt;
+        &lt;th&gt;Date&lt;/th&gt;       
+        &lt;th&gt;Sort value&lt;/th&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Before 2nd Jan 1 BCE&lt;/td&gt;
+            &lt;td&gt;0.9&lt;/td&gt;
+        &lt;/tr&gt;
+    
+        &lt;tr&gt;
+            &lt;td&gt;On 2nd Jan 1 BCE&lt;/td&gt;
+            &lt;td&gt;1.0&lt;/td&gt;        
+        &lt;/tr&gt;
+        
+        &lt;tr&gt;
+            &lt;td&gt;After 2nd Jan 1 BCE&lt;/td&gt;
+            &lt;td&gt;1.1&lt;/td&gt;
+        &lt;/tr&gt;
+        
+        &lt;tr&gt;
+            &lt;td&gt;Between 2nd Jan 1 BCE and 2nd Feb 1 BCE&lt;/td&gt;
+            &lt;td&gt;1.1&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;In the code below &lt;code&gt;data&lt;/code&gt; is of type &lt;code&gt;EventDate.Data&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getSortValue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;apply&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;adjustment&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+        &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Specific&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;                                 &lt;span class=&quot;c1&quot;&gt;//Absolute date&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Before&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;                                  &lt;span class=&quot;c1&quot;&gt;//Just before events on date&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Between&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;After&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;                &lt;span class=&quot;c1&quot;&gt;//Just after events on date&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;decimal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;FuzzyDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getSortValue&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;adjustment&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We now have way of sorting event dates chronologically, but there&amp;#39;s a moderately sized elephant in the room: leap years. Several functions included in the snippets above requires us
+to be able to calculate leap years. So how are we doing that?&lt;/p&gt;
+
+&lt;div class=&quot;header-bug&quot;&gt;&lt;/div&gt;
+
+&lt;h3&gt;Leap years&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://en.wikipedia.org/wiki/Leap_year&quot;&gt;Leap years&lt;/a&gt; exist because the astronomical year (i.e. how long it takes the Earth to do one orbit of the Sun) is not completely synchronised with the calendar year. &lt;/p&gt;
+
+&lt;p&gt;Leap years were first introduced in the Julian calendar in 46 BCE by Julius Caesar. An extra day was to be added to the year every 4 years to realign the calendar
+year with the astronomical year, but unfortunately the priests charged with maintaining the calendar erroneously added a day to the year every 3 years. To mitigate 
+this error there were no leap years between 8 BCE and 4 CE.&lt;/p&gt;
+
+&lt;p&gt;According to the &lt;a href=&quot;http://en.wikipedia.org/wiki/Julian_calendar#Leap_year_error&quot;&gt;latest works&lt;/a&gt; this means that the leap years between the introduction of the Julian calendar in 46 BCE and 4 CE are 44, 41, 38, 35, 32, 29, 26, 23, 20, 17, 14, 11 and 8 BCE. The next
+leap year is then 4 CE and every 4 years after that until the introduction of the Gregorian calendar in 1582 CE.&lt;/p&gt;
+
+&lt;p&gt;The calculation of leap years in the Gregorian calendar is slightly more complicated than in the Julian calendar as it had been noticed that the astronomical year was not quite
+exactly 365.25 days long and so the Julian method was actually over-compensating slightly.&lt;/p&gt;
+
+&lt;p&gt;In the Gregorian calendar a year is a leap year if it is divisible by 4 and not divisible by 100 or also divisible by 400. So, for example, 1800 CE is not a leap year despite being
+divisible by 4 because it is also divisible by 100 but not 400. On the other hand 2000 CE is a leap year because it is divisible by 4, 100 and 400.&lt;/p&gt;
+
+&lt;p&gt;The two &lt;code&gt;getSortValue&lt;/code&gt; functions we have already looked at are based on the &lt;a href=&quot;http://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar&quot;&gt;proleptic Gregorian calendar&lt;/a&gt; which simply extends our current calendar back into the past prior to
+its introduction. When calculating the leap year we also use the &lt;a href=&quot;http://en.wikipedia.org/wiki/Astronomical_year_numbering&quot;&gt;astronomical year&lt;/a&gt; which allows us to easily calculate leap years for BCE dates (where 1 BCE is year 0).&lt;/p&gt;
+
+&lt;p&gt;When researching leap years most sources seemed to suggest that your choice of leap year calculation would depend on what period you were working with and whether
+seasonal dates were important. As the events we are sorting could be from any time period I have decided on an hybrid approach which I have no doubt has all manner of issues
+for serious historians and horologists, but seems good enough for my purposes. Essentially my approach was to consider a year a leap year if the people alive at 
+the time would have done so. This means no leap years prior to 46 BCE and &amp;quot;fudged&amp;quot; dates between 46 BCE and 4 CE.&lt;/p&gt;
+
+&lt;p&gt;To calculate leap years we first we need to convert our era-based year into an astronomical year. This allows us to easily calculate leap years using the modulo operation.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getAstronomicalYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BCE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Next we need a way of deciding which leap year system to use. I implement this as an &lt;a href=&quot;https://msdn.microsoft.com/en-us/library/dd233248.aspx&quot;&gt;active pattern&lt;/a&gt;, one of F#&amp;#39;s handiest features.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///Contains the starting years for various leap year calculations&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RequireQualifiedAccess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;]&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;StartYears&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Literal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Triennial&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;45&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Literal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Julian&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Literal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Gregorian&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1582&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///Active pattern used to decide on the leap year calculation to be used&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Triennial&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Julian&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Gregorian&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;StartYears&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Gregorian&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;Gregorian&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;StartYears&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Julian&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;Julian&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;StartYears&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Triennial&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;Triennial&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;None&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now that we know which method we want to use we need some functions to actually determine whether a given astronomical year is a leap year.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///True if a year is an erroneous triennial leap year in the period between 46 BCE and 4 CE&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;isTriennialLeapYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;triennialLeapYears&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;43&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//Every 3 years between 44 BCE and 8 BCE&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exists&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;((=)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;triennialLeapYears&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///True if a year is a calculated leap year according to the Julian method - e.g. divisible by 4 &lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;isJulianLeapYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;sd&quot;&gt;///True if a year is a calculated leap year according to the Gregorian method - e.g. divisible by 4, and 400 if also divisible by 100&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;isGregorianLeapYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;400&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;                
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;   
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Finally, we can combine everything to create a single function that determines whether a year is a leap year.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;sd&quot;&gt;///True if a year is a leap year&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;isLeapYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getAstronomicalYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;year&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;era&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;None&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Triennial&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;isTriennialLeapYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Julian&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;isJulianLeapYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Gregorian&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;isGregorianLeapYear&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;astronomicalYear&lt;/span&gt;  
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We can now use this function when calculating things like the day of the year of any given date, the number of days in a month or the days in a year. As I said I&amp;#39;m sure that 
+there are a multitude of issues with this approach that I am not sufficiently qualified to comment on, but as a naive compromise I think it works rather well.&lt;/p&gt;
+
+&lt;div class=&quot;header-big&quot;&gt;&lt;/div&gt;
+
+&lt;h3&gt;Putting it all together&lt;/h3&gt;
+
+&lt;p&gt;By way of an example I took the dates of Roman battles in the first century BCE and the first century CE from &lt;a href=&quot;http://en.wikipedia.org/wiki/List_of_Roman_battles&quot;&gt;this list&lt;/a&gt; and wrote a small console application which randomises
+them and then sorts them into chronological order before writing a simple HTML page listing them. I also added a couple of &amp;quot;before&amp;quot; and &amp;quot;after&amp;quot; events as well for variety. &lt;/p&gt;
+
+&lt;p&gt;The source code for the application can be &lt;a href=&quot;https://github.com/wattsm/historical-dates/blob/master/HistoricalDates.App/Program.fs&quot;&gt;found here on GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;header-big&quot;&gt;&lt;/div&gt;
+
+&lt;h3&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;In this post I have shown how partial and vague historical dates can be modeled in F#. I have also outlined an approach to leap year calculations which, while probably questionable
+from a purely academic standpoint, works quite well as a simple compromise to what is a potentially extremely tricky problem.&lt;/p&gt;
+
+&lt;p&gt;In terms of possible enhancements, being able to choose the method of leap year calculation might be useful depending on the events being sorted (e.g. if they are all from a particular
+period of history then one method may be preferable to another). Similarly being able to choose the calendar used to represent the dates might be useful - if dates were stored as 
+the number of days since 1st Jan 1 BCE it should be fairly straight forward to convert to a date in a specific calendar when required. &lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/wattsm/historical-dates&quot;&gt;The source for the project is available on GitHub&lt;/a&gt;.&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>WebAPI OData GraphDelta<T></title>
