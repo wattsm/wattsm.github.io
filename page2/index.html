@@ -39,18 +39,6 @@
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
   
   
-  <!-- Google analytics -->
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-56516871-1', 'auto');
-    ga('send', 'pageview');
-
-  </script>
-  
 </head>
 
 
@@ -84,6 +72,47 @@
 
     <div class="content container">	
       <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2014/12/12/testing-web-api-odata-controllers/">
+        Testing Web API OData controllers
+      </a>
+    </h1>
+
+    <span class="post-date">
+		12 Dec 2014
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/entity-framework">Entity Framework</a>, 	
+
+	
+	<a href="/tags/webapi">WebAPI</a>, 	
+
+	
+	<a href="/tags/unit-testing">Unit Testing</a>, 	
+
+	
+	<a href="/tags/odata">OData</a>	
+
+&middot;
+<a data-disqus-identifier="Testing Web API OData controllers" href="/programming/2014/12/12/testing-web-api-odata-controllers/#disqus_thread">0 Comments</a>
+	</span>
+
+    <p>Microsoft&#39;s <a href="http://msdn.microsoft.com/en-us/data/ef.aspx">Entity Framework</a> is an occasionally handy <a href="https://en.wikipedia.org/wiki/Object-relational_mapping">ORM</a> framework that allows you to query database entities using LINQ and to easily add, update and delete entities via
+a variety of helper classes.</p>
+
+<p>Recently I wrote a set of <a href="http://www.asp.net/web-api">WebAPI</a> controllers to expose an Entity Framework model as <a href="http://www.odata.org/">OData</a> endpoints. Exposing an Entity Framework model as OData using WebAPI is <a href="http://www.asp.net/web-api/overview/odata-support-in-aspnet-web-api/odata-v4/create-an-odata-v4-endpoint">incredibly easy</a>.
+However, when it came to testing my controllers I found that mocking Entity Framework is tricky, due to a combination of erratic use of interfaces and the apparent complexity of <code>IQueryable&lt;T&gt;</code>. </p>
+
+<p>Luckily my controllers only used a few parts of the EF API, so I decided to write some lightweight wrappers to make testing easier. This had the bonus of also removing dependencies
+on EF from my controllers.</p>
+
+	
+	<a href="/programming/2014/12/12/testing-web-api-odata-controllers/">Continue reading &raquo;</a>	
+  </div>
   
   <div class="post">
     <h1 class="post-title">
@@ -214,36 +243,6 @@ on the standard Civ formula, but on the other hand there was no guarantee that t
 
 	
 	<a href="/gaming/2014/11/08/beyond-earth-good-bad-ugly/">Continue reading &raquo;</a>	
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/programming/2014/11/07/implementing-a-simple-ihttpactionresult/">
-        Implementing a simple IHttpActionResult
-      </a>
-    </h1>
-
-    <span class="post-date">
-		07 Nov 2014
-&middot;
-Programming 
-
-	&middot;
-	<a href="/tags/webapi">WebAPI</a>	
-
-&middot;
-<a data-disqus-identifier="Implementing a simple IHttpActionResult" href="/programming/2014/11/07/implementing-a-simple-ihttpactionresult/#disqus_thread">0 Comments</a>
-	</span>
-
-    <p>I&#39;ve recently started a new project which uses <a href="http://www.asp.net/web-api">Microsoft&#39;s Web API framework</a> to create a RESTful version of our product&#39;s API. 
-We chose Web API because the team were familiar with it and it&#39;s quick and easy to get up and running. However, as with other Microsoft frameworks, things can get
-more complicated than they seemingly need to be when you try and move away from the simple &quot;Hello, World&quot; type examples on MSDN.</p>
-
-<p>I ran into one of these situations when I wanted to respond to a request with a status code other than 200 and include a message body. In this post I will explain
-the scenario, the available options and the solution I eventually arrived at.</p>
-
-	
-	<a href="/programming/2014/11/07/implementing-a-simple-ihttpactionresult/">Continue reading &raquo;</a>	
   </div>
   
 </div>

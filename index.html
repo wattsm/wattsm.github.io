@@ -39,18 +39,6 @@
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
   
   
-  <!-- Google analytics -->
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-56516871-1', 'auto');
-    ga('send', 'pageview');
-
-  </script>
-  
 </head>
 
 
@@ -84,6 +72,36 @@
 
     <div class="content container">	
       <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2015/10/15/lenses-in-fsharp/">
+        Lenses in F#
+      </a>
+    </h1>
+
+    <span class="post-date">
+		15 Oct 2015
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>	
+
+&middot;
+<a data-disqus-identifier="Lenses in F#" href="/programming/2015/10/15/lenses-in-fsharp/#disqus_thread">0 Comments</a>
+	</span>
+
+    <p>I recently came across the concept of lenses in functional programming - a useful tool that can significantly reduce the amount of boilerplate code required when working
+with <a href="https://msdn.microsoft.com/en-us/library/dd233184.aspx">record types</a>. I first noticed them in <a href="http://suave.io/">suave</a>&#39;s source code and, intrigued, did some further research which lead me to <a href="https://www21.in.tum.de/teaching/fp/SS15/papers/17.pdf">this paper</a> by Albert Steckermeier 
+which describes the concept in detail (using Haskell). </p>
+
+<p>As my background is primarily with OO languages I find that I quite often stumble across concepts in functional programming that more experienced practitioners would 
+take for granted. There did not seem to a huge amount of information on lenses out there, so I thought I would write a short post about lenses in F#.</p>
+
+	
+	<a href="/programming/2015/10/15/lenses-in-fsharp/">Continue reading &raquo;</a>	
+  </div>
   
   <div class="post">
     <h1 class="post-title">
@@ -214,47 +232,6 @@ F#&#39;s <code>Async&lt;&#39;T&gt;</code>. Although these types are useful they 
 
 	
 	<a href="/programming/2015/01/19/futures-in-fsharp/">Continue reading &raquo;</a>	
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/programming/2014/12/12/testing-web-api-odata-controllers/">
-        Testing Web API OData controllers
-      </a>
-    </h1>
-
-    <span class="post-date">
-		12 Dec 2014
-&middot;
-Programming 
-
-	&middot;
-	<a href="/tags/entity-framework">Entity Framework</a>, 	
-
-	
-	<a href="/tags/webapi">WebAPI</a>, 	
-
-	
-	<a href="/tags/unit-testing">Unit Testing</a>, 	
-
-	
-	<a href="/tags/odata">OData</a>	
-
-&middot;
-<a data-disqus-identifier="Testing Web API OData controllers" href="/programming/2014/12/12/testing-web-api-odata-controllers/#disqus_thread">0 Comments</a>
-	</span>
-
-    <p>Microsoft&#39;s <a href="http://msdn.microsoft.com/en-us/data/ef.aspx">Entity Framework</a> is an occasionally handy <a href="https://en.wikipedia.org/wiki/Object-relational_mapping">ORM</a> framework that allows you to query database entities using LINQ and to easily add, update and delete entities via
-a variety of helper classes.</p>
-
-<p>Recently I wrote a set of <a href="http://www.asp.net/web-api">WebAPI</a> controllers to expose an Entity Framework model as <a href="http://www.odata.org/">OData</a> endpoints. Exposing an Entity Framework model as OData using WebAPI is <a href="http://www.asp.net/web-api/overview/odata-support-in-aspnet-web-api/odata-v4/create-an-odata-v4-endpoint">incredibly easy</a>.
-However, when it came to testing my controllers I found that mocking Entity Framework is tricky, due to a combination of erratic use of interfaces and the apparent complexity of <code>IQueryable&lt;T&gt;</code>. </p>
-
-<p>Luckily my controllers only used a few parts of the EF API, so I decided to write some lightweight wrappers to make testing easier. This had the bonus of also removing dependencies
-on EF from my controllers.</p>
-
-	
-	<a href="/programming/2014/12/12/testing-web-api-odata-controllers/">Continue reading &raquo;</a>	
   </div>
   
 </div>
