@@ -87,6 +87,38 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/programming/2015/11/13/stateful-akka-actors-with-fsharp/">
+        Stateful Akka.NET actors with F#
+      </a>
+    </h1>
+
+    <span class="post-date">
+		13 Nov 2015
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>, 	
+
+	
+	<a href="/tags/akka.net">Akka.NET</a>	
+
+&middot;
+<a data-disqus-identifier="Stateful Akka.NET actors with F#" href="/programming/2015/11/13/stateful-akka-actors-with-fsharp/#disqus_thread">0 Comments</a>
+	</span>
+
+    <p><a href="http://getakka.net/">Akka.NET</a> is the .Net implementation of Java&#39;s <a href="http://akka.io/">Akka</a> framework, which allows developers to build &quot;highly concurrent, distributed, and resilient message-driven applications&quot; via
+an <a href="https://en.wikipedia.org/wiki/Actor_model">actor model</a>. One of the many nice features of Akka.NET is that it comes with an <a href="http://getakka.net/docs/FSharp%20API">F# API</a>. However, there are some scenarios which the F# API does not specifically cater for, 
+and one of those is stafeul actors. </p>
+
+<p>In this post I will describe how to implement a simple stateful Akka.NET actor in a functional style without mutable variables.</p>
+
+	
+	<a href="/programming/2015/11/13/stateful-akka-actors-with-fsharp/">Continue reading &raquo;</a>	
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/programming/2015/10/15/lenses-in-fsharp/">
         Lenses in F#
       </a>
@@ -215,35 +247,6 @@ other, even using the in-game galaxy map. So I thought it would be interesting t
 
 	
 	<a href="/programming/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">Continue reading &raquo;</a>	
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/programming/2015/01/19/futures-in-fsharp/">
-        Futures in F#
-      </a>
-    </h1>
-
-    <span class="post-date">
-		19 Jan 2015
-&middot;
-Programming 
-
-	&middot;
-	<a href="/tags/fsharp">F#</a>	
-
-&middot;
-<a data-disqus-identifier="Futures in F#" href="/programming/2015/01/19/futures-in-fsharp/#disqus_thread">0 Comments</a>
-	</span>
-
-    <p>My first exposure to the concept of <a href="http://en.wikipedia.org/wiki/Futures_and_promises">futures (or promises)</a> was probably JavaScript&#39;s <a href="https://github.com/kriskowal/q/wiki/API-Reference">Q API</a> and AngularJS&#39; <a href="https://docs.angularjs.org/api/ng/service/$q">$q service</a>, but it was only after reading Twitter&#39;s 
-&quot;<a href="https://engineering.twitter.com/research/publication/your-server-as-a-function">Your Server as a Function</a>&quot; paper that their usefulness really sank in. The closest thing that .Net has to the Scala futures illustrated in the paper are <code>Task&lt;T&gt;</code> and 
-F#&#39;s <code>Async&lt;&#39;T&gt;</code>. Although these types are useful they do not provide all of the functionality of Scala&#39;s <code>Future[T]</code>, nor are they as elegant.</p>
-
-<p>In this post I will describe an approach to creating something akin to Scala&#39;s <code>Future[T]</code> in F#.</p>
-
-	
-	<a href="/programming/2015/01/19/futures-in-fsharp/">Continue reading &raquo;</a>	
   </div>
   
 </div>
