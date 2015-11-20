@@ -87,6 +87,34 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/programming/2013/11/19/fsharp-serialising-option/">
+        Serialising F#'s Option type using DataContractSerialiser
+      </a>
+    </h1>
+
+    <span class="post-date">
+		19 Nov 2013
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>	
+
+&middot;
+<a data-disqus-identifier="Serialising F#'s Option type using DataContractSerialiser" href="/programming/2013/11/19/fsharp-serialising-option/#disqus_thread">0 Comments</a>
+	</span>
+
+    <p><a href="http://msdn.microsoft.com/en-us/library/ms733127(v=vs.110).aspx">Data contracts</a> are a quick and relatively easy way of serialising objects to XML (or JSON, but we’ll stick to XML in this post) – e.g. for use as <a href="http://en.wikipedia.org/wiki/Data_transfer_object">DTOs</a>.</p>
+
+<p>Various attributes can be used to control aspects of the generated XML, meaning you can produce clean, simple XML quite easily. Using these attributes it is possible for the DataContractSerializer to serialise and deserialise F# record types, 
+which can be really handy when writing web services. However, a few wrinkles arise when using F#’s Option<T> type.</p>
+
+	
+	<a href="/programming/2013/11/19/fsharp-serialising-option/">Continue reading &raquo;</a>	
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/programming/2013/07/24/fsharp-collections-reflection/">
         Creating F# collections via reflection
       </a>

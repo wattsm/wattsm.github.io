@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>    
+	Usermaatre &middot; Constructing lenses using quotations    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  
+  <style type="text/css">
+	
+	.left-align {
+		text-align:left;
+	}
+	
+	.header-bug {
+		font-size:0px;
+	}
+	
+  </style>
+  
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+  
+  
+  <!-- Google analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-56516871-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+  
+</head>
+
+
+  <body class="theme-base-0b">
+  
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="/">
+          Usermaatre
+        </a>
+      </h1>
+      <p class="lead">Programming, science, history and gaming. Not necessarily in that order.</p>
+    </div>
+
+    <nav class="sidebar-nav">
+	  <a class="sidebar-nav-item" href="/">Home</a>
+	  <a class="sidebar-nav-item" href="/about">About</a>
+	  <a class="sidebar-nav-item" href="/archive">Archive</a>
+      <a class="sidebar-nav-item" href="https://twitter.com/m_d_watts" target="_blank">Twitter</a>	  
+      <a class="sidebar-nav-item" href="https://github.com/wattsm" target="_blank">GitHub</a>      
+    </nav>
+	
+	<p>&copy; 2015. All rights reserved.</p>
+	
+	
+  </div>
+</div>
+
+
+    <div class="content container">	
+      <div class="post">
+  <h1 class="post-title">Constructing lenses using quotations</h1>
+  <span class="post-date">
+	20 Nov 2015
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>	
+
+&middot;
+<a data-disqus-identifier="Constructing lenses using quotations" href="/programming/2015/11/20/constructing-lenses-using-quotations/#disqus_thread">0 Comments</a>	
+  </span>
+  <p>Earlier this month I wrote a post describing <a href="http://blog.usermaatre.co.uk/programming/2015/10/15/lenses-in-fsharp/">lenses in F#</a>. Lenses are a nice tool for reducing the amount of boilerplate code required when working with
+record types, most notably when performing updates. However, the lenses themselves contain a fair amount of boilerplate, with most taking the form:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">static</span> <span class="k">member</span> <span class="n">Lens_</span> <span class="o">=</span> 
+    <span class="o">(</span><span class="k">fun</span> <span class="n">source</span> <span class="o">-&gt;</span> <span class="n">source</span><span class="o">.</span><span class="n">View</span><span class="o">),</span>
+    <span class="o">(</span><span class="k">fun</span> <span class="n">view</span> <span class="n">source</span> <span class="o">-&gt;</span> <span class="o">{</span> <span class="n">source</span> <span class="k">with</span> <span class="n">View</span> <span class="o">=</span> <span class="n">view</span><span class="o">;</span> <span class="o">})</span>
+</code></pre></div>
+<p>I was intrigued, then, when I saw <a href="https://medium.com/@devboy_org/generic-lenses-for-f-record-types-6aea9f4cba40">Dominic Graefen&#39;s post</a> about dynamic lenses using quotations and reflection. His post outlines a way to create a type of lens that 
+requires essentially no boilerplate code. Dominic&#39;s approach provides direct update access to record properties without the need for <code>Lens&lt;&#39;TSource, &#39;TView&gt;</code> lens properties:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">original</span> <span class="o">=</span> <span class="o">{</span> <span class="n">View</span> <span class="o">=</span> <span class="s">&quot;Original Value&quot;</span><span class="o">;</span> <span class="o">}</span>
+<span class="k">let</span> <span class="nv">updated</span> <span class="o">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">With</span> <span class="o">&lt;@</span> <span class="n">original</span><span class="o">.</span><span class="n">View</span> <span class="o">@&gt;</span> <span class="s">&quot;New Value&quot;</span>
+</code></pre></div>
+<p>In this post I will describe how the same approach of using quotations and reflection can be used to create lens properties.</p>
+
+<!-- more -->
+
+<h3>Motivation</h3>
+
+<p>There are two motivations for wanting lens properties on our record types. </p>
+
+<p>Firstly they are potentially useful - they are reusable (i.e. a traditional lens can be passed around and applied to any instance of the source record type, whereas the 
+dynamic versions are tied to a specific instance), composable and represent a standard pattern which can be used to interface with the code of other developers 
+and third party libraries. </p>
+
+<p>Secondly constructing the lens when the type is initialised, rather than on-demand may help improve performance. As Dominic says in his post both quotations and 
+reflection can be detrimental to performance.</p>
+
+<p>Ideally we would like a way to create lens properties with less boilerplate, e.g.:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">static</span> <span class="k">member</span> <span class="n">Lens_</span> <span class="o">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">make</span> <span class="o">&lt;@</span> <span class="k">fun</span> <span class="n">source</span> <span class="o">-&gt;</span> <span class="n">source</span><span class="o">.</span><span class="n">View</span> <span class="o">@&gt;</span>
+</code></pre></div>
+<p>The <code>Lens.make</code> function accepts an expression which points to the view and returns a lens. It has the signature <code>Expr&lt;&#39;TSource -&gt; &#39;TView&gt; -&gt; Lens&lt;&#39;TSource, &#39;TView&gt;</code>.</p>
+
+<h3>Implementation</h3>
+
+<p>If we assume that the <code>Lens</code> module used in <a href="http://blog.usermaatre.co.uk/programming/2015/10/15/lenses-in-fsharp/">my previous post</a> is the starting point then it&#39;s actually quite straight forward to take Dominic&#39;s approach and tweak it to construct
+lenses of type <code>Lens&lt;&#39;TSource, &#39;TView&gt;</code>. Using a simple lambda expression to point to the property of interest also helps simplify the code that parses the quotation.</p>
+
+<p>Here is a basic implementation of <code>Lens.make</code> with supporting functions:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="o">[&lt;</span><span class="n">RequireQualifiedAccess</span><span class="o">&gt;]</span>
+<span class="k">module</span> <span class="nn">Lens</span> <span class="o">=</span> 
+
+    <span class="o">[&lt;</span><span class="n">AutoOpen</span><span class="o">&gt;]</span>
+    <span class="k">module</span> <span class="nn">private</span> <span class="n">Helpers</span> <span class="o">=</span> 
+
+        <span class="k">let</span> <span class="nv">getProperty</span> <span class="o">(</span><span class="n">expr</span> <span class="o">:</span> <span class="n">Expr</span><span class="o">)</span> <span class="o">=</span> 
+            <span class="k">match</span> <span class="n">expr</span> <span class="k">with</span>
+            <span class="o">|</span> <span class="n">Lambda</span> <span class="o">(_,</span> <span class="n">PropertyGet</span> <span class="o">(_,</span> <span class="n">property</span><span class="o">,</span> <span class="o">_))</span> <span class="o">-&gt;</span> <span class="n">Some</span> <span class="n">property</span>
+            <span class="o">|</span> <span class="o">_</span> <span class="o">-&gt;</span> <span class="n">None</span>
+
+        <span class="k">let</span> <span class="nv">getUpdatedRecord</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">TSource</span><span class="o">&gt;</span> <span class="o">(</span><span class="n">original</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">TSource</span><span class="o">)</span> <span class="o">(</span><span class="n">property</span> <span class="o">:</span> <span class="n">PropertyInfo</span><span class="o">)</span> <span class="n">value</span> <span class="o">=</span> 
+
+            <span class="k">let</span> <span class="nv">recordType</span> <span class="o">=</span> <span class="n">typeof</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">TSource</span><span class="o">&gt;</span>
+            <span class="k">let</span> <span class="nv">properties</span> <span class="o">=</span> <span class="nn">FSharpType</span><span class="p">.</span><span class="n">GetRecordFields</span> <span class="n">recordType</span>
+
+            <span class="k">let</span> <span class="nv">values</span> <span class="o">=</span> 
+                <span class="n">properties</span>
+                <span class="o">|&gt;</span> <span class="nn">Array</span><span class="p">.</span><span class="n">map</span> <span class="o">(</span><span class="k">fun</span> <span class="n">property&#39;</span> <span class="o">-&gt;</span> 
+                        <span class="k">if</span> <span class="o">(</span><span class="n">property&#39;</span> <span class="o">=</span> <span class="n">property</span><span class="o">)</span> <span class="k">then</span>
+                            <span class="n">value</span>
+                        <span class="k">else</span>
+                            <span class="n">property&#39;</span><span class="o">.</span><span class="n">GetValue</span> <span class="n">original</span>
+                    <span class="o">)</span>
+
+            <span class="k">let</span> <span class="nv">updated</span> <span class="o">=</span> <span class="nn">FSharpValue</span><span class="p">.</span><span class="n">MakeRecord</span> <span class="o">(</span><span class="n">recordType</span><span class="o">,</span> <span class="n">values</span><span class="o">)</span>
+
+            <span class="n">updated</span> <span class="o">:?&gt;</span> <span class="k">&#39;</span><span class="n">TSource</span>
+
+        <span class="k">let</span> <span class="nv">withProperty</span> <span class="n">expr</span> <span class="n">f</span> <span class="o">=</span> 
+            <span class="k">match</span> <span class="o">(</span><span class="n">getProperty</span> <span class="n">expr</span><span class="o">)</span> <span class="k">with</span>
+            <span class="o">|</span> <span class="n">Some</span> <span class="n">property</span> <span class="o">-&gt;</span> <span class="n">f</span> <span class="n">property</span>
+            <span class="o">|</span> <span class="o">_</span> <span class="o">-&gt;</span> <span class="n">failwith</span> <span class="s">&quot;Expression must be a lambda of form: fun source -&gt; source.View&quot;</span>
+
+        <span class="k">let</span> <span class="nv">createGet</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">TSource</span><span class="o">,</span> <span class="k">&#39;</span><span class="n">TView</span><span class="o">&gt;</span> <span class="o">(</span><span class="n">expr</span> <span class="o">:</span> <span class="n">Expr</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">TSource</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">TView</span><span class="o">&gt;)</span> <span class="o">=</span> 
+            <span class="n">withProperty</span> <span class="n">expr</span> <span class="o">(</span><span class="k">fun</span> <span class="n">property</span> <span class="o">-&gt;</span> 
+                <span class="k">fun</span> <span class="o">(</span><span class="n">source</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">TSource</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">property</span><span class="o">.</span><span class="n">GetValue</span> <span class="o">(</span><span class="n">source</span><span class="o">)</span> <span class="o">:?&gt;</span> <span class="k">&#39;</span><span class="n">TView</span>
+            <span class="o">)</span>
+
+        <span class="k">let</span> <span class="nv">createPut</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">TSource</span><span class="o">,</span> <span class="k">&#39;</span><span class="n">TView</span><span class="o">&gt;</span> <span class="o">(</span><span class="n">expr</span> <span class="o">:</span> <span class="n">Expr</span><span class="o">&lt;</span><span class="k">&#39;</span><span class="n">TSource</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">TView</span><span class="o">&gt;)</span> <span class="o">=</span> 
+            <span class="n">withProperty</span> <span class="n">expr</span> <span class="o">(</span><span class="k">fun</span> <span class="n">property</span> <span class="o">-&gt;</span>
+                <span class="k">fun</span> <span class="o">(</span><span class="n">view</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">TView</span><span class="o">)</span> <span class="o">(</span><span class="n">source</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">TSource</span><span class="o">)</span> <span class="o">-&gt;</span>  <span class="n">getUpdatedRecord</span> <span class="n">source</span> <span class="n">property</span> <span class="n">view</span>
+            <span class="o">)</span>
+
+    <span class="k">let</span> <span class="nv">make</span> <span class="n">expr</span> <span class="o">=</span> 
+        <span class="o">(</span><span class="n">createGet</span> <span class="n">expr</span><span class="o">),</span>
+        <span class="o">(</span><span class="n">createPut</span> <span class="n">expr</span><span class="o">)</span>
+</code></pre></div>
+<p>Lenses created using <code>Lens.make</code> will use reflection when called but the quotation parsing is only done once, when the type is initialised. Performance-wise this approach
+speeds things up slightly. Using a similar approach to the author of the <a href="https://bitbucket.org/rojepp/reflenses/src/0c80f965aeaa?at=default">Reflenses project</a> that Dominic links to in his post we can run some basic tests:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">open</span> <span class="nn">System</span>
+<span class="k">open</span> <span class="nn">System.Diagnostics</span>
+
+<span class="c1">//Records</span>
+<span class="k">type</span> <span class="nc">Person</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">Name</span> <span class="o">:</span> <span class="n">String</span><span class="o">;</span>
+    <span class="n">Age</span> <span class="o">:</span> <span class="n">Int32</span><span class="o">;</span>
+<span class="o">}</span>
+<span class="k">with</span>    
+    <span class="k">static</span> <span class="k">member</span> <span class="n">Age_</span> <span class="o">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">make</span> <span class="o">&lt;@</span> <span class="k">fun</span> <span class="n">person</span> <span class="o">-&gt;</span> <span class="n">person</span><span class="o">.</span><span class="n">Age</span> <span class="o">@&gt;</span>
+
+<span class="k">type</span> <span class="nc">Employee</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">Payroll</span> <span class="o">:</span> <span class="n">String</span><span class="o">;</span>
+    <span class="n">Person</span> <span class="o">:</span> <span class="n">Person</span><span class="o">;</span>
+<span class="o">}</span>
+<span class="k">with</span>    
+    <span class="k">static</span> <span class="k">member</span> <span class="n">Person_</span> <span class="o">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">make</span> <span class="o">&lt;@</span> <span class="k">fun</span> <span class="n">employee</span> <span class="o">-&gt;</span> <span class="n">employee</span><span class="o">.</span><span class="n">Person</span> <span class="o">@&gt;</span>
+
+<span class="c1">//Test timer</span>
+<span class="k">let</span> <span class="nv">inline</span> <span class="n">time</span> <span class="n">f</span> <span class="n">iterations</span> <span class="o">=</span> 
+
+    <span class="k">let</span> <span class="nv">stopwatch</span> <span class="o">=</span> <span class="nn">Stopwatch</span><span class="p">.</span><span class="n">StartNew</span> <span class="bp">()</span>
+
+    <span class="k">for</span> <span class="o">_</span> <span class="k">in</span> <span class="mi">1</span> <span class="o">..</span> <span class="n">iterations</span> <span class="k">do</span>
+        <span class="n">f</span> <span class="bp">()</span> <span class="o">|&gt;</span> <span class="n">ignore</span>
+
+    <span class="n">stopwatch</span><span class="o">.</span><span class="n">Stop</span> <span class="bp">()</span>
+
+    <span class="n">printfn</span> <span class="s">&quot;%A&quot;</span> <span class="n">stopwatch</span><span class="o">.</span><span class="n">ElapsedMilliseconds</span>
+
+<span class="c1">//Test data</span>
+<span class="k">let</span> <span class="nv">employee</span> <span class="o">=</span> <span class="o">{</span> <span class="n">Payroll</span> <span class="o">=</span> <span class="s">&quot;XXXX&quot;</span><span class="o">;</span> <span class="n">Person</span> <span class="o">=</span> <span class="o">{</span> <span class="n">Name</span> <span class="o">=</span>  <span class="s">&quot;Bob&quot;</span><span class="o">;</span> <span class="n">Age</span> <span class="o">=</span> <span class="mi">30</span><span class="o">;</span> <span class="o">};</span> <span class="o">}</span>
+
+<span class="c1">//Tests of lenses using Lens.make</span>
+<span class="k">let</span> <span class="nv">lens</span> <span class="o">=</span> <span class="o">(</span><span class="nn">Employee</span><span class="p">.</span><span class="n">Person_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Person</span><span class="p">.</span><span class="n">Age_</span><span class="o">)</span>
+
+<span class="n">time</span> <span class="o">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="o">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="n">lens</span> <span class="mi">25</span> <span class="n">employee</span><span class="o">)</span> <span class="mi">1000</span>                                 <span class="c1">//90 ms</span>
+<span class="n">time</span> <span class="o">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="o">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="o">(</span><span class="nn">Employee</span><span class="p">.</span><span class="n">Person_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Person</span><span class="p">.</span><span class="n">Age_</span><span class="o">)</span> <span class="mi">25</span> <span class="n">employee</span><span class="o">)</span> <span class="mi">1000</span>   <span class="c1">//152 ms</span>
+
+<span class="c1">//Tests of lenses using Lens.With</span>
+<span class="k">let</span> <span class="nv">expr</span> <span class="o">=</span> <span class="o">&lt;@</span> <span class="n">employee</span><span class="o">.</span><span class="n">Person</span><span class="o">.</span><span class="n">Age</span> <span class="o">@&gt;</span>
+
+<span class="n">time</span> <span class="o">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="o">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">With</span> <span class="n">expr</span> <span class="mi">25</span><span class="o">)</span> <span class="mi">1000</span>                                         <span class="c1">//316 ms</span>
+<span class="n">time</span> <span class="o">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="o">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">With</span> <span class="o">&lt;@</span> <span class="n">employee</span><span class="o">.</span><span class="n">Person</span><span class="o">.</span><span class="n">Age</span> <span class="o">@&gt;</span> <span class="mi">25</span><span class="o">)</span> <span class="mi">1000</span>                    <span class="c1">//355 ms</span>
+</code></pre></div>
+<p>Both approachs can obviously be optimised further (e.g. via memoization <a href="https://bitbucket.org/rojepp/reflenses/src/0c80f965aeaad6846cf9dddc3952b8d44230ba1c/Reflenses/Reflenses.fs?at=default&amp;fileviewer=file-view-default">as demonstrated here by Reflenses</a>), but the lenses constructed by <code>Lens.make</code> seem to perform
+significantly better than dynamic lenses. As both use essentially the same code to create updated records the difference is likely entirely due to quotation parsing done 
+by the dynamic lenses.</p>
+
+<h3>Conclusion</h3>
+
+<p>In this post I have shown how to use quotations and reflection to reduce the boilerplate code required when defining lenses for record types.</p>
+
+<p>Ultimately I think that a <code>Lens</code> module with support for both traditional <code>Lens&lt;&#39;TSource, &#39;TView&gt;</code> lenses and dynamic lenses provides the most flexibility 
+for developers, with both approaches having pros and cons depending on the scenario.</p>
+
+<p>For example, in order to update a property nested deep within a record type that is only updated once it would be preferable, in terms of readability and effort required, to simply
+use a dynamic lens to perform the udpate. However, when working with more frequently used properties having ready made lenses which can be reused and combined might make more sense.</p>
+
+</div>
+
+<div class="comments">
+	<h3>Comments</h3>
+
+	<div id="disqus_thread"></div>
+	<script type="text/javascript">
+		/* * * CONFIGURATION VARIABLES * * */
+		var disqus_shortname = 'usermaatre';
+		var disqus_title = "Constructing lenses using quotations";
+		var disqus_identifier = "Constructing lenses using quotations";
+		
+		/* * * DON'T EDIT BELOW THIS LINE * * */
+		(function() {
+			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+		})();
+	</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</div>
+
+<div class="related">
+  <h3>Related Posts</h3>
+  <ul class="related-posts">
+    
+      <li>
+        <h5>
+          <a href="/programming/2015/10/15/lenses-in-fsharp/">
+            Lenses in F#
+            <small>15 Oct 2015</small>
+          </a>
+        </h5>
+      </li>
+    
+      <li>
+        <h5>
+          <a href="/programming/2015/05/20/modeling-historical-dates/">
+            Modeling historical dates
+            <small>20 May 2015</small>
+          </a>
+        </h5>
+      </li>
+    
+      <li>
+        <h5>
+          <a href="/programming/2015/11/13/stateful-akka-actors-with-fsharp/">
+            Stateful Akka.NET actors with F#
+            <small>13 Nov 2015</small>
+          </a>
+        </h5>
+      </li>
+    
+  </ul>
+</div>
+    </div>
+
+	
+	<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = 'usermaatre';
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  </body>
+</html>

@@ -87,6 +87,42 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/programming/2015/11/20/constructing-lenses-using-quotations/">
+        Constructing lenses using quotations
+      </a>
+    </h1>
+
+    <span class="post-date">
+		20 Nov 2015
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>	
+
+&middot;
+<a data-disqus-identifier="Constructing lenses using quotations" href="/programming/2015/11/20/constructing-lenses-using-quotations/#disqus_thread">0 Comments</a>
+	</span>
+
+    <p>Earlier this month I wrote a post describing <a href="http://blog.usermaatre.co.uk/programming/2015/10/15/lenses-in-fsharp/">lenses in F#</a>. Lenses are a nice tool for reducing the amount of boilerplate code required when working with
+record types, most notably when performing updates. However, the lenses themselves contain a fair amount of boilerplate, with most taking the form:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">static</span> <span class="k">member</span> <span class="n">Lens_</span> <span class="o">=</span> 
+    <span class="o">(</span><span class="k">fun</span> <span class="n">source</span> <span class="o">-&gt;</span> <span class="n">source</span><span class="o">.</span><span class="n">View</span><span class="o">),</span>
+    <span class="o">(</span><span class="k">fun</span> <span class="n">view</span> <span class="n">source</span> <span class="o">-&gt;</span> <span class="o">{</span> <span class="n">source</span> <span class="k">with</span> <span class="n">View</span> <span class="o">=</span> <span class="n">view</span><span class="o">;</span> <span class="o">})</span>
+</code></pre></div>
+<p>I was intrigued, then, when I saw <a href="https://medium.com/@devboy_org/generic-lenses-for-f-record-types-6aea9f4cba40">Dominic Graefen&#39;s post</a> about dynamic lenses using quotations and reflection. His post outlines a way to create a type of lens that 
+requires essentially no boilerplate code. Dominic&#39;s approach provides direct update access to record properties without the need for <code>Lens&lt;&#39;TSource, &#39;TView&gt;</code> lens properties:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">original</span> <span class="o">=</span> <span class="o">{</span> <span class="n">View</span> <span class="o">=</span> <span class="s">&quot;Original Value&quot;</span><span class="o">;</span> <span class="o">}</span>
+<span class="k">let</span> <span class="nv">updated</span> <span class="o">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">With</span> <span class="o">&lt;@</span> <span class="n">original</span><span class="o">.</span><span class="n">View</span> <span class="o">@&gt;</span> <span class="s">&quot;New Value&quot;</span>
+</code></pre></div>
+<p>In this post I will describe how the same approach of using quotations and reflection can be used to create lens properties.</p>
+
+	
+	<a href="/programming/2015/11/20/constructing-lenses-using-quotations/">Continue reading &raquo;</a>	
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/programming/2015/11/13/stateful-akka-actors-with-fsharp/">
         Stateful Akka.NET actors with F#
       </a>
@@ -208,45 +244,6 @@ complex types the same way as changes are handled for entities. The post will fe
 
 	
 	<a href="/programming/2015/04/10/odata-graph-delta/">Continue reading &raquo;</a>	
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/programming/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">
-        Using DBSCAN for fun and (mostly) profit in Elite:Dangerous
-      </a>
-    </h1>
-
-    <span class="post-date">
-		13 Feb 2015
-&middot;
-Programming 
-
-	&middot;
-	<a href="/tags/fsharp">F#</a>, 	
-
-	
-	<a href="/tags/elite-dangerous">Elite Dangerous</a>	
-
-&middot;
-<a data-disqus-identifier="Using DBSCAN for fun and (mostly) profit in Elite:Dangerous" href="/programming/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/#disqus_thread">0 Comments</a>
-	</span>
-
-    <p><a href="https://www.elitedangerous.com/">Elite:Dangerous</a> is the reboot of the classic 1984 space trading, combat and exploration game <a href="http://en.wikipedia.org/wiki/Elite_%28video_game%29">Elite</a> and it has been out for a few months now. After some initial aimless wandering I, like a lot of
-people, settled on a career trading rare goods. These goods, as their name suggests, are rare and available in limited quantities and can bring in huge profits if sold sufficiently far away from 
-their system of origin. </p>
-
-<p>In order to maximise profits it is desirable to circulate as much as possible between systems that supply rare goods, buying and selling at each stop. One popular strategy
-is to follow a circular route, periodically selling and buying. Another, and the one I favour, is to ferry cargo between clusters of systems that supply rare goods - zipping around one cluster buying 
-goods and then travelling to another to sell before repeating the process.</p>
-
-<p>The Elite:Dangerous community has done a good job of exploring the game&#39;s trade network and documenting what rare goods are available where, but it can be hard to visualise the systems relative to each
-other, even using the in-game galaxy map. So I thought it would be interesting to see if I could take that community generated data and group the systems together into clusters programmatically.</p>
-
-<p>This post details how I used an immutable <a href="http://en.wikipedia.org/wiki/DBSCAN">DBSCAN</a> implementation to identify rare goods clusters in Elite:Dangerous.</p>
-
-	
-	<a href="/programming/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">Continue reading &raquo;</a>	
   </div>
   
 </div>
