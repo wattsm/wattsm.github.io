@@ -214,7 +214,7 @@ fields simultaneously.</p>
 <span class="o">}</span>
 <span class="k">with</span>
 
-    <span class="k">static</span> <span class="k">member</span> <span class="n">Street</span> <span class="o">=</span> 
+    <span class="k">static</span> <span class="k">member</span> <span class="n">Street_</span> <span class="o">=</span> 
         <span class="o">(</span><span class="k">fun</span> <span class="n">address</span> <span class="o">-&gt;</span> <span class="n">address</span><span class="o">.</span><span class="n">HouseNumber</span><span class="o">,</span> <span class="n">address</span><span class="o">.</span><span class="n">StreetName</span><span class="o">),</span>
         <span class="o">(</span><span class="k">fun</span> <span class="o">(</span><span class="n">houseNumber</span><span class="o">,</span> <span class="n">streetName</span><span class="o">)</span> <span class="n">address</span> <span class="o">-&gt;</span> 
             <span class="o">{</span> <span class="n">address</span> <span class="k">with</span> <span class="n">HouseNumber</span> <span class="o">=</span> <span class="n">houseNumber</span><span class="o">;</span> <span class="n">StreetName</span> <span class="o">=</span> <span class="n">streetName</span><span class="o">;</span> <span class="o">})</span>
