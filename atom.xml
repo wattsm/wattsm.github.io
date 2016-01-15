@@ -4,13 +4,725 @@
  <title>Usermaatre</title>
  <link href="http://blog.usermaatre.co.uk/atom.xml" rel="self"/>
  <link href="http://blog.usermaatre.co.uk/"/>
- <updated>2015-11-20T16:03:44+00:00</updated>
+ <updated>2016-01-15T16:13:40+00:00</updated>
  <id>http://blog.usermaatre.co.uk</id>
  <author>
    <name>Mark Watts</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Optimising Civ 5 cities using genetic algorithms</title>
+   <link href="http://blog.usermaatre.co.uk/programming/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/"/>
+   <updated>2016-01-19T00:00:00+00:00</updated>
+   <id>http://blog.usermaatre.co.uk/programming/2016/01/19/optimising-civ5-cities-using-genetic-algorithms</id>
+   <content type="html">&lt;p&gt;I recently came across &lt;a href=&quot;https://www.cs.auckland.ac.nz/research/gameai/projects/GA%20in%20FreeCiv.pdf&quot;&gt;a paper from 2005 about using genetic algorithms to optimise cities in FreeCiv&lt;/a&gt;, a free game similar to Sid Meier&amp;#39;s Civilization. Genetic algorithms
+are an interesting approach to complex problems. Their brute force, trial and error approach means that they are often less effective than other algorithms but
+for some scenarios they can be surprisingly effective.&lt;/p&gt;
+
+&lt;p&gt;The paper spurred me to publish this post as over the course of 2015 I sporadically worked on a similar side project which used genetic algorithms to assign citizens in 
+Civilization 5. The 2005 paper does not include any actual algorithms and there does not appear to be any follow up, so in this post I will discuss the algorithm I 
+arrived at and its results.&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;h3&gt;Contents&lt;/h3&gt;
+
+&lt;p&gt;As this is quite a long post I have broken it down into sections so you can skip the preamble. If you just want to peruse the code then it&amp;#39;s &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm&quot;&gt;all here on GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#intro-civ5&quot;&gt;Civilization 5 city management&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#intro-ga&quot;&gt;A (very) short introduction to genetic algorithms&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#impl&quot;&gt;Implementation&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#impl-foundations&quot;&gt;Foundations&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#impl-civ5&quot;&gt;Civilization 5&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#running&quot;&gt;Running the algorithm&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#results&quot;&gt;Results&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#constantinople&quot;&gt;Constantinople (11 citizens)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#mecca&quot;&gt;Mecca (28 citizens)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#conclusion&quot;&gt;Conclusion and source code&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;&lt;a name=&quot;intro-civ5&quot;&gt;&lt;/a&gt;Civilization 5 city management&lt;/h3&gt;
+
+&lt;p&gt;A core part of Civilization 5 is managing your cities. A city has a population of citizens that can be assigned to assets within the city. These assets are either tiles representing
+the terrain within the city&amp;#39;s borders (e.g. farmed grassland, mines or desert trading posts) or buildings within the city itself. A tile can be assigned a maximum of one citizen. 
+Buildings can be assigned one or more citizens, depending on the type of building.&lt;/p&gt;
+
+&lt;p&gt;At its greatest extent a city will have access to 3 rings of hexagonal tiles surrounding its base tile. The first ring contains 6 tiles, the second 12 and the third 18. The screenshot
+below shows the city management screen with assignable tiles being highlighted in green (currently assigned) and blue (not assigned) and assignable buildings appearing on the right
+under the heading of &amp;quot;Specialist Buildings&amp;quot;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;/public/img/2016-01-15-constantinople.jpg&quot; target=&quot;_blank&quot;&gt;
+    &lt;img src=&quot;/public/img/2016-01-15-constantinople.jpg&quot; alt=&quot;The Civilization 5 city screen&quot; style=&quot;width:450px;&quot; /&gt;
+&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;When a citizen is assigned to a tile or building they generate resources that contribute towards the success of the city and your empire. There are a number of resource types but
+the most important ones are food, production, gold and science. Citizens can also be left unassigned in which case they might also produce some resources (usually not much) 
+depending on game factors which are not relevant here.&lt;/p&gt;
+
+&lt;p&gt;In order to squeeze the most out of your cities it is often necessary to micromanage citizen assignments. In a newly founded city you might want to prioritise food in order to 
+stimulate growth, in a city with access to luxuries (e.g. gems, spices or truffles) you might want to maximise gold and so on. &lt;/p&gt;
+
+&lt;p&gt;The game has built-in shortcuts for citizen assignment which can be used to assign citizens automatically to maximise a given resource type. This is fine if you simply want to 
+focus on one particular resource type (apart from the minimal amount of food necessary to feed your citizens). However if you want to take a more 
+nuanced approach - e.g. focusing primarily on production but also favouring science over gold - then it becomes more complicated. &lt;/p&gt;
+
+&lt;p&gt;This is the kind of complex scenario to which genetic algorithms can be applied to good effect.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;#top&quot;&gt;Back to top&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3&gt;&lt;a name=&quot;intro-ga&quot;&gt;&lt;/a&gt;A (very) short introduction to genetic algorithms&lt;/h3&gt;
+
+&lt;p&gt;Genetic algorithms are a topic that crops up every now and then on programming sites like &lt;a href=&quot;https://www.reddit.com/r/programming/search?q=genetic&amp;amp;restrict_sr=on&quot;&gt;/r/programming&lt;/a&gt; so there is a good chance you are already familiar with them. If not, 
+&lt;a href=&quot;http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3&quot;&gt;this post by Lee Jacobson&lt;/a&gt; is an excellent basic introduction using Java.&lt;/p&gt;
+
+&lt;p&gt;A genetic algorithm aims to solve a problem by mimicking the process of evolution via natural selection. For a given problem a genetic algorithm requires 4 things:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;An initial population of solutions.&lt;/li&gt;
+&lt;li&gt;A way of evaluating the fitness of a solution.&lt;/li&gt;
+&lt;li&gt;A way of combining two solutions to create a third.&lt;/li&gt;
+&lt;li&gt;A way of mutating (slightly changing) a solution.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The process is then fairly simple. A basic genetic algorithm might take the initial population and evaluate the fitness of each solution - if an acceptable solution exists 
+then return that solution as the result. If no acceptable solution exists then use the combination and mutation functions to create a new population based on the fittest 
+members of the current population and re-evaluate. The process can be repeated until an acceptable solution is found or some other exit criteria is reached. Note that genetic 
+algorithms are essentially informed trial and error and so are not guaranteed to find the optimal solution for any given scenario.&lt;/p&gt;
+
+&lt;p&gt;The algorithm will generally have a limit on the number of times the process can be repeated before exiting. If the combination, mutation and fitness functions are suitably
+written then in general the fitness of the population as a whole should rise with successive generations. &lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;That last sentence is really important.&lt;/strong&gt; The complexity of the combination, mutation and fitness functions can increase enormously as the complexity of the scenario increases. 
+Before turning my attention to Civilization 5 I originally looked at using genetic algorithms to try and create effective armies in Total War: Rome II. The sheer number
+of factors to consider (e.g. the multitude of unit stats and abilities, the definition of an effective army etc.) meant that the algorithm could just about produce viable
+armies but very little else. &lt;/p&gt;
+
+&lt;p&gt;So, before using a genetic algorithm for anything ensure that you are confident that you can effectively define combination, mutation and fitness functions.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;#top&quot;&gt;Back to top&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3&gt;&lt;a name=&quot;impl&quot;&gt;&lt;/a&gt;Implementation&lt;/h3&gt;
+
+&lt;p&gt;The algorithm I arrived at works on a basic model of the Civilization 5 city screen that provides useful functions like the ability to assign/unassign citizens, calculate resource 
+yields etc. I will not describe this model in detail here, but if you are interested then &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Model.fs&quot;&gt;see Model.fs&lt;/a&gt;. Similarly there are a number of utility functions for working with
+random numbers, lists, optional values etc. that can be &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Shared.fs&quot;&gt;seen in Shared.fs&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;There are two parts to the algorithm - a set of foundational functions that describe how populations are evolved and a set of functions specific to Civilization 5 citizen assignments
+that can be passed to those foundational functions.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;#top&quot;&gt;Back to top&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4&gt;&lt;a name=&quot;impl-foundations&quot;&gt;&lt;/a&gt;Foundations&lt;/h4&gt;
+
+&lt;p&gt;The first thing we need to do is give proper definitions to our combination, mutation and fitness functions given a solution type &lt;code&gt;&amp;#39;T&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CombineFunction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MutateFunction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;EvaluateFunction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Decimal&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So the combine function takes two instances of &lt;code&gt;&amp;#39;T&lt;/code&gt; and combines them to create a third. The mutation function takes an instance of  &lt;code&gt;&amp;#39;T&lt;/code&gt; and mutates it, usually
+in a fairly minor way. Finally, the fitness evaluation function takes an instance of &lt;code&gt;&amp;#39;T&lt;/code&gt; and returns a decimal score. Depending on the problem domain this might be a percentage
+or a points score of some kind.&lt;/p&gt;
+
+&lt;p&gt;Next, we can define a record type that contains settings for the algorithm.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AlgorithmSettings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;IsElitist&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Boolean&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; 
+    &lt;span class=&quot;n&quot;&gt;TournamentSize&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;MutationRate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Decimal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Combine&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CombineFunction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Mutate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MutateFunction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Evaluate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EvaluateFunction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Population&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This record contains the current population, the three functions used to evolve the population and some settings that control how that evolution is affected. &lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;IsElitist&lt;/code&gt; flag is used to specify whether the fittest individual in a population should be carried forward to the next generation. &lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;MutationRate&lt;/code&gt; setting is used to control how often mutations occur during evolution - e.g. a setting of &lt;code&gt;0.25&lt;/code&gt; would result in the mutation function 
+being applied to approximately 1 in 4 of the offspring produced by the combination function. &lt;/p&gt;
+
+&lt;p&gt;Finally, the &lt;code&gt;TournamentSize&lt;/code&gt; setting controls how large the tournament that is used to select individuals during combination is (&lt;a href=&quot;http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3&quot;&gt;see Lee Jacobson&amp;#39;s post for information about 
+tournaments&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;Running a tournament given an instance of our settings record is straight forward - randomly select competitors from the population and return the fittest.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;run&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Population&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;selectMany&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;TournamentSize&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;maxBy&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Evaluate&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Creating a new population based on the current one is similarly straight forward - run tournaments and use the combination function to create offspring until we have a new
+population of the desired size.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;combine&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;init&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Tournament&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Tournament&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Combine&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;length&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Population&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;offspring&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Parallel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;init&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toList&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;offspring&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note that this method allows what we shall delicately call &amp;quot;self combination&amp;quot; - the same individual could be selected from the population by both tournaments. &lt;/p&gt;
+
+&lt;p&gt;Now that we have a new population all that remains is to apply mutations.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;mutate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;individual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;RNG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MutationRate&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Mutate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;individual&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;individual&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The implementation of the &lt;code&gt;RNG&lt;/code&gt; module as well as the related &lt;code&gt;List.selectOne&lt;/code&gt; and &lt;code&gt;List.selectMany&lt;/code&gt; functions can be &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Shared.fs&quot;&gt;seen in Shared.fs&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We can put all of this together to create a function which evolves a population based on a settings record.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;evolve&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;offspring&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;IsElitist&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;fittest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;remaining&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+                &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Population&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sortBy&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Evaluate&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rev&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;detach&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Population&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;remaining&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fittest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;offspring&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ofList&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Parallel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mutate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toList&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This function will use the population combination function defined above to create a new population, carrying forward the fittest member of the current population 
+if the &lt;code&gt;IsElitist&lt;/code&gt; flag is set, before applying mutations to the result. Note that when the &lt;code&gt;IsElitist&lt;/code&gt; flag is set it is possible for the fittest member of 
+the current population to be mutated.&lt;/p&gt;
+
+&lt;p&gt;Finally, we can now create a function which will evolve a population for a given number of generations, keeping a record of the fittest individual in each generation.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RequireQualifiedAccess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;]&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Algorithm&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;run&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;generations&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;rec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;runWithHistory&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;generations&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;history&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;generations&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+
+                &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;history&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+                    &lt;span class=&quot;n&quot;&gt;history&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rev&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;index&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;history&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Population&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;population&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Population&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;evolve&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;            
+                &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;fittest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;maxBy&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Evaluate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;population&lt;/span&gt;
+
+                &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;generations&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;generations&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;history&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fittest&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;history&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Population&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;population&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+                &lt;span class=&quot;n&quot;&gt;runWithHistory&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;generations&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;history&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;runWithHistory&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;generations&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All of the code for the foundational functions can be &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Genetics.fs&quot;&gt;seen in Genetics.fs&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;#top&quot;&gt;Back to top&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4&gt;&lt;a name=&quot;impl-civ5&quot;&gt;&lt;/a&gt;Civilization 5&lt;/h4&gt;
+
+&lt;p&gt;Now that we have foundational set of functions that can be used to run generic genetic algorithms we need to implement the combine, mutate and fitness functions for our
+Civilization 5 citizen assignment scenario. &lt;/p&gt;
+
+&lt;p&gt;Our code algorithm can be thought of as an additional Civilization 5 advisor, so it will reside in the &lt;code&gt;Advisor&lt;/code&gt; module. Firstly, we can define a record type which contains 
+the advisor&amp;#39;s settings. We can then use this record type to create our foundational &lt;code&gt;AlgorithmSettings&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; record where &lt;code&gt;&amp;#39;T&lt;/code&gt; will be the model type &lt;code&gt;City.Instance&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AdvisorSettings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;PopulationSize&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;TournamentSize&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Generations&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;MutationRate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Decimal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Weightings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;YieldType&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Decimal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;member&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Default&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;PopulationSize&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;TournamentSize&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;Generations&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;MutationRate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;Weightings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Food&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Production&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Gold&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Faith&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Culture&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Science&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GreatArtist&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GreatWriter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GreatMusician&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GreatEngineer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GreatScientist&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;YieldType&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GreatMerchant&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;];&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Most of the properties of this record are self explanatory. The &lt;code&gt;Weightings&lt;/code&gt; property is used when calculating the fitness of a solution and allows us to specify the relative
+importance that each resource type should be given.&lt;/p&gt;
+
+&lt;p&gt;We can use the weightings to define a fitness evaluation function.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;evaluate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;weightings&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getWeightedValue&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;yield&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Yield&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getType&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;yield&amp;#39;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;decimal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;Yield&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getValue&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;yield&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;factor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+            &lt;span class=&quot;n&quot;&gt;weightings&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tryFind&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fst&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;((=)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;type&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;snd&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unwrap&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;defaultWeighting&lt;/span&gt;
+
+        &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;factor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;  
+
+    &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Starving&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0M&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; 
+            &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getYields&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt;  &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sumBy&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getWeightedValue&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here we simply take the yields of the city, weight them accordingly and sum them. We use an &lt;a href=&quot;https://msdn.microsoft.com/en-us/library/dd233248.aspx&quot;&gt;active pattern&lt;/a&gt; to detect starving cities and arbitrarily give them a fitness of 0. Note
+that the &lt;code&gt;defaultWeighting&lt;/code&gt; is 0 so if no weighting is supplied for a resource type then its yield will not contribute towards the city&amp;#39;s fitness score.&lt;/p&gt;
+
+&lt;p&gt;Combining two cities is slightly more complex. The approach I have taken here is for each citizen to randomly choose between their assignment in the first city and their 
+assignment in the second. If the chosen assignment cannot be used (e.g. the asset is a building and is at full capacity in the new city) then the citizen is left unassigned.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;combine&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//Get a flattened list of assignments - e.g. [ (asset, 2); ] becomes [ asset; asset; ]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;getAssignments&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+        &lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getCitizenAssignments&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;collect&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;asset&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;init&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;asset&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//Randomly chose between a city X and a city Y assignment&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;pickAssignment&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;assignmentX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assignmentY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;RNG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flip&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;assignmentX&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;assignmentY&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//Apply an assignment if possible. If not, the citizen is unemployed.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;applyAssignment&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;asset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;assetId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Asset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getId&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;asset&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;isAssignable&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assetId&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+            &lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;assign&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assetId&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cityX&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cityY&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; 
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;assignmentsX&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getAssignments&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cityX&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;assignmentsY&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getAssignments&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cityY&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;unassignedCity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unassignAll&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cityX&lt;/span&gt;
+
+        &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;zip&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assignmentsX&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assignmentsY&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pickAssignment&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;choose&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;               
+        &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fold&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;applyAssignment&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unassignedCity&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Similarly mutation is fairly complicated. The approach I have taken here is that if a city has unassigned citizens there is a 50/50 chance that one of them will be assigned to
+a randomly chosen asset. Otherwise a citizen will be unassigned and there is a 50/50 chance that they will be reassigned to a randomly chosen asset. &lt;/p&gt;
+
+&lt;p&gt;There is a bias here towards assigning rather than unassigning citizens - I took this approach because unassigned citizens rarely contribute towards a city as much as assigned 
+citizens.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;mutate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;unassign&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assign&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;RNG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flip&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hasUnemployedCitizens&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;//50% chance of assigning an unemployed citizen, if possible...&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;true&lt;/span&gt; 
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;//Otherwise definitely unassign a citizen and 50% chance of assigning them elsewhere&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;RNG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flip&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;city&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unassign&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;assetId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+                &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getAssignedAssets&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fst&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Asset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;selectOne&lt;/span&gt; 
+            &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unassign&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assetId&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;city&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assign&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;assets&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getAssignableAssets&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&amp;#39;&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assets&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&amp;#39;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; 
+            &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;assetId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+                &lt;span class=&quot;n&quot;&gt;assets&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Asset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getId&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;|&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;selectOne&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;City&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;assign&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assetId&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;city&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;city&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We can use these functions and the &lt;code&gt;AdvisorSettings&lt;/code&gt; record to create an &lt;code&gt;AlgorithmSettings&amp;lt;City.Instance&amp;gt;&lt;/code&gt; record that can be passed to our foundational &lt;code&gt;Algorithm.run&lt;/code&gt; function. 
+The initial population is created by taking a prototypical &lt;code&gt;City.Instance&lt;/code&gt; that has no assignments and assigning citizens to the highest food producing assets until the 
+city can feed itself, and then randomly assigning any remaining citizens. &lt;/p&gt;
+
+&lt;p&gt;For the purposes of this scenario we reformat the results of the &lt;code&gt;Algorithm.run&lt;/code&gt; function. That reformatting and all of the various utility functions used above can be found
+in the &lt;code&gt;Advisor&lt;/code&gt; module and can be &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Civ.fs&quot;&gt;seen in Civ.fs&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;#top&quot;&gt;Back to top&lt;/a&gt; &lt;/p&gt;
+
+&lt;h3&gt;&lt;a name=&quot;running&quot;&gt;&lt;/a&gt;Running the algorithm&lt;/h3&gt;
+
+&lt;p&gt;The example program included in &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm&quot;&gt;the GitHub repository&lt;/a&gt; loads details of the city from an embedded JSON file. This file contains the city&amp;#39;s size (number of assignable citizens),
+base yields and details of tiles and buildings. The algorithm is run for the city and details of the 
+final solution and fittest solution in each generation are printed to the console.&lt;/p&gt;
+
+&lt;p&gt;As you can see in the code above, the default settings for the algorithm are a population size of 40, a tournament size of 8, 100 generations and a mutation rate of 1/3. This is
+probably overkill for smaller cities.&lt;/p&gt;
+
+&lt;p&gt;You can run the program for yourself - simply configure the settings at the top of &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Program.fs&quot;&gt;Program.fs&lt;/a&gt; and run the project. After a brief pause the results will be printed to the console.&lt;/p&gt;
+
+&lt;p&gt;In order to make the program&amp;#39;s output as readable as possible I have assigned tiles a label in the format &amp;quot;ring/index&amp;quot;. &lt;a href=&quot;/public/img/2016-01-15-city-map.jpg&quot;&gt;This diagram illustrates this system&lt;/a&gt;, 
+where B is the base tile.&lt;/p&gt;
+
+&lt;h3&gt;&lt;a name=&quot;results&quot;&gt;&lt;/a&gt;Results&lt;/h3&gt;
+
+&lt;p&gt;We shall run our algorithm against two cities, one small and one large, and compare our results against the game&amp;#39;s built-in shortcuts. These shortcuts allow you to quickly
+change citizen assignments within a city to focus on a particular resource type. &lt;/p&gt;
+
+&lt;p&gt;Firstly we shall compare the &amp;quot;default focus&amp;quot; shortcut which should be broadly equivalent to running our algorithm with every resource type given a weighting of 1. &lt;/p&gt;
+
+&lt;p&gt;Then we shall compare the built-in shortcuts for the four primary resource types (food, production, gold and science) to our algorithm. In this scenario the selected resource
+type will be given a weighting of 1 and all others will be given a weighting of 0.&lt;/p&gt;
+
+&lt;p&gt;Finally we shall run our algorithm with a variety of multi-focus weightings to see if the related resource type yields respond as we&amp;#39;d expect. &lt;/p&gt;
+
+&lt;p&gt;Some notes on the results:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Yields shown are base yields and do not include percentage multipliers from buildings or other game factors;&lt;/li&gt;
+&lt;li&gt;Maximum values are calculated based purely on assigning citizens to maximise a resource type. No consideration is given to meeting the city&amp;#39;s food requirements.&lt;/li&gt;
+&lt;li&gt;The tables below focus only the primary four resource types - yields for other resource types are not shown.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;&lt;a name=&quot;constantinople&quot;&gt;&lt;/a&gt;Constantinople (11 citizens)&lt;/h4&gt;
+
+&lt;p&gt;Our first set of tests will by run against the &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Constantinople.json&quot;&gt;city of Constantinople&lt;/a&gt; (&lt;a href=&quot;/public/img/2016-01-15-constantinople.jpg&quot;&gt;screenshot&lt;/a&gt;), a modest city with a few resource 
+producing buildings.&lt;/p&gt;
+
+&lt;p&gt;The table below shows yields for the &amp;quot;default focus&amp;quot; scenario. Maximum possible yields for resource types are included in the headers.&lt;/p&gt;
+
+&lt;table&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;&lt;/th&gt;
+            &lt;th&gt;Food (65)&lt;/th&gt;
+            &lt;th&gt;Production (41)&lt;/th&gt;
+            &lt;th&gt;Gold (35)&lt;/th&gt;
+            &lt;th&gt;Science (9)&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Built-in shortcut&lt;/td&gt;
+            &lt;td&gt;56&lt;/td&gt;
+            &lt;td&gt;32&lt;/td&gt;
+            &lt;td&gt;32&lt;/td&gt;
+            &lt;td&gt;6&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Genetic algorithm&lt;/td&gt;
+            &lt;td&gt;54&lt;/td&gt;
+            &lt;td&gt;30&lt;/td&gt;
+            &lt;td&gt;33&lt;/td&gt;
+            &lt;td&gt;9&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;As expected our algorithm, while significantly slower, produces similar yields to the built-in shortcut.&lt;/p&gt;
+
+&lt;p&gt;The next table shows yields for the four primary resource focus scenarios. &lt;/p&gt;
+
+&lt;table&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Resource&lt;/th&gt;
+            &lt;th&gt;Maximum&lt;/th&gt;
+            &lt;th&gt;Built-in shortcut&lt;/th&gt;
+            &lt;th&gt;Genetic algorithm&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;     
+        &lt;tr&gt;
+            &lt;td&gt;Food&lt;/td&gt;
+            &lt;td&gt;65&lt;/td&gt;
+            &lt;td&gt;65&lt;/td&gt;
+            &lt;td&gt;65&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Production&lt;/td&gt;
+            &lt;td&gt;41&lt;/td&gt;         
+            &lt;td&gt;35&lt;/td&gt;
+            &lt;td&gt;40&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Gold&lt;/td&gt;
+            &lt;td&gt;35&lt;/td&gt;
+            &lt;td&gt;35&lt;/td&gt;
+            &lt;td&gt;35&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Science&lt;/td&gt;
+            &lt;td&gt;9&lt;/td&gt;
+            &lt;td&gt;9&lt;/td&gt;
+            &lt;td&gt;9&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;For the most part our algorithm achieves similar yields as the built-in shortcuts. The notable exception is production, where our genetic algorithm sacrifices food for 
+more production leaving the city stagnant with just enough food to feed itself (42). I did consider implementing a penalty for this condition but in the end I have only penalised
+starving cities.&lt;/p&gt;
+
+&lt;p&gt;Our algorithm is significantly slower than the built-in shortcuts, however the most useful property or our algorithm is that we can request more nuanced solutions 
+than simply maximising a given resource. &lt;/p&gt;
+
+&lt;p&gt;The table below shows some example outputs for various focus scenarios. Weightings are shown as an abbreviation (food = F, production = P, gold = G, science = S) and 
+their decimal value. &lt;/p&gt;
+
+&lt;table&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Weightings&lt;/th&gt;
+            &lt;th&gt;Food (65)&lt;/th&gt;
+            &lt;th&gt;Production (41)&lt;/th&gt;
+            &lt;th&gt;Gold (35)&lt;/th&gt;
+            &lt;th&gt;Science (9)&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;             
+        &lt;tr&gt;
+            &lt;td&gt;1.0F, 1.0P&lt;/td&gt;
+            &lt;td&gt;61&lt;/td&gt;
+            &lt;td&gt;34&lt;/td&gt;
+            &lt;td&gt;25&lt;/td&gt;
+            &lt;td&gt;3&lt;/td&gt;          
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1.0F, 0.75P&lt;/td&gt;
+            &lt;td&gt;65&lt;/td&gt;
+            &lt;td&gt;30&lt;/td&gt;
+            &lt;td&gt;24&lt;/td&gt;
+            &lt;td&gt;3&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1.0F, 0.5P, 0.5G&lt;/td&gt;
+            &lt;td&gt;64&lt;/td&gt;
+            &lt;td&gt;31&lt;/td&gt;
+            &lt;td&gt;33&lt;/td&gt;
+            &lt;td&gt;3&lt;/td&gt;
+        &lt;/tr&gt;       
+        &lt;tr&gt;
+            &lt;td&gt;1.0G, 0.5P&lt;/td&gt;
+            &lt;td&gt;43&lt;/td&gt;
+            &lt;td&gt;38&lt;/td&gt;
+            &lt;td&gt;35&lt;/td&gt;
+            &lt;td&gt;3&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1.0S, 1.0G, 1.0P&lt;/td&gt;
+            &lt;td&gt;45&lt;/td&gt;
+            &lt;td&gt;36&lt;/td&gt;
+            &lt;td&gt;35&lt;/td&gt;
+            &lt;td&gt;9&lt;/td&gt;
+        &lt;/tr&gt;       
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Despite the trial and error approach the genetic algorithm seems to be arriving at good solutions. Production and food are produced by a large number of assets and
+so nearly always have high values. Gold and science, which are produced by fewer assets, vary more dramatically based on their weighting.&lt;/p&gt;
+
+&lt;h4&gt;&lt;a name=&quot;mecca&quot;&gt;&lt;/a&gt; Mecca (28 citizens)&lt;/h4&gt;
+
+&lt;p&gt;Below are tables of similar test runs using the much larger &lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Mecca.json&quot;&gt;city of Mecca&lt;/a&gt; (&lt;a href=&quot;/public/img/2016-01-15-mecca.jpg&quot;&gt;city screen&lt;/a&gt;). As before we shall start by comparing the
+&amp;quot;default focus&amp;quot; yields.&lt;/p&gt;
+
+&lt;table&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;&lt;/th&gt;
+            &lt;th&gt;Food (90)&lt;/th&gt;
+            &lt;th&gt;Production (99)&lt;/th&gt;
+            &lt;th&gt;Gold (51)&lt;/th&gt;
+            &lt;th&gt;Science (40)&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Built-in shortcut&lt;/td&gt;
+            &lt;td&gt;68&lt;/td&gt;
+            &lt;td&gt;87&lt;/td&gt;
+            &lt;td&gt;25&lt;/td&gt;
+            &lt;td&gt;37&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Genetic algorithm&lt;/td&gt;
+            &lt;td&gt;58&lt;/td&gt;
+            &lt;td&gt;76&lt;/td&gt;
+            &lt;td&gt;33&lt;/td&gt;
+            &lt;td&gt;40&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;With more citizens and more assets to assign the differences between our algorithm and the built-in shortcut become more noticeable. I believe this is because the built-in shortcut
+does not actually give exactly equal weighting whereas our algorithm does - e.g. it treats food exactly the same as Great Merchant points, whereas I suspect the built-in shortcut
+is slightly more nuanced.&lt;/p&gt;
+
+&lt;p&gt;The next table shows yields for the four primary resource focus scenarios. &lt;/p&gt;
+
+&lt;table&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Resource&lt;/th&gt;
+            &lt;th&gt;Maximum&lt;/th&gt;
+            &lt;th&gt;Built-in shortcut&lt;/th&gt;
+            &lt;th&gt;Genetic algorithm&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Food&lt;/td&gt;
+            &lt;td&gt;90&lt;/td&gt;
+            &lt;td&gt;83&lt;/td&gt;
+            &lt;td&gt;90&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Production&lt;/td&gt;
+            &lt;td&gt;99&lt;/td&gt;         
+            &lt;td&gt;96&lt;/td&gt;
+            &lt;td&gt;99&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Gold&lt;/td&gt;
+            &lt;td&gt;51&lt;/td&gt;
+            &lt;td&gt;51&lt;/td&gt;
+            &lt;td&gt;51&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Science&lt;/td&gt;
+            &lt;td&gt;40&lt;/td&gt;
+            &lt;td&gt;40&lt;/td&gt;
+            &lt;td&gt;40&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;As expected, our algorithm is slightly better at squeezing resources out of a city but not by much.&lt;/p&gt;
+
+&lt;p&gt;Finally, the table below shows the yields for the same example focus scenarios used previously.&lt;/p&gt;
+
+&lt;table&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Weightings&lt;/th&gt;
+            &lt;th&gt;Food (90)&lt;/th&gt;
+            &lt;th&gt;Production (99)&lt;/th&gt;
+            &lt;th&gt;Gold (51)&lt;/th&gt;
+            &lt;th&gt;Science (40)&lt;/th&gt; 
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;             
+        &lt;tr&gt;
+            &lt;td&gt;1.0F, 1.0P&lt;/td&gt;
+            &lt;td&gt;87&lt;/td&gt;
+            &lt;td&gt;92&lt;/td&gt;
+            &lt;td&gt;25&lt;/td&gt;
+            &lt;td&gt;16&lt;/td&gt;         
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1.0F, 0.75P&lt;/td&gt;
+            &lt;td&gt;86&lt;/td&gt;
+            &lt;td&gt;94&lt;/td&gt;
+            &lt;td&gt;25&lt;/td&gt;
+            &lt;td&gt;16&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1.0F, 0.5P, 0.5G&lt;/td&gt;
+            &lt;td&gt;86&lt;/td&gt;
+            &lt;td&gt;86&lt;/td&gt;
+            &lt;td&gt;37&lt;/td&gt;
+            &lt;td&gt;16&lt;/td&gt;
+        &lt;/tr&gt;       
+        &lt;tr&gt;
+            &lt;td&gt;1.0G, 0.5P&lt;/td&gt;
+            &lt;td&gt;56&lt;/td&gt;
+            &lt;td&gt;87&lt;/td&gt;
+            &lt;td&gt;51&lt;/td&gt;
+            &lt;td&gt;16&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1.0S, 1.0G, 1.0P&lt;/td&gt;
+            &lt;td&gt;57&lt;/td&gt;
+            &lt;td&gt;85&lt;/td&gt;
+            &lt;td&gt;40&lt;/td&gt;
+            &lt;td&gt;40&lt;/td&gt;
+        &lt;/tr&gt;       
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;It is notable here that, in the first two cases, the production yield is lower when weighted by 1.0 than by 0.75. This illustrates the imperfect nature of genetic algorithms - 
+they will, with suitable combine, mutate and fitness functions, generally produce reasonable results but they are not guaranteed to find the &amp;quot;best&amp;quot; solution for any given problem, if
+such a thing even exists. All you can say is that it will generally arrive at a good solution.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;#top&quot;&gt;Back to top&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3&gt;&lt;a name=&quot;conclusion&quot;&gt;&lt;/a&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;In this post I have shown how I approached the problem of optimising citizen assignments in Civilization 5 using genetic algorithms. &lt;/p&gt;
+
+&lt;p&gt;Genetic algorithms can be applied effectively to this kind of complex problem. The results show that, while significantly slower, for simple cases the algorithm 
+produces similar solutions to the built-in shortcuts. However it is when the desired outcome is more complicated, and cannot be expressed simply as &amp;quot;maximise X&amp;quot;, that 
+genetic algorithms come into their own.&lt;/p&gt;
+
+&lt;p&gt;There are a number of optimisations which could be made to the algorithm that would improve performance. The population size and maximum number of generations could be set according
+to the population of the city - larger cities will likely require more work to optimise. There are a number of early exit strategies which could also be adopted - e.g. if a plateau in
+fitness scores is detected. I believe that with further optimisations the performance of my implementation could be improved significantly.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/wattsm/civ5-genetic-algorithm&quot;&gt;The full source code for the project is available on GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;#top&quot;&gt;Back to top&lt;/a&gt;&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Constructing lenses using quotations</title>
@@ -607,7 +1319,7 @@ fields simultaneously.&lt;/p&gt;
 &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt;
 
-    &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;member&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Street&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;member&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Street_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
         &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HouseNumber&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;StreetName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;),&lt;/span&gt;
         &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;houseNumber&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;streetName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; 
             &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;HouseNumber&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;houseNumber&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;StreetName&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;streetName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;})&lt;/span&gt;

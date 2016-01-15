@@ -129,6 +129,10 @@ dd {
   margin-bottom: .5rem;
 }
 
+li ul {
+ margin-bottom: 0;
+}
+
 /* Misc */
 hr {
   position: relative;

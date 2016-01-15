@@ -75,7 +75,7 @@
       <a class="sidebar-nav-item" href="https://github.com/wattsm" target="_blank">GitHub</a>      
     </nav>
 	
-	<p>&copy; 2015. All rights reserved.</p>
+	<p>&copy; 2016. All rights reserved.</p>
 	
 	
   </div>
@@ -84,6 +84,43 @@
 
     <div class="content container">	
       <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/programming/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">
+        Optimising Civ 5 cities using genetic algorithms
+      </a>
+    </h1>
+
+    <span class="post-date">
+		19 Jan 2016
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/fsharp">F#</a>, 	
+
+	
+	<a href="/tags/civilization-5">Civilization 5</a>, 	
+
+	
+	<a href="/tags/genetic-algorithms">Genetic algorithms</a>	
+
+&middot;
+<a data-disqus-identifier="Optimising Civ 5 cities using genetic algorithms" href="/programming/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/#disqus_thread">0 Comments</a>
+	</span>
+
+    <p>I recently came across <a href="https://www.cs.auckland.ac.nz/research/gameai/projects/GA%20in%20FreeCiv.pdf">a paper from 2005 about using genetic algorithms to optimise cities in FreeCiv</a>, a free game similar to Sid Meier&#39;s Civilization. Genetic algorithms
+are an interesting approach to complex problems. Their brute force, trial and error approach means that they are often less effective than other algorithms but
+for some scenarios they can be surprisingly effective.</p>
+
+<p>The paper spurred me to publish this post as over the course of 2015 I sporadically worked on a similar side project which used genetic algorithms to assign citizens in 
+Civilization 5. The 2005 paper does not include any actual algorithms and there does not appear to be any follow up, so in this post I will discuss the algorithm I 
+arrived at and its results.</p>
+
+	
+	<a href="/programming/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">Continue reading &raquo;</a>	
+  </div>
   
   <div class="post">
     <h1 class="post-title">
@@ -98,7 +135,10 @@
 Programming 
 
 	&middot;
-	<a href="/tags/fsharp">F#</a>	
+	<a href="/tags/fsharp">F#</a>, 	
+
+	
+	<a href="/tags/lenses">Lenses</a>	
 
 &middot;
 <a data-disqus-identifier="Constructing lenses using quotations" href="/programming/2015/11/20/constructing-lenses-using-quotations/#disqus_thread">0 Comments</a>
@@ -166,7 +206,10 @@ and one of those is stafeul actors. </p>
 Programming 
 
 	&middot;
-	<a href="/tags/fsharp">F#</a>	
+	<a href="/tags/fsharp">F#</a>, 	
+
+	
+	<a href="/tags/lenses">Lenses</a>	
 
 &middot;
 <a data-disqus-identifier="Lenses in F#" href="/programming/2015/10/15/lenses-in-fsharp/#disqus_thread">0 Comments</a>
@@ -211,39 +254,6 @@ further complicated by the surprisingly chequered history of leap years.</p>
 
 	
 	<a href="/programming/2015/05/20/modeling-historical-dates/">Continue reading &raquo;</a>	
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/programming/2015/04/10/odata-graph-delta/">
-        WebAPI OData GraphDelta<T>
-      </a>
-    </h1>
-
-    <span class="post-date">
-		10 Apr 2015
-&middot;
-Programming 
-
-	&middot;
-	<a href="/tags/webapi">WebAPI</a>, 	
-
-	
-	<a href="/tags/odata">OData</a>	
-
-&middot;
-<a data-disqus-identifier="WebAPI OData GraphDelta<T>" href="/programming/2015/04/10/odata-graph-delta/#disqus_thread">0 Comments</a>
-	</span>
-
-    <p>In the course of a recent project I ran into a problem with the standard <code>Delta&lt;T&gt;</code> included in Microsoft WebAPI&#39;s OData functionality: it treats complex properties as atomic 
-values meaning that instead of applying the delta to the existing value of the complex property it will create a new, blank value, apply the delta to that
-and then set the complex property to the result. </p>
-
-<p><a href="http://stackoverflow.com/questions/27963113/using-deltat-with-complex-objects">I asked about this behaviour on StackOverflow</a> and it turns out that it&#39;s a <a href="https://github.com/OData/WebApi/issues/135">known issue</a>. This post briefly outlines how I implemented an alternative to <code>Delta&lt;T&gt;</code> that handled changes to 
-complex types the same way as changes are handled for entities. The post will feature minimal code but source code is <a href="https://github.com/wattsm/odata-graph-delta">available on GitHub</a>.</p>
-
-	
-	<a href="/programming/2015/04/10/odata-graph-delta/">Continue reading &raquo;</a>	
   </div>
   
 </div>
