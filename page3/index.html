@@ -87,6 +87,44 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/programming/2014/11/27/testing-dependency-registrations-with-castle-windsor/">
+        Testing dependency registrations with Castle Windsor
+      </a>
+    </h1>
+
+    <span class="post-date">
+		27 Nov 2014
+&middot;
+Programming 
+
+	&middot;
+	<a href="/tags/castle-windsor">Castle Windsor</a>, 	
+
+	
+	<a href="/tags/xunit">xUnit</a>, 	
+
+	
+	<a href="/tags/unit-testing">Unit Testing</a>	
+
+&middot;
+<a data-disqus-identifier="Testing dependency registrations with Castle Windsor" href="/programming/2014/11/27/testing-dependency-registrations-with-castle-windsor/#disqus_thread">0 Comments</a>
+	</span>
+
+    <p>Until recently one of the most frustrating bugs I have routinely found in my own code is incomplete dependency registrations. </p>
+
+<p>It&#39;s a scenario I&#39;m sure everyone is familiar with - you&#39;ve just written some new components and got the unit tests passing, so now it&#39;s time to fire up the 
+application and see your creations in action. Then as soon as the application starts it falls over because you forgot to add your new components to the <a href="http://en.wikipedia.org/wiki/Inversion_of_control">IOC</a> container,
+leaving you with unresolvable dependencies.</p>
+
+<p>I would curse my own forgetfulness as I fixed the problem and would often think to myself that it would be really handy if there was a way to test your dependency registrations.
+I was pleasantly surprised then to find out that <a href="http://docs.castleproject.org/Default.aspx?Page=MainPage&amp;NS=Windsor&amp;AspxAutoDetectCookieSupport=1">Castle Windsor</a> supports exactly these kinds of tests.</p>
+
+	
+	<a href="/programming/2014/11/27/testing-dependency-registrations-with-castle-windsor/">Continue reading &raquo;</a>	
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/programming/2014/11/20/psexec-fsi-console-clear/">
         FSI, PsExec and Console.Clear
       </a>
@@ -206,40 +244,6 @@ the scenario, the available options and the solution I eventually arrived at.</p
 
 	
 	<a href="/programming/2014/11/07/implementing-a-simple-ihttpactionresult/">Continue reading &raquo;</a>	
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">
-        Creating versioned installers using Wix and TFS 2010
-      </a>
-    </h1>
-
-    <span class="post-date">
-		16 May 2014
-&middot;
-Programming 
-
-	&middot;
-	<a href="/tags/tfs">TFS</a>, 	
-
-	
-	<a href="/tags/wix">Wix</a>	
-
-&middot;
-<a data-disqus-identifier="Creating versioned installers using Wix and TFS 2010" href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/#disqus_thread">0 Comments</a>
-	</span>
-
-    <p>Recently I created a Wix installer for a product and wanted to include the version number in the installer name – e.g. “My Product.1.2.3.msi”. 
-I found this post which describes how to edit the .wixproj file to add a pre-build task to update the output filename to include a version. 
-This worked perfectly when building the project locally, but not as a part of our TFS 2010 automated build. The reason for this is that TFS 2010 
-outputs builds to the /Binaries/ directory rather than their local /bin/, so the relative paths in the solution given break. In this post I describe how I 
-edited the .wixproj file to work both locally and as a part of a TFS 2010 automated build.</p>
-
-<p>I also wanted my MSI  to use a three part version number rather than the default four part used.</p>
-
-	
-	<a href="/programming/2014/05/16/tfs-2010-versioned-wix-installers/">Continue reading &raquo;</a>	
   </div>
   
 </div>

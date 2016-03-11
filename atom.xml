@@ -4,13 +4,85 @@
  <title>Usermaatre</title>
  <link href="http://blog.usermaatre.co.uk/atom.xml" rel="self"/>
  <link href="http://blog.usermaatre.co.uk/"/>
- <updated>2016-01-15T16:13:40+00:00</updated>
+ <updated>2016-03-11T14:00:40+00:00</updated>
  <id>http://blog.usermaatre.co.uk</id>
  <author>
    <name>Mark Watts</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Why CompilationRepresentationAttribute is your friend</title>
+   <link href="http://blog.usermaatre.co.uk/programming/2016/03/11/compilation-representation-attribute-is-your-friend/"/>
+   <updated>2016-03-11T00:00:00+00:00</updated>
+   <id>http://blog.usermaatre.co.uk/programming/2016/03/11/compilation-representation-attribute-is-your-friend</id>
+   <content type="html">&lt;p&gt;In this short post I show why &lt;code&gt;CompilationRepresentationAttribute&lt;/code&gt; is your friend if you like the &amp;quot;union/struct plus module&amp;quot; way of 
+organising code as seen in core language features like &lt;code&gt;Option&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; and the &lt;code&gt;Option&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;h3&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;Dividing a piece of functionality between a struct or discriminated union representing the data and a module of the same name containing associated functions is a fairly 
+common practice in F#. Good examples are the &lt;code&gt;Option&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; and &lt;code&gt;Async&amp;lt;&amp;#39;T&amp;gt;&lt;/code&gt; types and associated &lt;code&gt;Option&lt;/code&gt; and &lt;code&gt;Async&lt;/code&gt; modules from F#&amp;#39;s core language features.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Some&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;of&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;None&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Option&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This style helps keep your code both tidy and readable, particularly when piping or composing multiple functions.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;runParallel&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;nn&quot;&gt;Async&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Parallel&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Async&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Catch&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Async&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RunSynchronously&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;CompilationRepresentationFlags&lt;/h3&gt;
+
+&lt;p&gt;Writing F# in this style is straight forward if your union or record type is generic.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Keywords&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;   
+
+&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Widget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;add&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;keyword&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The compiler will happily compile this code. When viewed in the object browser or from C# you can see that this code results in two types with different names - &lt;code&gt;Widget&amp;lt;T&amp;gt;&lt;/code&gt; for 
+the record type and &lt;code&gt;Widget&lt;/code&gt; for the module, with the functions compiling to static methods.&lt;/p&gt;
+
+&lt;p&gt;However, you will run into problems if your union or record type is not generic.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Widget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Widget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is because now the compiled representations of the record and module have the same name.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;Duplicate definition of type, exception or module `Widget`
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;One way to avoid this is to simply change your naming convention - e.g. perhaps use &lt;code&gt;Widget&lt;/code&gt; for the record/struct and &lt;code&gt;Widgets&lt;/code&gt; for the module. However, if you prefer the names
+to match then F# lets you have your cake and eat it.&lt;/p&gt;
+
+&lt;p&gt;Enter &lt;a href=&quot;https://msdn.microsoft.com/en-us/library/ee353574.aspx&quot;&gt;CompilationRepresentationAttribute&lt;/a&gt;. This is an attribute that can be added to language elements to tell the F# compiler how they should be represented when compiled using the
+&lt;a href=&quot;https://msdn.microsoft.com/en-us/library/ee370528.aspx&quot;&gt;CompilationRepresentationFlags&lt;/a&gt; enumation. &lt;/p&gt;
+
+&lt;p&gt;Of relevance to this discussion is the &lt;code&gt;ModuleSuffix&lt;/code&gt; value of the flags enumeration. When applied to a module this tells the F#
+compiler to add &amp;quot;Module&amp;quot; to the end of the type name.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Widget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CompilationRepresentation&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nn&quot;&gt;CompilationRepresentationFlags&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ModuleSuffix&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&amp;gt;]&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;module&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Widget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the example above this would mean that the &lt;code&gt;Widget&lt;/code&gt; module compiles to a type called &lt;code&gt;WidgetModule&lt;/code&gt;, thus resolving our type name problems. The module is still accessible
+as &lt;code&gt;Widget&lt;/code&gt; within F#, but in C# it would appear as &lt;code&gt;WidgetModule&lt;/code&gt;. This allows us to continue to use the record/union plus module style despite the
+record and module having the same name.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-fsharp&quot; data-lang=&quot;fsharp&quot;&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;init&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+    &lt;span class=&quot;nn&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;create&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Key&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Words&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+ </entry>
  
  <entry>
    <title>Optimising Civ 5 cities using genetic algorithms</title>
