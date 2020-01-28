@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="https://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <title>
+    
+      Modeling historical dates &middot; try/finally
+    
+  </title>
+
+  
+
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+
+  <!-- Additional head bits without overriding original head -->
+</head>
+
+
+  <body class="post">
+
+    <div id="sidebar">
+  <header>
+    <div class="site-title">
+      <a href="/">
+        
+          <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h24v24H0z" fill="none"/>
+  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+</svg></span>
+        
+        try/finally
+      </a>
+    </div>
+    <p class="lead">Occasional programming thoughts of Mark Watts.</p>
+  </header>
+  <nav id="sidebar-nav-links">
+  
+  
+
+  
+
+  
+
+
+  
+    
+  
+
+  
+    
+      <a class="page-link "
+          href="/about/">About</a>
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  
+
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  <!-- Optional additional links to insert in sidebar nav -->
+</nav>
+
+
+  
+    <span class="site-version">Currently v1.0</span>
+  
+
+  <nav id="sidebar-icon-links">
+  
+
+  
+  
+  
+  
+
+  <a id="github-link"
+      class="icon"
+      title="GitHub" aria-label="GitHub"
+      href="https://github.com/wattsm"
+      target="_blank">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" height="24" width="28"><path d="M12 2c6.625 0 12 5.375 12 12 0 5.297-3.437 9.797-8.203 11.391-0.609 0.109-0.828-0.266-0.828-0.578 0-0.391 0.016-1.687 0.016-3.297 0-1.125-0.375-1.844-0.812-2.219 2.672-0.297 5.484-1.313 5.484-5.922 0-1.313-0.469-2.375-1.234-3.219 0.125-0.313 0.531-1.531-0.125-3.187-1-0.313-3.297 1.234-3.297 1.234-0.953-0.266-1.984-0.406-3-0.406s-2.047 0.141-3 0.406c0 0-2.297-1.547-3.297-1.234-0.656 1.656-0.25 2.875-0.125 3.187-0.766 0.844-1.234 1.906-1.234 3.219 0 4.594 2.797 5.625 5.469 5.922-0.344 0.313-0.656 0.844-0.766 1.609-0.688 0.313-2.438 0.844-3.484-1-0.656-1.141-1.844-1.234-1.844-1.234-1.172-0.016-0.078 0.734-0.078 0.734 0.781 0.359 1.328 1.75 1.328 1.75 0.703 2.141 4.047 1.422 4.047 1.422 0 1 0.016 1.937 0.016 2.234 0 0.313-0.219 0.688-0.828 0.578-4.766-1.594-8.203-6.094-8.203-11.391 0-6.625 5.375-12 12-12zM4.547 19.234c0.031-0.063-0.016-0.141-0.109-0.187-0.094-0.031-0.172-0.016-0.203 0.031-0.031 0.063 0.016 0.141 0.109 0.187 0.078 0.047 0.172 0.031 0.203-0.031zM5.031 19.766c0.063-0.047 0.047-0.156-0.031-0.25-0.078-0.078-0.187-0.109-0.25-0.047-0.063 0.047-0.047 0.156 0.031 0.25 0.078 0.078 0.187 0.109 0.25 0.047zM5.5 20.469c0.078-0.063 0.078-0.187 0-0.297-0.063-0.109-0.187-0.156-0.266-0.094-0.078 0.047-0.078 0.172 0 0.281s0.203 0.156 0.266 0.109zM6.156 21.125c0.063-0.063 0.031-0.203-0.063-0.297-0.109-0.109-0.25-0.125-0.313-0.047-0.078 0.063-0.047 0.203 0.063 0.297 0.109 0.109 0.25 0.125 0.313 0.047zM7.047 21.516c0.031-0.094-0.063-0.203-0.203-0.25-0.125-0.031-0.266 0.016-0.297 0.109s0.063 0.203 0.203 0.234c0.125 0.047 0.266 0 0.297-0.094zM8.031 21.594c0-0.109-0.125-0.187-0.266-0.172-0.141 0-0.25 0.078-0.25 0.172 0 0.109 0.109 0.187 0.266 0.172 0.141 0 0.25-0.078 0.25-0.172zM8.937 21.438c-0.016-0.094-0.141-0.156-0.281-0.141-0.141 0.031-0.234 0.125-0.219 0.234 0.016 0.094 0.141 0.156 0.281 0.125s0.234-0.125 0.219-0.219z"></path>
+</svg>
+
+  </a>
+
+  
+    <a id="tags-link"
+       class="icon"
+       title="Tags" aria-label="Tags"
+       href="/tags/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+    </a>
+  
+
+  
+    <a id="search-link"
+       class="icon"
+       title="Search" aria-label="Search"
+       href="/search/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
+    </a>
+  
+
+  <!-- Optional additional links to insert for icons links -->
+</nav>
+
+  <p>
+  &copy; 2020.  
+</p>
+
+</div>
+
+    <main class="container">
+      <header>
+  <h1 class="post-title">Modeling historical dates</h1>
+</header>
+<div class="content">
+  <div class="post-meta">
+  <span class="post-date">20 May 2015</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        fsharp
+      
+    
+  </span>
+</div>
+
+
+  <div class="post-body">
+    <p>As a part of a side project I continually fail to actually start I would need the ability to sort events based on a date. Sounds simple, right? And so it would be if 
+all of the dates were CE (or AD if you prefer) or if .Net’s DateTime type supported BCE dates. Unfortunately these dates could be BCE or CE and System.DateTime’s 
+minimum value is 1st Jan 1 CE. Further complicating the matter is the fact that these dates come from historical sources which can be extremely vague (e.g. “before January 17 BCE”).</p>
+
+<p>In this post I will look at modeling historical dates using F#. I’ll look at creating a model that captures the vagueness of historical dates and a method for sorting them which is 
+further complicated by the surprisingly chequered history of leap years.</p>
+
+<!-- more -->
+
+<h3 id="setting-the-scene">Setting the scene</h3>
+
+<p>To put the issues with historical dates into some context, consider the following list of dates taken from this <a href="http://en.wikipedia.org/wiki/List_of_Roman_battles">list of Roman battles</a>:</p>
+
+<table style="text-align:left;">
+  <thead>
+	<tr>
+		<th>Date</th>
+		<th>Description</th>
+	</tr>
+  </thead>
+  <tbody>
+	<tr>
+		<td>June 58 BCE</td>
+		<td>Battle of Arar</td>
+	</tr>
+	<tr>
+		<td>9th August 48 BCE</td>
+		<td>Battle of Pharsalus</td>
+	</tr>
+	<tr>
+		<td>43 CE</td>
+		<td>Battle of the Medway</td>
+	</tr>	
+  </tbody>
+</table>
+
+<p>As you can see, the dates range from complete to just the year. In addition you will frequently see events described as occuring “some time before July 77 CE” or “some time
+between March and May 1872 CE”.</p>
+
+<p>There are three challenges here:</p>
+
+<ul>
+  <li>System.DateTime cannot be used as it does not support anything prior to 01/01/0001.</li>
+  <li>Need to support partial dates.</li>
+  <li>Need to support concepts like “before”, “after” and “between”.</li>
+</ul>
+
+<p>There are some .Net libraries out there that look to address the first point (e.g. <a href="http://nodatime.org/">nodatime</a>) but on balance it would seem that a custom date model is in order.</p>
+
+<h3 id="modeling-dates">Modeling dates</h3>
+
+<p>Our first task is to create a model which captures both the partial nature of some dates - e.g. Jun 865 CE - and the vagueness of an event’s relation to a date - e.g. before 
+Jun 865 CE. We can do this by splitting these concepts between two model types.</p>
+
+<p>Firstly, let’s tackle partial dates by creating a <code class="highlighter-rouge">FuzzyDate</code> model. I am broadly using the <a href="http://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/">single case union</a> approach to models in F#.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Discriminated union for the two eras</span>
+<span class="k">type</span> <span class="nc">Era</span> <span class="p">=</span> 
+    <span class="p">|</span> <span class="nc">BCE</span>
+    <span class="p">|</span> <span class="nc">CE</span>
+
+<span class="c1">///Contains functions and types for working with "fuzzy" historical dates</span>
+<span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
+<span class="k">module</span> <span class="nc">FuzzyDate</span> <span class="p">=</span> 
+
+    <span class="c1">///Describes a basic fuzzy date</span>
+    <span class="k">type</span> <span class="nc">Data</span> <span class="p">=</span> <span class="p">{</span>
+        <span class="nc">Day</span> <span class="p">:</span> <span class="nc">Int32</span> <span class="n">option</span><span class="p">;</span>
+        <span class="nc">Month</span> <span class="p">:</span> <span class="nc">Int32</span> <span class="n">option</span><span class="p">;</span>
+        <span class="nc">Year</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+        <span class="nc">Era</span> <span class="p">:</span> <span class="nc">Era</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">with</span>
+        <span class="k">static</span> <span class="k">member</span> <span class="nc">Empty</span> <span class="p">=</span> 
+            <span class="p">{</span>
+                <span class="nc">Day</span> <span class="p">=</span> <span class="nc">None</span><span class="p">;</span>
+                <span class="nc">Month</span> <span class="p">=</span> <span class="nc">None</span><span class="p">;</span>
+                <span class="nc">Year</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
+                <span class="nc">Era</span> <span class="p">=</span> <span class="nn">Era</span><span class="p">.</span><span class="nc">CE</span><span class="p">;</span>
+            <span class="p">}</span>
+
+    <span class="c1">///Instance union type</span>
+    <span class="k">type</span> <span class="nc">Instance</span> <span class="p">=</span> <span class="nc">FuzzyDate</span> <span class="k">of</span> <span class="nc">Data</span>
+</code></pre></div></div>
+
+<p>All dates using this model must have an era and year but the month and day are optional. We can define some functions to act as constructors for the patterns we want
+to support. I have created a <code class="highlighter-rouge">Outcome&lt;T&gt;</code> type to represent success/failure conditions and will use it here to return either a <code class="highlighter-rouge">FuzzyDate.Instance</code> or an error message.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Validate a given date's components</span>
+<span class="k">let</span> <span class="k">private</span> <span class="p">_</span><span class="n">validate</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span> <span class="p">=</span> 
+
+	<span class="k">let</span> <span class="n">month'</span> <span class="p">=</span> <span class="nn">Option</span><span class="p">.</span><span class="n">unwrap</span> <span class="mi">1</span> <span class="n">month</span>
+	<span class="k">let</span> <span class="n">day'</span> <span class="p">=</span> <span class="nn">Option</span><span class="p">.</span><span class="n">unwrap</span> <span class="mi">1</span> <span class="n">day</span>
+
+	<span class="k">if</span> <span class="p">(</span><span class="n">year</span> <span class="p">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">then</span> 
+		<span class="p">(</span><span class="nc">Some</span> <span class="s2">"The year cannot be less than 1."</span><span class="p">)</span>
+	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">month'</span> <span class="p">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">month'</span> <span class="p">&gt;</span> <span class="mi">12</span><span class="p">)</span> <span class="k">then</span> 
+		<span class="p">(</span><span class="nc">Some</span> <span class="s2">"The month must be between 1 and 12."</span><span class="p">)</span>
+	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">day'</span> <span class="p">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">day'</span> <span class="p">&gt;</span> <span class="p">(</span><span class="nn">Month</span><span class="p">.</span><span class="n">getDayCount</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month'</span><span class="o">))</span> <span class="k">then</span> 
+		<span class="p">(</span><span class="nc">Some</span> <span class="s2">"The day is not valid for the given month and year."</span><span class="p">)</span>
+	<span class="k">else</span> <span class="nc">None</span>
+
+<span class="c1">///Validate a date's components and then create a success result if valid</span>
+<span class="k">let</span> <span class="k">private</span> <span class="p">_</span><span class="n">create</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span> <span class="p">=</span> 
+	<span class="k">match</span> <span class="o">(_</span><span class="n">validate</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span><span class="p">)</span> <span class="k">with</span>
+	<span class="p">|</span> <span class="nc">Some</span> <span class="n">message</span> <span class="p">-&gt;</span> <span class="nc">Error</span> <span class="n">message</span>
+	<span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> 
+		<span class="k">let</span> <span class="n">date</span> <span class="p">=</span> 
+			<span class="nc">FuzzyDate</span> <span class="p">(</span>
+				<span class="p">{</span> <span class="nn">Data</span><span class="p">.</span><span class="nc">Empty</span> 
+					<span class="k">with</span> 
+						<span class="nc">Day</span> <span class="p">=</span> <span class="n">day</span><span class="p">;</span> 
+						<span class="nc">Month</span> <span class="p">=</span> <span class="n">month</span><span class="p">;</span> 
+						<span class="nc">Year</span> <span class="p">=</span> <span class="n">year</span><span class="p">;</span> 
+						<span class="nc">Era</span> <span class="p">=</span> <span class="n">era</span><span class="p">;</span> 
+				<span class="p">}</span>
+			<span class="p">)</span>
+		<span class="k">in</span> <span class="p">(</span><span class="nc">Success</span> <span class="n">date</span><span class="p">)</span>
+
+<span class="c1">///Create a day, or fully specified date - e.g. 31st Jan 42B CE</span>
+<span class="k">let</span> <span class="n">createDay</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span> <span class="p">=</span> <span class="p">_</span><span class="n">create</span> <span class="n">era</span> <span class="n">year</span> <span class="p">(</span><span class="nc">Some</span> <span class="n">month</span><span class="p">)</span> <span class="p">(</span><span class="nc">Some</span> <span class="n">day</span><span class="p">)</span>
+
+<span class="c1">///Create a month - e.g. Jan 42 BCE</span>
+<span class="k">let</span> <span class="n">createMonth</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="p">=</span> <span class="p">_</span><span class="n">create</span> <span class="n">era</span> <span class="n">year</span> <span class="p">(</span><span class="nc">Some</span> <span class="n">month</span><span class="p">)</span> <span class="nc">None</span>
+
+<span class="c1">///Create a year - e.g. 42 BCE</span>
+<span class="k">let</span> <span class="n">createYear</span> <span class="n">era</span> <span class="n">year</span> <span class="p">=</span> <span class="p">_</span><span class="n">create</span> <span class="n">era</span> <span class="n">year</span> <span class="nc">None</span> <span class="nc">None</span>
+</code></pre></div></div>
+
+<p>Now we can create full or partial dates in the three basic formats:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Jun 20 1832 CE</span>
+<span class="k">let</span> <span class="n">complete</span> <span class="p">=</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createDay</span> <span class="nc">CE</span> <span class="mi">1832</span> <span class="mi">6</span> <span class="mi">20</span>
+
+<span class="c1">//May 7 BCE</span>
+<span class="k">let</span> <span class="n">quiteVague</span> <span class="p">=</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createMonth</span> <span class="nc">BCE</span> <span class="mi">7</span> <span class="mi">5</span>
+
+<span class="c1">//766 BCE</span>
+<span class="k">let</span> <span class="n">reallyVague</span> <span class="p">=</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createYear</span> <span class="nc">BCE</span> <span class="mi">766</span>
+</code></pre></div></div>
+
+<p>Now that we have support for partial dates we can start thinking about how to model on/before/after/between type dates.</p>
+
+<p><em>In this context between means that an event occurred at some point between two dates, but depending on your use case it could also be taken to mean 
+that an event started and finished on the dates given.</em></p>
+
+<p>To model on/before/after/between event dates I created an <code class="highlighter-rouge">EventDate</code> model which builds upon <code class="highlighter-rouge">FuzzyDate</code>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Contains functions and types for historical event dates</span>
+<span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
+<span class="k">module</span> <span class="nc">EventDate</span> <span class="p">=</span>
+
+    <span class="c1">///Union describing various types of event date</span>
+    <span class="k">type</span> <span class="nc">Data</span> <span class="p">=</span> 
+        <span class="p">|</span> <span class="nc">Specific</span> <span class="k">of</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span>
+        <span class="p">|</span> <span class="nc">Before</span> <span class="k">of</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span>
+        <span class="p">|</span> <span class="nc">After</span> <span class="k">of</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span>
+        <span class="p">|</span> <span class="nc">Between</span> <span class="k">of</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span> <span class="p">*</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span><span class="p">)</span>
+
+    <span class="c1">///Instance union type</span>
+    <span class="k">type</span> <span class="nc">Instance</span> <span class="p">=</span> <span class="nc">EventDate</span> <span class="k">of</span> <span class="nc">Data</span>
+</code></pre></div></div>
+
+<p>Using this model we can represent events that occurred on a specific date, before a date, after a date or at some point between two dates. Again we can add some constructor functions.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Creates a single specific date - e.g. 18th Apr 1472 CE</span>
+<span class="k">let</span> <span class="n">createSpecific</span> <span class="n">date</span> <span class="p">=</span> <span class="nc">EventDate</span> <span class="p">(</span><span class="nc">Specific</span> <span class="n">date</span><span class="p">)</span>
+
+<span class="c1">///Creates a "some time before" date - e.g. &lt; 13 BCE</span>
+<span class="k">let</span> <span class="n">createBefore</span> <span class="n">date</span> <span class="p">=</span> <span class="nc">EventDate</span> <span class="p">(</span><span class="nc">Before</span> <span class="n">date</span><span class="p">)</span>
+
+<span class="c1">///Creates a "some time after" date - e.g. &gt; 13 BCE</span>
+<span class="k">let</span> <span class="n">createAfter</span> <span class="n">date</span> <span class="p">=</span> <span class="nc">EventDate</span> <span class="p">(</span><span class="nc">After</span> <span class="n">date</span><span class="p">)</span>
+
+<span class="c1">///Creates a date range - e.g. 13BCE - 14th Jun 34 CE</span>
+<span class="k">let</span> <span class="n">createBetween</span> <span class="n">first</span> <span class="n">last</span> <span class="p">=</span> 
+
+	<span class="k">let</span> <span class="n">firstValue</span> <span class="p">=</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">getSortValue</span> <span class="n">first</span>
+	<span class="k">let</span> <span class="n">secondValue</span> <span class="p">=</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">getSortValue</span> <span class="n">last</span>
+
+	<span class="k">if</span> <span class="p">(</span><span class="n">firstValue</span> <span class="p">&gt;</span> <span class="n">secondValue</span><span class="p">)</span> <span class="k">then</span>
+		<span class="nc">Error</span> <span class="s2">"The second date cannot come before the first."</span>
+	<span class="k">else</span>        
+		<span class="nc">Success</span> <span class="p">(</span><span class="nc">EventDate</span> <span class="p">(</span><span class="nc">Between</span> <span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="o">)))</span>
+</code></pre></div></div>
+
+<p>We can now model a variety of vague historical dates.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//On 25th Dec 800 CE</span>
+<span class="k">let</span> <span class="n">exact</span> <span class="p">=</span> <span class="nn">EventDate</span><span class="p">.</span><span class="n">createSpecific</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createDay</span> <span class="nc">CE</span> <span class="mi">800</span> <span class="mi">12</span> <span class="mi">25</span><span class="p">)</span>
+
+<span class="c1">//Between Jan and 3rd Feb 1701 CE</span>
+<span class="k">let</span> <span class="n">quiteVague</span> <span class="p">=</span> 
+	<span class="nn">EventDate</span><span class="p">.</span><span class="n">createRange</span> 
+	<span class="p">&lt;|</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createMonth</span> <span class="nc">CE</span> <span class="mi">1701</span> <span class="mi">1</span><span class="p">)</span> 
+	<span class="p">&lt;|</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createDay</span> <span class="nc">CE</span> <span class="mi">1701</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="c1">//Before 700 BCE</span>
+<span class="k">let</span> <span class="n">reallyVague</span> <span class="p">=</span> <span class="nn">EventDate</span><span class="p">.</span><span class="n">createBefore</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createYear</span> <span class="nc">BCE</span> <span class="mi">700</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>I also created a module for parsing both <code class="highlighter-rouge">FuzzyDate</code> and <code class="highlighter-rouge">EventDate</code> from strings - you can see the <a href="https://github.com/wattsm/historical-dates/blob/master/HistoricalDates.App/Parser.fs">source code here on GitHub</a>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">date</span> <span class="p">=</span> <span class="nn">Parser</span><span class="p">.</span><span class="n">readEventDate</span> <span class="s2">"19 Oct 1691 CE"</span> <span class="c1">//Outcome&lt;EventDate&gt;</span>
+</code></pre></div></div>
+
+<h3 id="sorting-dates">Sorting dates</h3>
+
+<p>As I mentioned in the introduction my hypothetical app would need to be able to sort a series of events into chronological order. The vague nature of the dates
+and the mix of BCE and CE dates complicate sorting somewhat.</p>
+
+<p>In order to support sorting of <code class="highlighter-rouge">FuzzyDate</code> I added the <code class="highlighter-rouge">getSortValue</code> function which returns an integer which can used when sorting - e.g. using <code class="highlighter-rouge">Seq.sortBy</code>. The value 
+returned is the difference, in days, between the date provided and 1st Jan 1 BCE (the beginning of <a href="http://en.wikipedia.org/wiki/Astronomical_year_numbering">astronomical year</a> zero).  When dealing with partial dates a default value of 1 is simply used 
+for the missing part(s) of the date so both Jan 1 BCE and 1 BCE become 1st Jan 1 BCE. The table below contains examples of the result of <code class="highlighter-rouge">FuzzyDate.getSortValue</code>,</p>
+
+<table class="left-align">
+	<thead>
+		<th>Date</th>		
+		<th>Sort value</th>
+	</thead>
+	<tbody>
+		<tr>
+			<td>1 Jan 2 BCE</td>
+			<td>-365</td>
+		</tr>
+		<tr>
+			<td>31st Dec 2 BCE</td>
+			<td>-1</td>
+		</tr>
+		<tr>
+			<td>1st Jan 1 BCE</td>
+			<td>0</td>
+		</tr>
+		<tr>
+			<td>2nd Jan 1 BCE</td>
+			<td>1</td>
+		</tr>
+		<tr>
+			<td>1st Jan 1 CE</td>
+			<td>365</td>
+		</tr>
+	</tbody>
+</table>
+
+<p>The method for calculating the number of days since 1st Jan 1 BCE for a date differs slightly depending on whether the date is BCE or CE. For CE dates we can simply sum 
+the number of days since 1st Jan 1 CE and then add the number of days in 1 BCE.</p>
+
+<p>In the code below <code class="highlighter-rouge">data</code> is of type <code class="highlighter-rouge">FuzzyDate.Data</code>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//The sum of all days to date in the CE era plus the number of days in 1 BCE</span>
+<span class="k">let</span> <span class="n">dayCountCe</span> <span class="p">=</span> 
+	<span class="p">[</span> <span class="mi">1</span> <span class="p">..</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span> <span class="p">]</span>
+	<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">sumBy</span> <span class="p">(</span><span class="k">fun</span> <span class="n">year</span> <span class="p">-&gt;</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">year</span> <span class="p">=</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span><span class="p">)</span> <span class="k">then</span>
+				<span class="p">(</span><span class="nn">Year</span><span class="p">.</span><span class="n">getDayNumber</span> <span class="nc">CE</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span><span class="p">)</span> <span class="p">-</span> <span class="mi">1</span>
+			<span class="k">else</span>
+				<span class="nn">Year</span><span class="p">.</span><span class="n">getDayCount</span> <span class="nc">CE</span> <span class="n">year</span>
+		<span class="p">)</span>
+<span class="k">in</span> <span class="p">(</span><span class="n">dayCountCe</span> <span class="o">+</span> <span class="p">(</span><span class="nn">Year</span><span class="p">.</span><span class="n">getDayCount</span> <span class="nc">BCE</span> <span class="mi">1</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p>For BCE dates things are slightly different because the dates run “backwards” - i.e. 3 BCE comes <em>before</em> 2 BCE. For dates in 1 BCE itself we simply count the days as per the CE
+method. For any other year, Y, we sum the number of days in the the years between 2 and (Y - 1), if appropriate, add the number of days <em>remaining</em> in the year Y and add then 1 
+(because there are 0 days remaining in the year on 31st Dec, but we want the number of days to 1st Jan of the next year).</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Remember that BCE dates are backwards - e.g. 31st Dec 3BCE moves to 1st Jan 2BCE. </span>
+<span class="p">[</span> <span class="mi">2</span> <span class="p">..</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span> <span class="p">]</span>
+<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">sumBy</span> <span class="p">(</span><span class="k">fun</span> <span class="n">year</span> <span class="p">-&gt;</span>
+		<span class="k">if</span><span class="p">(</span><span class="n">year</span> <span class="p">=</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span><span class="p">)</span> <span class="k">then</span>
+			<span class="p">(</span><span class="nn">Year</span><span class="p">.</span><span class="n">getDaysRemaining</span> <span class="nc">BCE</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+		<span class="k">else</span>
+			<span class="nn">Year</span><span class="p">.</span><span class="n">getDayCount</span> <span class="nc">BCE</span> <span class="n">year</span>
+	<span class="p">)</span>
+</code></pre></div></div>
+
+<p>The result is then negated for dates prior to 1st Jan 1 BCE.</p>
+
+<p>This value allows us to chronologically sort a series of <code class="highlighter-rouge">FuzzyDate</code> instances. To support chronological sorting of <code class="highlighter-rouge">EventDate</code> instances I added a corresponding
+<code class="highlighter-rouge">getSortValue</code> function which simply uses <code class="highlighter-rouge">FuzzyDate.getSortValue</code> to get a baseline value, converts it to a decimal and then tweaks it slightly so that the before, after
+and between cases are placed appropriately - e.g. “before 18 BCE” should appear in the sorted list before “18 BCE”. The table below contains examples of the result of
+<code class="highlighter-rouge">EventDate.getSortValue</code>.</p>
+
+<table class="left-align">
+	<thead>
+		<th>Date</th>		
+		<th>Sort value</th>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Before 2nd Jan 1 BCE</td>
+			<td>0.9</td>
+		</tr>
+	
+		<tr>
+			<td>On 2nd Jan 1 BCE</td>
+			<td>1.0</td>		
+		</tr>
+		
+		<tr>
+			<td>After 2nd Jan 1 BCE</td>
+			<td>1.1</td>
+		</tr>
+		
+		<tr>
+			<td>Between 2nd Jan 1 BCE and 2nd Feb 1 BCE</td>
+			<td>1.1</td>
+		</tr>
+	</tbody>
+</table>
+
+<p>In the code below <code class="highlighter-rouge">data</code> is of type <code class="highlighter-rouge">EventDate.Data</code>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">getSortValue</span> <span class="p">=</span> <span class="p">_</span><span class="n">apply</span> <span class="p">(</span><span class="k">fun</span> <span class="n">data</span> <span class="p">-&gt;</span>
+	<span class="k">let</span> <span class="n">date</span><span class="p">,</span> <span class="n">adjustment</span> <span class="p">=</span> 
+		<span class="k">match</span> <span class="n">data</span> <span class="k">with</span>
+		<span class="p">|</span> <span class="nc">Specific</span> <span class="n">date</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="nc">M</span><span class="p">)</span>                                 <span class="c1">//Absolute date</span>
+		<span class="p">|</span> <span class="nc">Before</span> <span class="n">date</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="p">-</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="nc">M</span><span class="p">)</span>                                  <span class="c1">//Just before events on date</span>
+		<span class="p">|</span> <span class="nc">Between</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="o">_)</span> <span class="p">|</span> <span class="nc">After</span> <span class="n">date</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="nc">M</span><span class="p">)</span>                <span class="c1">//Just after events on date</span>
+	<span class="k">in</span> <span class="p">(</span><span class="n">decimal</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">getSortValue</span> <span class="n">date</span><span class="o">))</span> <span class="o">+</span> <span class="n">adjustment</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>We now have way of sorting event dates chronologically, but there’s a moderately sized elephant in the room: leap years. Several functions included in the snippets above requires us
+to be able to calculate leap years. So how are we doing that?</p>
+
+<div class="header-bug"></div>
+
+<h3 id="leap-years">Leap years</h3>
+
+<p><a href="http://en.wikipedia.org/wiki/Leap_year">Leap years</a> exist because the astronomical year (i.e. how long it takes the Earth to do one orbit of the Sun) is not completely synchronised with the calendar year.</p>
+
+<p>Leap years were first introduced in the Julian calendar in 46 BCE by Julius Caesar. An extra day was to be added to the year every 4 years to realign the calendar
+year with the astronomical year, but unfortunately the priests charged with maintaining the calendar erroneously added a day to the year every 3 years. To mitigate 
+this error there were no leap years between 8 BCE and 4 CE.</p>
+
+<p>According to the <a href="http://en.wikipedia.org/wiki/Julian_calendar#Leap_year_error">latest works</a> this means that the leap years between the introduction of the Julian calendar in 46 BCE and 4 CE are 44, 41, 38, 35, 32, 29, 26, 23, 20, 17, 14, 11 and 8 BCE. The next
+leap year is then 4 CE and every 4 years after that until the introduction of the Gregorian calendar in 1582 CE.</p>
+
+<p>The calculation of leap years in the Gregorian calendar is slightly more complicated than in the Julian calendar as it had been noticed that the astronomical year was not quite
+exactly 365.25 days long and so the Julian method was actually over-compensating slightly.</p>
+
+<p>In the Gregorian calendar a year is a leap year if it is divisible by 4 and not divisible by 100 or also divisible by 400. So, for example, 1800 CE is not a leap year despite being
+divisible by 4 because it is also divisible by 100 but not 400. On the other hand 2000 CE is a leap year because it is divisible by 4, 100 and 400.</p>
+
+<p>The two <code class="highlighter-rouge">getSortValue</code> functions we have already looked at are based on the <a href="http://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar">proleptic Gregorian calendar</a> which simply extends our current calendar back into the past prior to
+its introduction. When calculating the leap year we also use the <a href="http://en.wikipedia.org/wiki/Astronomical_year_numbering">astronomical year</a> which allows us to easily calculate leap years for BCE dates (where 1 BCE is year 0).</p>
+
+<p>When researching leap years most sources seemed to suggest that your choice of leap year calculation would depend on what period you were working with and whether
+seasonal dates were important. As the events we are sorting could be from any time period I have decided on an hybrid approach which I have no doubt has all manner of issues
+for serious historians and horologists, but seems good enough for my purposes. Essentially my approach was to consider a year a leap year if the people alive at 
+the time would have done so. This means no leap years prior to 46 BCE and “fudged” dates between 46 BCE and 4 CE.</p>
+
+<p>To calculate leap years we first we need to convert our era-based year into an astronomical year. This allows us to easily calculate leap years using the modulo operation.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">getAstronomicalYear</span> <span class="n">year</span> <span class="p">=</span> <span class="k">function</span>
+	<span class="p">|</span> <span class="nc">CE</span> <span class="p">-&gt;</span> <span class="n">year</span>
+	<span class="p">|</span> <span class="nc">BCE</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">year</span> <span class="p">-</span> <span class="mi">1</span><span class="p">)</span> <span class="p">*</span> <span class="p">-</span><span class="mi">1</span>
+</code></pre></div></div>
+
+<p>Next we need a way of deciding which leap year system to use. I implement this as an <a href="https://msdn.microsoft.com/en-us/library/dd233248.aspx">active pattern</a>, one of F#’s handiest features.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Contains the starting years for various leap year calculations</span>
+<span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
+<span class="k">module</span> <span class="nc">StartYears</span> <span class="p">=</span> 
+	<span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">Triennial</span> <span class="p">=</span> <span class="p">-</span><span class="mi">45</span>
+	<span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">Julian</span> <span class="p">=</span> <span class="mi">4</span>
+	<span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">Gregorian</span> <span class="p">=</span> <span class="mi">1582</span>
+
+<span class="c1">///Active pattern used to decide on the leap year calculation to be used</span>
+<span class="k">let</span> <span class="o">(|</span><span class="nc">None</span><span class="p">|</span><span class="nc">Triennial</span><span class="p">|</span><span class="nc">Julian</span><span class="p">|</span><span class="nc">Gregorian</span><span class="o">|)</span> <span class="n">astronomicalYear</span> <span class="p">=</span> 
+	<span class="k">if</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">&gt;=</span> <span class="nn">StartYears</span><span class="p">.</span><span class="nc">Gregorian</span><span class="p">)</span> <span class="k">then</span>
+
+		<span class="nc">Gregorian</span>
+
+	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">&gt;=</span> <span class="nn">StartYears</span><span class="p">.</span><span class="nc">Julian</span><span class="p">)</span> <span class="k">then</span>
+
+		<span class="nc">Julian</span>
+
+	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">&gt;=</span> <span class="nn">StartYears</span><span class="p">.</span><span class="nc">Triennial</span><span class="p">)</span> <span class="k">then</span>
+
+		<span class="nc">Triennial</span>
+
+	<span class="k">else</span>
+	
+		<span class="nc">None</span>
+</code></pre></div></div>
+
+<p>Now that we know which method we want to use we need some functions to actually determine whether a given astronomical year is a leap year.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///True if a year is an erroneous triennial leap year in the period between 46 BCE and 4 CE</span>
+<span class="k">let</span> <span class="n">isTriennialLeapYear</span> <span class="p">=</span> 
+
+	<span class="k">let</span> <span class="n">triennialLeapYears</span> <span class="p">=</span> <span class="p">[</span> <span class="p">-</span><span class="mi">43</span> <span class="p">..</span> <span class="mi">3</span> <span class="p">..</span> <span class="p">-</span><span class="mi">7</span> <span class="p">]</span> <span class="c1">//Every 3 years between 44 BCE and 8 BCE</span>
+
+	<span class="k">fun</span> <span class="n">astronomicalYear</span> <span class="p">-&gt;</span>
+		<span class="nn">List</span><span class="p">.</span><span class="n">exists</span> <span class="o">((=)</span> <span class="n">astronomicalYear</span><span class="p">)</span> <span class="n">triennialLeapYears</span>
+
+<span class="c1">///True if a year is a calculated leap year according to the Julian method - e.g. divisible by 4 </span>
+<span class="k">let</span> <span class="n">isJulianLeapYear</span> <span class="n">astronomicalYear</span> <span class="p">=</span> <span class="o">((</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">4</span><span class="p">)</span> <span class="p">=</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="c1">///True if a year is a calculated leap year according to the Gregorian method - e.g. divisible by 4, and 400 if also divisible by 100</span>
+<span class="k">let</span> <span class="n">isGregorianLeapYear</span> <span class="n">astronomicalYear</span> <span class="p">=</span> 
+	<span class="k">match</span> <span class="o">((</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">4</span><span class="o">),</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">100</span><span class="o">))</span> <span class="k">with</span>
+	<span class="p">|</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">400</span><span class="p">)</span> <span class="p">=</span> <span class="mi">0</span>
+	<span class="p">|</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">_)</span> <span class="p">-&gt;</span> <span class="bp">true</span>                
+	<span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> <span class="bp">false</span>   
+</code></pre></div></div>
+
+<p>Finally, we can combine everything to create a single function that determines whether a year is a leap year.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///True if a year is a leap year</span>
+<span class="k">let</span> <span class="n">isLeapYear</span> <span class="n">era</span> <span class="n">year</span> <span class="p">=</span> 
+
+	<span class="k">let</span> <span class="n">astronomicalYear</span> <span class="p">=</span> <span class="n">getAstronomicalYear</span> <span class="n">year</span> <span class="n">era</span>
+
+	<span class="k">match</span> <span class="n">astronomicalYear</span> <span class="k">with</span>
+	<span class="p">|</span> <span class="nc">None</span> <span class="p">-&gt;</span> <span class="bp">false</span>
+	<span class="p">|</span> <span class="nc">Triennial</span> <span class="p">-&gt;</span> <span class="n">isTriennialLeapYear</span> <span class="n">astronomicalYear</span>
+	<span class="p">|</span> <span class="nc">Julian</span> <span class="p">-&gt;</span> <span class="n">isJulianLeapYear</span> <span class="n">astronomicalYear</span>
+	<span class="p">|</span> <span class="nc">Gregorian</span> <span class="p">-&gt;</span> <span class="n">isGregorianLeapYear</span> <span class="n">astronomicalYear</span>  
+</code></pre></div></div>
+
+<p>We can now use this function when calculating things like the day of the year of any given date, the number of days in a month or the days in a year. As I said I’m sure that 
+there are a multitude of issues with this approach that I am not sufficiently qualified to comment on, but as a naive compromise I think it works rather well.</p>
+
+<div class="header-big"></div>
+
+<h3 id="putting-it-all-together">Putting it all together</h3>
+
+<p>By way of an example I took the dates of Roman battles in the first century BCE and the first century CE from <a href="http://en.wikipedia.org/wiki/List_of_Roman_battles">this list</a> and wrote a small console application which randomises
+them and then sorts them into chronological order before writing a simple HTML page listing them. I also added a couple of “before” and “after” events as well for variety.</p>
+
+<p>The source code for the application can be <a href="https://github.com/wattsm/historical-dates/blob/master/HistoricalDates.App/Program.fs">found here on GitHub</a>.</p>
+
+<div class="header-big"></div>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>In this post I have shown how partial and vague historical dates can be modeled in F#. I have also outlined an approach to leap year calculations which, while probably questionable
+from a purely academic standpoint, works quite well as a simple compromise to what is a potentially extremely tricky problem.</p>
+
+<p>In terms of possible enhancements, being able to choose the method of leap year calculation might be useful depending on the events being sorted (e.g. if they are all from a particular
+period of history then one method may be preferable to another). Similarly being able to choose the calendar used to represent the dates might be useful - if dates were stored as 
+the number of days since 1st Jan 1 BCE it should be fairly straight forward to convert to a date in a specific calendar when required.</p>
+
+<p><a href="https://github.com/wattsm/historical-dates">The source for the project is available on GitHub</a>.</p>
+
+
+    
+
+
+
+<div class="post-tags">
+  
+    
+    <a href="/tags/#fsharp">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">fsharp</span>
+    </a>
+  
+    
+    <a href="/tags/#dotnet">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">dotnet</span>
+    </a>
+  
+</div>
+  </div>
+
+  
+  <section class="related">
+  <h2>Related Posts</h2>
+  <ul class="posts-list">
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">
+            Optimising Civ 5 cities using genetic algorithms
+            <small>19 Jan 2016</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">
+            Using DBSCAN for fun and (mostly) profit in Elite:Dangerous
+            <small>13 Feb 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/11/13/stateful-akka-actors-with-fsharp/">
+            Stateful Akka.NET actors with F#
+            <small>13 Nov 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</section>
+
+</div>
+
+    </main>
+
+    <!-- Optional footer content -->
+
+  </body>
+</html>

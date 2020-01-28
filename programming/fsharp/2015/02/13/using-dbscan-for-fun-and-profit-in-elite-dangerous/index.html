@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="https://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <title>
+    
+      Using DBSCAN for fun and (mostly) profit in Elite:Dangerous &middot; try/finally
+    
+  </title>
+
+  
+
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+
+  <!-- Additional head bits without overriding original head -->
+</head>
+
+
+  <body class="post">
+
+    <div id="sidebar">
+  <header>
+    <div class="site-title">
+      <a href="/">
+        
+          <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h24v24H0z" fill="none"/>
+  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+</svg></span>
+        
+        try/finally
+      </a>
+    </div>
+    <p class="lead">Occasional programming thoughts of Mark Watts.</p>
+  </header>
+  <nav id="sidebar-nav-links">
+  
+  
+
+  
+
+  
+
+
+  
+    
+  
+
+  
+    
+      <a class="page-link "
+          href="/about/">About</a>
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  
+
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  <!-- Optional additional links to insert in sidebar nav -->
+</nav>
+
+
+  
+    <span class="site-version">Currently v1.0</span>
+  
+
+  <nav id="sidebar-icon-links">
+  
+
+  
+  
+  
+  
+
+  <a id="github-link"
+      class="icon"
+      title="GitHub" aria-label="GitHub"
+      href="https://github.com/wattsm"
+      target="_blank">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" height="24" width="28"><path d="M12 2c6.625 0 12 5.375 12 12 0 5.297-3.437 9.797-8.203 11.391-0.609 0.109-0.828-0.266-0.828-0.578 0-0.391 0.016-1.687 0.016-3.297 0-1.125-0.375-1.844-0.812-2.219 2.672-0.297 5.484-1.313 5.484-5.922 0-1.313-0.469-2.375-1.234-3.219 0.125-0.313 0.531-1.531-0.125-3.187-1-0.313-3.297 1.234-3.297 1.234-0.953-0.266-1.984-0.406-3-0.406s-2.047 0.141-3 0.406c0 0-2.297-1.547-3.297-1.234-0.656 1.656-0.25 2.875-0.125 3.187-0.766 0.844-1.234 1.906-1.234 3.219 0 4.594 2.797 5.625 5.469 5.922-0.344 0.313-0.656 0.844-0.766 1.609-0.688 0.313-2.438 0.844-3.484-1-0.656-1.141-1.844-1.234-1.844-1.234-1.172-0.016-0.078 0.734-0.078 0.734 0.781 0.359 1.328 1.75 1.328 1.75 0.703 2.141 4.047 1.422 4.047 1.422 0 1 0.016 1.937 0.016 2.234 0 0.313-0.219 0.688-0.828 0.578-4.766-1.594-8.203-6.094-8.203-11.391 0-6.625 5.375-12 12-12zM4.547 19.234c0.031-0.063-0.016-0.141-0.109-0.187-0.094-0.031-0.172-0.016-0.203 0.031-0.031 0.063 0.016 0.141 0.109 0.187 0.078 0.047 0.172 0.031 0.203-0.031zM5.031 19.766c0.063-0.047 0.047-0.156-0.031-0.25-0.078-0.078-0.187-0.109-0.25-0.047-0.063 0.047-0.047 0.156 0.031 0.25 0.078 0.078 0.187 0.109 0.25 0.047zM5.5 20.469c0.078-0.063 0.078-0.187 0-0.297-0.063-0.109-0.187-0.156-0.266-0.094-0.078 0.047-0.078 0.172 0 0.281s0.203 0.156 0.266 0.109zM6.156 21.125c0.063-0.063 0.031-0.203-0.063-0.297-0.109-0.109-0.25-0.125-0.313-0.047-0.078 0.063-0.047 0.203 0.063 0.297 0.109 0.109 0.25 0.125 0.313 0.047zM7.047 21.516c0.031-0.094-0.063-0.203-0.203-0.25-0.125-0.031-0.266 0.016-0.297 0.109s0.063 0.203 0.203 0.234c0.125 0.047 0.266 0 0.297-0.094zM8.031 21.594c0-0.109-0.125-0.187-0.266-0.172-0.141 0-0.25 0.078-0.25 0.172 0 0.109 0.109 0.187 0.266 0.172 0.141 0 0.25-0.078 0.25-0.172zM8.937 21.438c-0.016-0.094-0.141-0.156-0.281-0.141-0.141 0.031-0.234 0.125-0.219 0.234 0.016 0.094 0.141 0.156 0.281 0.125s0.234-0.125 0.219-0.219z"></path>
+</svg>
+
+  </a>
+
+  
+    <a id="tags-link"
+       class="icon"
+       title="Tags" aria-label="Tags"
+       href="/tags/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+    </a>
+  
+
+  
+    <a id="search-link"
+       class="icon"
+       title="Search" aria-label="Search"
+       href="/search/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
+    </a>
+  
+
+  <!-- Optional additional links to insert for icons links -->
+</nav>
+
+  <p>
+  &copy; 2020.  
+</p>
+
+</div>
+
+    <main class="container">
+      <header>
+  <h1 class="post-title">Using DBSCAN for fun and (mostly) profit in Elite:Dangerous</h1>
+</header>
+<div class="content">
+  <div class="post-meta">
+  <span class="post-date">13 Feb 2015</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        fsharp
+      
+    
+  </span>
+</div>
+
+
+  <div class="post-body">
+    <p>[Elite:Dangerous] is the reboot of the classic 1984 space trading, combat and exploration game [Elite] and it has been out for a few months now. After some initial aimless wandering I, like a lot of
+people, settled on a career trading rare goods. These goods, as their name suggests, are rare and available in limited quantities and can bring in huge profits if sold sufficiently far away from 
+their system of origin.</p>
+
+<p>In order to maximise profits it is desirable to circulate as much as possible between systems that supply rare goods, buying and selling at each stop. One popular strategy
+is to follow a circular route, periodically selling and buying. Another, and the one I favour, is to ferry cargo between clusters of systems that supply rare goods - zipping around one cluster buying 
+goods and then travelling to another to sell before repeating the process.</p>
+
+<p>The Elite:Dangerous community has done a good job of exploring the game’s trade network and documenting what rare goods are available where, but it can be hard to visualise the systems relative to each
+other, even using the in-game galaxy map. So I thought it would be interesting to see if I could take that community generated data and group the systems together into clusters programmatically.</p>
+
+<p>This post details how I used an immutable [DBSCAN] implementation to identify rare goods clusters in Elite:Dangerous.</p>
+
+<!-- more -->
+
+<h3 id="dbscan">DBSCAN</h3>
+
+<p>I pondered approaches to clustering rare good systems on and off for a few days, coming up with various approaches before realising that the abstract problem of clustering points in 3D 
+space must have already been thoroughly addressed.</p>
+
+<p>Some cursory internet research lead me to the [DBSCAN] algorithm which is one of the most commonly used clustering algorithms in the scientific literature
+with the added bonus that it is both compact and elegant. The Wikipedia article also handily included [pseudo-code].</p>
+
+<p>The algorithm takes three parameters - a data set, the maximum distance between points in a cluster and the minimum number of points required to form a cluster. It then iterates over all points in the data set
+and uses neighbouring points within the maximum distance to create clusters.</p>
+
+<h3 id="modelling-rare-goods-in-elitedangerous">Modelling rare goods in Elite:Dangerous</h3>
+
+<p>Before I could implement any clustering algorithm I would need something to cluster. So I wrote a simple model that represents rare goods in Elite:Dangerous. The item that would eventually
+be clustered was the rare good <code class="highlighter-rouge">Manifest</code> of a aystem:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Represents rare goods information for a system</span>
+<span class="k">type</span> <span class="nc">Manifest</span> <span class="p">=</span> <span class="p">{</span>
+    <span class="nc">System</span> <span class="p">:</span> <span class="nc">System</span><span class="p">;</span>
+    <span class="nc">Commodities</span> <span class="p">:</span> <span class="p">(</span><span class="nc">Station</span> <span class="p">*</span> <span class="nc">Commodity</span><span class="p">)</span> <span class="kt">list</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>You can see the [rest of the model here], but to summarise:</p>
+
+<ul>
+  <li>A <code class="highlighter-rouge">System</code> has a set of 3D coordinates and is assigned an incremental integer id for use in comparisons.</li>
+  <li>A <code class="highlighter-rouge">Commodity</code> (rare good) has a name, price etc.</li>
+  <li>A <code class="highlighter-rouge">Station</code> has a name and orbital radius (I’m looking at you, [Hutton Orbital]).</li>
+</ul>
+
+<p>I then took local copies of the systems and rare goods data from [Phil Hibbs’ excellent Google spreadsheet], added the CSV files to my project and loaded the data into my model. If you are interested 
+in the raw data you can see the [systems data here] and the [rare goods data here], while the [data parsing is here].</p>
+
+<h3 id="immutable-dbscan-implementation">Immutable DBSCAN implementation</h3>
+
+<p>After writing a model and settling on DBSCAN as the clustering algorithm I had a quick look around to see what existing implementations I could find. I tend to avoid mutable state in F# as 
+much as possible so wanted an immutable solution. However, <a href="http://www.fssnip.net/jo">the only implementation I could find</a> was mutable. So, armed with the pseudo-code from Wikipedia 
+I set out to create an immutable version.</p>
+
+<p>I knew the function was going to be recursive, so the first thing I did was create a simple model of the state of the function that I could easily modify between calls:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Represents the current state of the algorithm</span>
+<span class="k">type</span> <span class="nc">State</span> <span class="p">=</span> <span class="p">{</span>
+	<span class="nc">ClusterNo</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+	<span class="nc">Clusters</span> <span class="p">:</span> <span class="p">(</span><span class="nc">Int32</span> <span class="p">*</span> <span class="nc">Manifest</span><span class="p">)</span> <span class="kt">list</span><span class="p">;</span>
+	<span class="nc">Noise</span> <span class="p">:</span> <span class="nc">Manifest</span> <span class="kt">list</span><span class="p">;</span>
+	<span class="nc">Visited</span> <span class="p">:</span> <span class="nc">Int32</span> <span class="kt">list</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">with</span>
+	<span class="k">static</span> <span class="k">member</span> <span class="nc">Empty</span> <span class="p">=</span> 
+		<span class="p">{</span>
+			<span class="nc">ClusterNo</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span>
+			<span class="nc">Clusters</span> <span class="p">=</span> <span class="bp">[]</span><span class="p">;</span>
+			<span class="nc">Noise</span> <span class="p">=</span> <span class="bp">[]</span><span class="p">;</span>
+			<span class="nc">Visited</span> <span class="p">=</span> <span class="bp">[]</span><span class="p">;</span>
+		<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This allowed me to keep track of the current cluster, what clusters manifests had already been assigned to, what manifests had been marked as noise (potential outliers) and what manifests had already
+been visited.</p>
+
+<p>I created a separate model for the algorithm settings which would be the input for any code calling the algorithm:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Represents the settings that can be used for this DBSCAN implementation</span>
+<span class="k">type</span> <span class="nc">Settings</span> <span class="p">=</span> <span class="p">{</span>
+    <span class="nc">Manifests</span> <span class="p">:</span> <span class="nc">Manifest</span> <span class="kt">list</span><span class="p">;</span>
+    <span class="nc">MaxDistance</span> <span class="p">:</span> <span class="nc">Decimal</span><span class="p">;</span>
+    <span class="nc">MinSize</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Various utility functions aside, my implementation closely followed the pseudo-code example. The function which does the majority of the heavy lifting is <code class="highlighter-rouge">expandCluster</code>:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Expand a cluster by recursively moving out from core points</span>
+<span class="k">let</span> <span class="n">expandCluster</span> <span class="n">settings</span> <span class="p">=</span>
+	
+	<span class="c1">//Partially apply some functions with settings where appropriate</span>
+	<span class="k">let</span> <span class="n">getLocalGroup'</span> <span class="p">=</span> <span class="n">getLocalGroup</span> <span class="n">settings</span>
+	<span class="k">let</span> <span class="n">isCore'</span> <span class="p">=</span> <span class="n">isCore</span> <span class="n">settings</span>
+
+	<span class="k">let</span> <span class="n">union</span> <span class="n">x</span> <span class="n">y</span> <span class="p">=</span> 
+		<span class="nn">List</span><span class="p">.</span><span class="n">append</span> <span class="n">x</span> <span class="n">y</span>
+		<span class="p">|&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">distinctBy</span> <span class="p">(</span><span class="k">fun</span> <span class="n">manifest</span> <span class="p">-&gt;</span> <span class="n">manifest</span><span class="p">.</span><span class="nn">System</span><span class="p">.</span><span class="nc">Id</span><span class="p">)</span>
+		<span class="p">|&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">toList</span>
+
+	<span class="k">let</span> <span class="k">rec</span> <span class="n">expandLocalGroup</span> <span class="n">state</span> <span class="p">=</span> <span class="k">function</span>
+		<span class="p">|</span> <span class="bp">[]</span> <span class="p">-&gt;</span> <span class="n">state</span>
+		<span class="p">|</span> <span class="n">manifest</span> <span class="p">::</span> <span class="n">manifests</span> <span class="k">when</span> <span class="p">(</span><span class="n">visited</span> <span class="n">manifest</span> <span class="n">state</span><span class="p">)</span> <span class="p">-&gt;</span> 
+
+			<span class="c1">//Manifest has already been visited; simply add to the current cluster if </span>
+			<span class="c1">//it has not already been clustered.</span>
+		
+			<span class="k">let</span> <span class="n">state'</span> <span class="p">=</span> 
+				<span class="k">if</span> <span class="p">(</span><span class="n">clustered</span> <span class="n">manifest</span> <span class="n">state</span><span class="p">)</span> <span class="k">then</span>
+					<span class="n">state</span>
+				<span class="k">else</span>
+					<span class="n">addToCluster</span> <span class="n">manifest</span> <span class="n">state</span>
+
+			<span class="n">expandLocalGroup</span> <span class="n">state'</span> <span class="n">manifests</span>
+
+		<span class="p">|</span> <span class="n">manifest</span> <span class="p">::</span> <span class="n">manifests</span> <span class="p">-&gt;</span>
+
+			<span class="c1">//Manifest has not been visited, so add to the visited list. As it has not been visited</span>
+			<span class="c1">//it also cannot be clustered, so add to the current cluster. Expand the local group and</span>
+			<span class="c1">//if this manifest represents a core point then add the local group to the list of</span>
+			<span class="c1">//manifests to consider and recurse.</span>
+
+			<span class="k">let</span> <span class="n">state'</span> <span class="p">=</span>                     
+				<span class="n">state</span>
+				<span class="p">|&gt;</span> <span class="n">recordVisit</span> <span class="n">manifest</span>
+				<span class="p">|&gt;</span> <span class="n">addToCluster</span> <span class="n">manifest</span>                      
+
+			<span class="k">let</span> <span class="n">localGroup</span> <span class="p">=</span> <span class="n">getLocalGroup'</span> <span class="n">manifest</span> <span class="c1">//Includes self</span>
+
+			<span class="k">let</span> <span class="n">manifests'</span> <span class="p">=</span> 
+				<span class="k">if</span> <span class="p">(</span><span class="n">isCore'</span> <span class="n">localGroup</span><span class="p">)</span> <span class="k">then</span>
+					<span class="n">union</span> <span class="n">manifests</span> <span class="n">localGroup</span>
+				<span class="k">else</span>
+					<span class="n">manifests</span>
+				
+			<span class="n">expandLocalGroup</span> <span class="n">state'</span> <span class="n">manifests'</span>
+
+	<span class="k">fun</span> <span class="n">manifest</span> <span class="n">localGroup</span> <span class="n">state</span> <span class="p">-&gt;</span>
+
+		<span class="c1">//Increment the cluster, add the current manifest and expand</span>
+
+		<span class="k">let</span> <span class="n">state'</span> <span class="p">=</span> <span class="n">startNewCluster</span> <span class="n">manifest</span> <span class="n">state</span>
+		<span class="k">in</span> <span class="n">expandLocalGroup</span> <span class="n">state'</span> <span class="n">localGroup</span>
+</code></pre></div></div>
+
+<p>This function accepts a <code class="highlighter-rouge">Settings</code> input, defines some internal helper functions and returns another function with signature <code class="highlighter-rouge">Manifest -&gt; Manifest list -&gt; State -&gt; State</code> where the parameters
+are the manifest being considered, the list of manifests within the maximum distance (the local group) and the initial state and returning an updated state. This gives the function an 
+effective signature of <code class="highlighter-rouge">Settings -&gt; Manifest -&gt; Manifest list -&gt; State -&gt; State</code>.</p>
+
+<p>The function is used to create and expand a cluster, and works by first creating the new cluster by incrementing the <code class="highlighter-rouge">ClusterNo</code> of the state and and assigning the current manifest to that cluster, 
+then an internal recursive function, <code class="highlighter-rouge">expandLocalGroup</code>, is used to evaluate each manifest in the local group - adding and expanding as appropriate.</p>
+
+<p>You will notice at several points in this algorithm that it is possible for the same manifest to be considered multiple times. In these scenarios the <code class="highlighter-rouge">visited</code> and <code class="highlighter-rouge">clustered</code> functions are used
+to decide whether the manifest can be safely ignored.</p>
+
+<p>Once I had an implementation of <code class="highlighter-rouge">expandCluster</code> the rest was fairly straight forward:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Runs the DBSCAN algorithm against a list of manifests using the given settings</span>
+<span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="n">settings</span> <span class="p">=</span>
+
+	<span class="c1">//Partially apply some functions with settings where appropriate</span>
+	<span class="k">let</span> <span class="n">getLocalGroup'</span> <span class="p">=</span> <span class="n">getLocalGroup</span> <span class="n">settings</span>
+	<span class="k">let</span> <span class="n">expandCluster'</span> <span class="p">=</span> <span class="n">expandCluster</span> <span class="n">settings</span>
+	<span class="k">let</span> <span class="n">isCore'</span> <span class="p">=</span> <span class="n">isCore</span> <span class="n">settings</span>
+
+	<span class="k">fun</span> <span class="n">state</span> <span class="p">-&gt;</span> <span class="k">function</span>
+		<span class="p">|</span> <span class="bp">[]</span> <span class="p">-&gt;</span> <span class="n">state</span>
+		<span class="p">|</span> <span class="n">manifest</span> <span class="p">::</span> <span class="n">manifests</span> <span class="p">-&gt;</span>
+
+			<span class="k">let</span> <span class="n">state'</span> <span class="p">=</span> 
+				<span class="k">if</span> <span class="p">(</span><span class="n">visited</span> <span class="n">manifest</span> <span class="n">state</span><span class="p">)</span> <span class="k">then</span>
+
+					<span class="c1">//Point has already been visited, so it can be ignored </span>
+					<span class="n">state</span>
+				<span class="k">else</span>
+
+					<span class="k">let</span> <span class="n">localGroup</span> <span class="p">=</span> <span class="n">getLocalGroup'</span> <span class="n">manifest</span>
+
+					<span class="k">if</span> <span class="p">(</span><span class="n">isCore'</span> <span class="n">localGroup</span><span class="p">)</span> <span class="k">then</span>
+
+						<span class="c1">//Point is core, so it can be used to create a new cluster</span>
+
+						<span class="n">state</span>
+						<span class="p">|&gt;</span> <span class="n">recordVisit</span> <span class="n">manifest</span>
+						<span class="p">|&gt;</span> <span class="n">expandCluster'</span> <span class="n">manifest</span> <span class="n">localGroup</span>
+
+					<span class="k">else</span>
+
+						<span class="c1">//Point is not core, so mark as noise. </span>
+						
+						<span class="n">state</span>
+						<span class="p">|&gt;</span> <span class="n">recordVisit</span> <span class="n">manifest</span>
+						<span class="p">|&gt;</span> <span class="n">markAsNoise</span> <span class="n">manifest</span>
+			
+			<span class="n">run</span> <span class="n">settings</span> <span class="n">state'</span> <span class="n">manifests</span>
+</code></pre></div></div>
+
+<p>Again, this function accepts a <code class="highlighter-rouge">Settings</code> and uses it to partially apply some utility functions before returning a function with signature <code class="highlighter-rouge">State -&gt; Manifest list -&gt; State</code>, giving the
+function the effective signature <code class="highlighter-rouge">Settings -&gt; Manifest list -&gt; State -&gt; State</code>.</p>
+
+<p>Code that calls the DBSCAN implementation is only likely to care about the clustered manifests, and possibly the list of manifests marked as noise. So I wrote another function to keep everything tidy. This
+function is the only publicly visible function in the <code class="highlighter-rouge">DBSCAN</code> module.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Apply the DBSCAN to the given settings, returning the clusters and noise </span>
+<span class="k">let</span> <span class="n">apply</span> <span class="n">settings</span> <span class="p">=</span> 
+
+    <span class="k">let</span> <span class="n">state</span> <span class="p">=</span> <span class="n">run</span> <span class="n">settings</span> <span class="nn">State</span><span class="p">.</span><span class="nc">Empty</span> <span class="n">settings</span><span class="p">.</span><span class="nc">Manifests</span>
+    
+    <span class="k">let</span> <span class="n">clusters</span> <span class="p">=</span> 
+        <span class="n">state</span><span class="p">.</span><span class="nc">Clusters</span>
+        <span class="p">|&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">groupBy</span> <span class="n">fst</span>
+        <span class="p">|&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">map</span> <span class="p">(</span><span class="k">fun</span> <span class="p">(</span><span class="n">clusterNo</span><span class="p">,</span> <span class="n">members</span><span class="p">)</span> <span class="p">-&gt;</span>
+                <span class="k">let</span> <span class="n">manifests</span> <span class="p">=</span> 
+                    <span class="n">members</span>
+                    <span class="p">|&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">map</span> <span class="n">snd</span> 
+                    <span class="p">|&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">sortBy</span> <span class="p">(</span><span class="k">fun</span> <span class="n">manifest</span> <span class="p">-&gt;</span> <span class="n">manifest</span><span class="p">.</span><span class="nn">System</span><span class="p">.</span><span class="nc">Name</span><span class="p">)</span>
+                    <span class="p">|&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">toList</span>
+                <span class="k">in</span> <span class="p">(</span><span class="n">clusterNo</span><span class="p">,</span> <span class="n">manifests</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">|&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">sortBy</span> <span class="n">fst</span>
+        <span class="p">|&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">toList</span>
+
+    <span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">state</span><span class="p">.</span><span class="nc">Noise</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The function has the signature <code class="highlighter-rouge">Settings -&gt; ((Int32 * Manifest list) list * Manifest list)</code>.
+<br /></p>
+
+<h3 id="putting-it-all-together">Putting it all together</h3>
+
+<p>Now that I had the raw data and the algorithm all I needed to do was put it all together into a usable format. For the sake of brevity I chose a simple console app which prompts
+the user for the maximum distance between systems in a cluster and the minimum number of systems required to make a cluster and then uses the algorithm to generate a list.</p>
+
+<p>I used the centroid of each cluster to calculate a ballbark figure of the distance between them and then displayed which clusters were further than 100 LY away for each.</p>
+
+<p>The list of clusters is then formatted and printed to the screen. The user can optionally save to a file that they can refer to later. You can see the [source of the console application here].</p>
+
+<p>If you are interested in seeing the results without building from source then here are some examples:</p>
+
+<table style="text-align:center;">
+	<thead>
+		<tr>
+			<th>Max. distance</th>
+			<th>Min. size</th>
+			<th>Clusters</th>
+			<th>Avg. size</th>
+			<th>Report</th>
+		</tr>		
+	</thead>
+	<tbody>
+		<tr>
+			<td>40 LY</td>
+			<td>3</td>
+			<td>7</td>
+			<td>8.14</td>
+			<td>
+				<a href="/public/ed-rare-reports/40-3.txt" target="_blank">Click here</a>
+			</td>
+		</tr>
+		<tr>
+			<td>30 LY</td>
+			<td>3</td>
+			<td>5</td>
+			<td>6.2</td>
+			<td>
+				<a href="/public/ed-rare-reports/30-3.txt" target="_blank">Click here</a>
+			</td>
+		</tr>
+		<tr>
+			<td>30 LY</td>
+			<td>2</td>
+			<td>13</td>
+			<td>3.62</td>
+			<td>
+				<a href="/public/ed-rare-reports/30-2.txt" target="_blank">Click here<a />
+			&lt;/td&gt;
+		&lt;/tr&gt;
+		<tr>
+			<td>25 LY</td>
+			<td>3</td>
+			<td>4</td>
+			<td>5</td>
+			<td>
+				<a href="/public/ed-rare-reports/25-3.txt" target="_blank">Click here</a>
+			</td>
+		</tr>		
+		<tr>
+			<td>25 LY</td>
+			<td>2</td>
+			<td>10</td>
+			<td>3.2</td>
+			<td>
+				<a href="/public/ed-rare-reports/25-2.txt" target="_blank">Click here</a>
+			</td>
+		</tr>		
+		<tr>
+			<td>20 LY</td>
+			<td>2</td>
+			<td>10</td>
+			<td>2.8</td>
+			<td>
+				<a href="/public/ed-rare-reports/20-2.txt" target="_blank">Click here</a>
+			</td>
+		</tr>		
+	&lt;/tbody&gt;
+&lt;/table&gt;
+
+### Conclusions
+
+In this post I have described how I created an immutable F# implementation of the DBSCAN algorithm, primarily for the purposes of making money in Elite:Dangerous. I enjoyed the combination
+of programming and gaming as it allowed me to play around with concepts that I would not usually encounter during my every day work and was fun to think about, implement and test.
+
+In the future I may expand the console application to read its data directly from the various community spreadsheets using the Google API, maybe add in some route planning or convert it to a
+web API but for now I have another 4M credits to earn before I can afford an Asp, so if you'll excuse me...
+
+(You can view the project [here on GitHub].)
+
+[Elite:Dangerous]: https://www.elitedangerous.com/
+[Elite]: http://en.wikipedia.org/wiki/Elite_%28video_game%29
+[circular route]: http://galnetnews.com/wp-content/uploads/2015/01/Rares-Circuit-1.jpg
+[DBSCAN]: http://en.wikipedia.org/wiki/DBSCAN
+[pseudo-code]: http://en.wikipedia.org/wiki/DBSCAN#Algorithm
+[Hutton Orbital]: http://i.imgur.com/pWWNQbu.jpg
+[Phil Hibbs' excellent Google spreadsheet]: https://docs.google.com/spreadsheets/d/1QvYs16qagtkYbJkizpYnmLoyVeSW3XY-7dP5TCJnSKg/edit?pli=1#gid=1595245292
+
+[rest of the model here]: https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/Model.fs
+[data parsing is here]: https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/IO.fs
+[systems data here]: https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/Systems.csv
+[rare goods data here]: https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/Goods.csv
+[source of the console application here]: https://github.com/wattsm/elite-dangerous-rares/blob/master/ED.Rares/Program.fs
+[here on GitHub]: https://github.com/wattsm/elite-dangerous-rares
+</a></td></tr></tbody></table>
+
+    
+
+
+
+<div class="post-tags">
+  
+    
+    <a href="/tags/#fsharp">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">fsharp</span>
+    </a>
+  
+    
+    <a href="/tags/#dotnet">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">dotnet</span>
+    </a>
+  
+    
+    <a href="/tags/#games">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">games</span>
+    </a>
+  
+    
+    <a href="/tags/#elite-dangerous">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">elite-dangerous</span>
+    </a>
+  
+</div>
+  </div>
+
+  
+  <section class="related">
+  <h2>Related Posts</h2>
+  <ul class="posts-list">
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">
+            Optimising Civ 5 cities using genetic algorithms
+            <small>19 Jan 2016</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/05/20/modeling-historical-dates/">
+            Modeling historical dates
+            <small>20 May 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/11/13/stateful-akka-actors-with-fsharp/">
+            Stateful Akka.NET actors with F#
+            <small>13 Nov 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</section>
+
+</div>
+
+    </main>
+
+    <!-- Optional footer content -->
+
+  </body>
+</html>

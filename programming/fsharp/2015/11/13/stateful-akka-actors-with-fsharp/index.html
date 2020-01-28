@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="https://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <title>
+    
+      Stateful Akka.NET actors with F# &middot; try/finally
+    
+  </title>
+
+  
+
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+
+  <!-- Additional head bits without overriding original head -->
+</head>
+
+
+  <body class="post">
+
+    <div id="sidebar">
+  <header>
+    <div class="site-title">
+      <a href="/">
+        
+          <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h24v24H0z" fill="none"/>
+  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+</svg></span>
+        
+        try/finally
+      </a>
+    </div>
+    <p class="lead">Occasional programming thoughts of Mark Watts.</p>
+  </header>
+  <nav id="sidebar-nav-links">
+  
+  
+
+  
+
+  
+
+
+  
+    
+  
+
+  
+    
+      <a class="page-link "
+          href="/about/">About</a>
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  
+
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  <!-- Optional additional links to insert in sidebar nav -->
+</nav>
+
+
+  
+    <span class="site-version">Currently v1.0</span>
+  
+
+  <nav id="sidebar-icon-links">
+  
+
+  
+  
+  
+  
+
+  <a id="github-link"
+      class="icon"
+      title="GitHub" aria-label="GitHub"
+      href="https://github.com/wattsm"
+      target="_blank">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" height="24" width="28"><path d="M12 2c6.625 0 12 5.375 12 12 0 5.297-3.437 9.797-8.203 11.391-0.609 0.109-0.828-0.266-0.828-0.578 0-0.391 0.016-1.687 0.016-3.297 0-1.125-0.375-1.844-0.812-2.219 2.672-0.297 5.484-1.313 5.484-5.922 0-1.313-0.469-2.375-1.234-3.219 0.125-0.313 0.531-1.531-0.125-3.187-1-0.313-3.297 1.234-3.297 1.234-0.953-0.266-1.984-0.406-3-0.406s-2.047 0.141-3 0.406c0 0-2.297-1.547-3.297-1.234-0.656 1.656-0.25 2.875-0.125 3.187-0.766 0.844-1.234 1.906-1.234 3.219 0 4.594 2.797 5.625 5.469 5.922-0.344 0.313-0.656 0.844-0.766 1.609-0.688 0.313-2.438 0.844-3.484-1-0.656-1.141-1.844-1.234-1.844-1.234-1.172-0.016-0.078 0.734-0.078 0.734 0.781 0.359 1.328 1.75 1.328 1.75 0.703 2.141 4.047 1.422 4.047 1.422 0 1 0.016 1.937 0.016 2.234 0 0.313-0.219 0.688-0.828 0.578-4.766-1.594-8.203-6.094-8.203-11.391 0-6.625 5.375-12 12-12zM4.547 19.234c0.031-0.063-0.016-0.141-0.109-0.187-0.094-0.031-0.172-0.016-0.203 0.031-0.031 0.063 0.016 0.141 0.109 0.187 0.078 0.047 0.172 0.031 0.203-0.031zM5.031 19.766c0.063-0.047 0.047-0.156-0.031-0.25-0.078-0.078-0.187-0.109-0.25-0.047-0.063 0.047-0.047 0.156 0.031 0.25 0.078 0.078 0.187 0.109 0.25 0.047zM5.5 20.469c0.078-0.063 0.078-0.187 0-0.297-0.063-0.109-0.187-0.156-0.266-0.094-0.078 0.047-0.078 0.172 0 0.281s0.203 0.156 0.266 0.109zM6.156 21.125c0.063-0.063 0.031-0.203-0.063-0.297-0.109-0.109-0.25-0.125-0.313-0.047-0.078 0.063-0.047 0.203 0.063 0.297 0.109 0.109 0.25 0.125 0.313 0.047zM7.047 21.516c0.031-0.094-0.063-0.203-0.203-0.25-0.125-0.031-0.266 0.016-0.297 0.109s0.063 0.203 0.203 0.234c0.125 0.047 0.266 0 0.297-0.094zM8.031 21.594c0-0.109-0.125-0.187-0.266-0.172-0.141 0-0.25 0.078-0.25 0.172 0 0.109 0.109 0.187 0.266 0.172 0.141 0 0.25-0.078 0.25-0.172zM8.937 21.438c-0.016-0.094-0.141-0.156-0.281-0.141-0.141 0.031-0.234 0.125-0.219 0.234 0.016 0.094 0.141 0.156 0.281 0.125s0.234-0.125 0.219-0.219z"></path>
+</svg>
+
+  </a>
+
+  
+    <a id="tags-link"
+       class="icon"
+       title="Tags" aria-label="Tags"
+       href="/tags/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+    </a>
+  
+
+  
+    <a id="search-link"
+       class="icon"
+       title="Search" aria-label="Search"
+       href="/search/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
+    </a>
+  
+
+  <!-- Optional additional links to insert for icons links -->
+</nav>
+
+  <p>
+  &copy; 2020.  
+</p>
+
+</div>
+
+    <main class="container">
+      <header>
+  <h1 class="post-title">Stateful Akka.NET actors with F#</h1>
+</header>
+<div class="content">
+  <div class="post-meta">
+  <span class="post-date">13 Nov 2015</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        fsharp
+      
+    
+  </span>
+</div>
+
+
+  <div class="post-body">
+    <p><a href="http://getakka.net/">Akka.NET</a> is the .Net implementation of Java’s <a href="http://akka.io/">Akka</a> framework, which allows developers to build “highly concurrent, distributed, and resilient message-driven applications” via
+an <a href="https://en.wikipedia.org/wiki/Actor_model">actor model</a>. One of the many nice features of Akka.NET is that it comes with an <a href="http://getakka.net/docs/FSharp%20API">F# API</a>. However, there are some scenarios which the F# API does not specifically cater for, 
+and one of those is stafeul actors.</p>
+
+<p>In this post I will describe how to implement a simple stateful Akka.NET actor in a functional style without mutable variables.</p>
+
+<!-- more -->
+
+<h3 id="stateful-actors">Stateful actors</h3>
+
+<p>When talking about stateful actors I am specifically talking about actors that behave like <a href="http://en.wikipedia.org/wiki/Finite-state_machine">finite state machines</a> - i.e. they have some concept of their current state and 
+can change their behaviour depending on their inputs. Akka.NET supports this kind of actor via switchable behaviours. Aaron Stannard’s blog post 
+“<a href="https://petabridge.com/blog/akka-actors-finite-state-machines-switchable-behavior/">Building Finite State Machines With Actors: Switchable Behavior</a>” gives an excellent
+overview of how you would implement a stateful actor in Akka.NET using C#.</p>
+
+<p>Akka.NET’s F# API provides a lot of handy tools for working with actors in a functional style but unfortunately switchable behaviours are not covered, so in order to use them
+you have to create a type which implements <code class="highlighter-rouge">ReceiveActor</code> as per Aaron’s blog post. Implementing stateful actors in this way will also likely require the use of mutable variables.</p>
+
+<p>Given how elegant actors created using the <code class="highlighter-rouge">actorOf</code> functions provided by the F# API can be, stateful actors created by inheriting from <code class="highlighter-rouge">ReceiveActor</code> can seem clunky 
+and out of place, and mutable variables are generally frowned upon in functional programming.</p>
+
+<p>It would be useful to have an equivalent of <code class="highlighter-rouge">actorOf</code> for creating stateful actors in a functional style and without mutable variables for the sake of consistency if nothing else.</p>
+
+<h3 id="c-example">C# example</h3>
+
+<p>Before we look at implementing stateful actors in F# let’s look at a simple C# example.</p>
+
+<p>One usage of stateful actors is to act as an aggregator for data - e.g. an actor which collates data from multiple sources into a single message. This actor might 
+have two states - waiting and collecting. When the initial request for the collated data arrives it sends requests to various other actors for data and then moves 
+to the collecting state and waits for replies. When all of the data has been received it sends the collated data back to the original requester and then moves back 
+into the waiting state or stops, depending on the lifecycle.</p>
+
+<p>Here is a simplified version of that stateful actor written in C#. This actor starts in the waiting state. When it receives the <code class="highlighter-rouge">StartCollecting</code> message it moves 
+to the collecting state. When in the collecting state the value of any <code class="highlighter-rouge">Collected</code> messages are recorded. When the maximum number of values have been collected or 
+the <code class="highlighter-rouge">StopCollecting</code> message is received the actor prints the values it has stored and moves back to the waiting state.</p>
+
+<div class="language-c# highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">class</span> <span class="nc">ExampleActor</span> <span class="p">:</span> <span class="n">ReceiveActor</span> <span class="p">{</span>
+
+	<span class="k">private</span> <span class="kt">int</span> <span class="n">_count</span><span class="p">;</span>
+	<span class="k">private</span> <span class="k">readonly</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">String</span><span class="p">&gt;</span> <span class="n">_values</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;();</span>
+
+	<span class="k">public</span> <span class="nf">ExampleActor</span><span class="p">()</span> <span class="p">{</span>
+		<span class="k">this</span><span class="p">.</span><span class="nf">Waiting</span><span class="p">();</span>
+	<span class="p">}</span>
+
+	<span class="k">private</span> <span class="k">void</span> <span class="nf">Waiting</span><span class="p">()</span> <span class="p">{</span>
+		<span class="k">this</span><span class="p">.</span><span class="n">Receive</span><span class="p">&lt;</span><span class="n">Messages</span><span class="p">.</span><span class="n">StartCollecting</span><span class="p">&gt;(</span><span class="n">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
+
+			<span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">"Starting collection"</span><span class="p">);</span>
+
+			<span class="n">_values</span><span class="p">.</span><span class="nf">Clear</span><span class="p">();</span>
+			<span class="n">_count</span> <span class="p">=</span> <span class="n">message</span><span class="p">.</span><span class="n">Count</span><span class="p">;</span>
+
+			<span class="k">this</span><span class="p">.</span><span class="nf">Become</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">Collecting</span><span class="p">);</span>
+		<span class="p">});</span>
+	<span class="p">}</span>
+
+	<span class="k">private</span> <span class="k">void</span> <span class="nf">Collecting</span><span class="p">()</span> <span class="p">{</span>
+		<span class="k">this</span><span class="p">.</span><span class="n">Receive</span><span class="p">&lt;</span><span class="n">Messages</span><span class="p">.</span><span class="n">Collected</span><span class="p">&gt;(</span><span class="n">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
+			
+			<span class="n">_values</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="n">Value</span><span class="p">);</span>
+
+			<span class="k">if</span><span class="p">(</span><span class="n">_values</span><span class="p">.</span><span class="nf">Count</span><span class="p">()</span> <span class="p">==</span> <span class="n">_count</span><span class="p">)</span> <span class="p">{</span>
+
+				<span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span>
+					<span class="s">"Finished collecting ({0}/{0}): {1}"</span><span class="p">,</span> 
+					<span class="n">_count</span><span class="p">,</span> 
+					<span class="n">String</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="s">","</span><span class="p">,</span> <span class="n">_values</span><span class="p">)</span>
+				<span class="p">);</span>
+
+				<span class="k">this</span><span class="p">.</span><span class="nf">StopCollecting</span><span class="p">();</span>
+			<span class="p">}</span>
+		<span class="p">});</span>
+
+		<span class="k">this</span><span class="p">.</span><span class="n">Receive</span><span class="p">&lt;</span><span class="n">Messages</span><span class="p">.</span><span class="n">StopCollecting</span><span class="p">&gt;(</span><span class="n">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
+
+			<span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span>
+				<span class="s">"Stopped collecting ({0}/{1}): {2}"</span><span class="p">,</span> 
+				<span class="n">_values</span><span class="p">.</span><span class="nf">Count</span><span class="p">(),</span> 
+				<span class="n">_count</span><span class="p">,</span> 
+				<span class="n">String</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="s">","</span><span class="p">,</span> <span class="n">_values</span><span class="p">)</span>
+			<span class="p">);</span>
+
+			<span class="k">this</span><span class="p">.</span><span class="nf">StopCollecting</span><span class="p">();</span>
+		<span class="p">});</span>
+	<span class="p">}</span>
+
+	<span class="k">private</span> <span class="k">void</span> <span class="nf">StopCollecting</span><span class="p">()</span> <span class="p">{</span>
+		<span class="k">this</span><span class="p">.</span><span class="nf">Become</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">Waiting</span><span class="p">);</span>
+
+		<span class="c1">//Or stop</span>
+		<span class="c1">//ReceiveActor.Context.Stop(this.Self);</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>While it is possible to implement this actor in F# using the same approach let’s look at a more elegant approach to creating stateful actors by building on Akka.NET’s F# API.</p>
+
+<h3 id="stateful-actors-using-f">Stateful actors using F#</h3>
+
+<p>The basic implementation of an Akka.NET actor in F# is a simple recursive function which receives the next message, processes it and then loops.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">actor</span> <span class="p">=</span> 
+	<span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="k">fun</span> <span class="n">mailbox</span> <span class="p">-&gt;</span>
+		
+		<span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="bp">()</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
+			
+			<span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
+			
+			<span class="c1">//Process the message</span>
+			
+			<span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="bp">()</span><span class="p">)</span>
+		<span class="p">}</span>
+		
+		<span class="n">run</span> <span class="bp">()</span>
+	<span class="p">)</span>
+</code></pre></div></div>
+
+<p>We can use the recursive nature of the <code class="highlighter-rouge">run</code> function to keep a track of the actor’s current state, both in terms of its behaviour and any associated data. We might try
+and implement this like so:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">initialState</span> <span class="p">=</span> <span class="o">...</span>
+<span class="k">let</span> <span class="n">initialHandler</span> <span class="p">=</span> <span class="o">...</span>
+
+<span class="k">let</span> <span class="n">actor</span> <span class="p">=</span> 
+	<span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="k">fun</span> <span class="n">mailbox</span> <span class="p">-&gt;</span>
+	
+		<span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="n">data</span> <span class="n">handler</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
+		
+			<span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
+		
+			<span class="k">let</span> <span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span> <span class="p">=</span> <span class="p">(</span><span class="n">handler</span> <span class="n">data</span> <span class="n">message</span><span class="p">)</span>
+			
+			<span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="n">data'</span> <span class="n">handler'</span><span class="p">)</span>
+		<span class="p">}</span>
+	
+		<span class="n">run</span> <span class="n">initialState</span> <span class="n">initialHandler</span>
+	<span class="p">)</span>
+</code></pre></div></div>
+
+<p>Here the actor’s behaviour is defined by the <code class="highlighter-rouge">handler</code> function which accepts the current state’s data and the message and returns udpated data and the next handler to be used. 
+However we run into problems when we try to define the signature for <code class="highlighter-rouge">handler</code> as it is self recursive - i.e. the second element in the tuple it returns has the same signature as itself.</p>
+
+<p>To address this we can use recursive types to create a definition of our <code class="highlighter-rouge">handler</code>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">AutoOpen</span><span class="p">&gt;]</span>
+<span class="k">module</span> <span class="nc">Types</span> <span class="p">=</span> 
+
+    <span class="k">type</span> <span class="nc">Handler</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">TData</span><span class="p">,</span> <span class="k">'</span><span class="nc">TMessage</span><span class="p">&gt;</span> <span class="p">=</span> <span class="k">'</span><span class="nc">TData</span> <span class="p">-&gt;</span> <span class="k">'</span><span class="nc">TMessage</span> <span class="p">-&gt;</span> <span class="nc">Instruction</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">TData</span><span class="p">,</span> <span class="k">'</span><span class="nc">TMessage</span><span class="p">&gt;</span>
+
+    <span class="k">and</span> <span class="nc">Instruction</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">TData</span><span class="p">,</span> <span class="k">'</span><span class="nc">TMessage</span><span class="p">&gt;</span> <span class="p">=</span> 
+        <span class="p">|</span> <span class="nc">Continue</span> <span class="k">of</span> <span class="k">'</span><span class="nc">TData</span>
+        <span class="p">|</span> <span class="nc">Become</span> <span class="k">of</span> <span class="p">(</span><span class="k">'</span><span class="nc">TData</span> <span class="p">*</span> <span class="nc">Handler</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">TData</span><span class="p">,</span> <span class="k">'</span><span class="nc">TMessage</span><span class="o">&gt;)</span>
+        <span class="p">|</span> <span class="nc">Unhandled</span>
+        <span class="p">|</span> <span class="nc">Stop</span>
+</code></pre></div></div>
+
+<p>First we define a handler type which is a function which accepts <code class="highlighter-rouge">'TData</code> and <code class="highlighter-rouge">'TMessage</code> and returns an <code class="highlighter-rouge">Instruction&lt;'TData,'TMessage&gt;</code>. Secondly we define <code class="highlighter-rouge">Instruction&lt;'TData, 'TMessage&gt;</code> as a union of four 
+possible values:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">Continue</code> - continue processing messages with updated data;</li>
+  <li><code class="highlighter-rouge">Become</code> - move to a new state;</li>
+  <li><code class="highlighter-rouge">Unhandled</code> - the message was unhandled;</li>
+  <li><code class="highlighter-rouge">Stop</code> - stop processing messages.</li>
+</ul>
+
+<p>Now that we have defined what our <code class="highlighter-rouge">handler</code> function should look like we can try and implement our actor again:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">let</span> <span class="n">handlers</span> <span class="p">=</span> <span class="o">...</span> <span class="c1">//Handler&lt;'TData, 'TMessage&gt; list</span>
+<span class="k">let</span> <span class="n">initialData</span> <span class="p">=</span> <span class="o">...</span> <span class="c1">//'TData</span>
+
+<span class="k">let</span> <span class="n">actor</span> <span class="p">=</span> 
+	<span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="k">fun</span> <span class="n">mailbox</span> <span class="p">-&gt;</span>
+
+        <span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="n">data</span> <span class="n">handler</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
+
+            <span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
+                
+            <span class="c1">//Process the message</span>
+            <span class="k">let</span> <span class="n">next</span><span class="p">,</span> <span class="n">handled</span> <span class="p">=</span> 
+                <span class="k">match</span> <span class="p">(</span><span class="n">handler</span> <span class="n">data</span> <span class="n">message</span><span class="p">)</span> <span class="k">with</span>
+                <span class="p">|</span> <span class="nc">Continue</span> <span class="n">data'</span> <span class="p">-&gt;</span>				<span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">true</span>					
+                <span class="p">|</span> <span class="nc">Become</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>	<span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="o">),</span> <span class="bp">true</span>
+				<span class="p">|</span> <span class="nc">Unhandled</span> <span class="p">-&gt;</span> 					<span class="nc">Some</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">false</span>					
+                <span class="p">|</span> <span class="nc">Stop</span> <span class="p">-&gt;</span> 						<span class="nc">None</span><span class="p">,</span> <span class="bp">true</span>
+                
+            <span class="c1">//Report unhandled messages</span>
+            <span class="k">if</span> <span class="p">(</span><span class="k">not</span> <span class="n">handled</span><span class="p">)</span> <span class="k">then</span>
+                <span class="n">mailbox</span><span class="p">.</span><span class="nc">Unhandled</span> <span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+            <span class="c1">//Continue or exit the loop</span>
+            <span class="k">match</span> <span class="n">next</span> <span class="k">with</span>
+            <span class="p">|</span> <span class="nc">None</span> <span class="p">-&gt;</span> 
+                <span class="n">mailbox</span><span class="p">.</span><span class="nn">Context</span><span class="p">.</span><span class="nc">Stop</span> <span class="p">(</span><span class="n">mailbox</span><span class="p">.</span><span class="nc">Self</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">()</span>
+
+            <span class="p">|</span> <span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>
+                <span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="n">data'</span> <span class="n">handler'</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">run</span> <span class="n">initialData</span> <span class="p">(</span><span class="nn">List</span><span class="p">.</span><span class="n">head</span> <span class="n">handlers</span><span class="p">)</span>
+	<span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now we have a working stateful actor. The <code class="highlighter-rouge">run</code> function receives a message and passes it and any current data to the handler function. The handler returns
+an instruction telling the actor what do next. It translate this into either the arguments for the next iteration of the <code class="highlighter-rouge">run</code> function or as a stop signal (<code class="highlighter-rouge">None</code>) for the actor. 
+It also sets a flag indicating whether the current message should be marked as unhandled. The function then either recurses or stops the actor and exits as appropriate.</p>
+
+<p>The <code class="highlighter-rouge">run</code> function is started with the first handler in the <code class="highlighter-rouge">handlers</code> list and <code class="highlighter-rouge">initialData</code>, and will loop until a <code class="highlighter-rouge">Stop</code> instruction is issued.</p>
+
+<p>This code can be packaged up into a function similar to Akka.NET F# API’s <code class="highlighter-rouge">actorOf</code>:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Handler&lt;'TData,'TMessage&gt; list -&gt; 'TData -&gt; Actor&lt;'TMessage&gt; -&gt; Cont&lt;'TMessage, unit&gt;</span>
+<span class="k">let</span> <span class="n">statefulActorOf</span> <span class="n">handlers</span> <span class="n">initialData</span> <span class="p">(</span><span class="n">mailbox</span> <span class="p">:</span> <span class="nc">Actor</span><span class="o">&lt;_&gt;)</span> <span class="p">=</span> 
+
+	<span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="n">data</span> <span class="n">handler</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
+
+		<span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
+			
+		<span class="c1">//Process the message</span>
+		<span class="k">let</span> <span class="n">next</span><span class="p">,</span> <span class="n">handled</span> <span class="p">=</span> 
+			<span class="k">match</span> <span class="p">(</span><span class="n">handler</span> <span class="n">data</span> <span class="n">message</span><span class="p">)</span> <span class="k">with</span>
+			<span class="p">|</span> <span class="nc">Continue</span> <span class="n">data'</span> <span class="p">-&gt;</span>				<span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">true</span>					
+			<span class="p">|</span> <span class="nc">Become</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>	<span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="o">),</span> <span class="bp">true</span>
+			<span class="p">|</span> <span class="nc">Unhandled</span> <span class="p">-&gt;</span> 					<span class="nc">Some</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">false</span>					
+			<span class="p">|</span> <span class="nc">Stop</span> <span class="p">-&gt;</span> 						<span class="nc">None</span><span class="p">,</span> <span class="bp">true</span>
+			
+		<span class="c1">//Report unhandled messages</span>
+		<span class="k">if</span> <span class="p">(</span><span class="k">not</span> <span class="n">handled</span><span class="p">)</span> <span class="k">then</span>
+			<span class="n">mailbox</span><span class="p">.</span><span class="nc">Unhandled</span> <span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+		<span class="c1">//Continue or exit the loop</span>
+		<span class="k">match</span> <span class="n">next</span> <span class="k">with</span>
+		<span class="p">|</span> <span class="nc">None</span> <span class="p">-&gt;</span> 
+			<span class="n">mailbox</span><span class="p">.</span><span class="nn">Context</span><span class="p">.</span><span class="nc">Stop</span> <span class="p">(</span><span class="n">mailbox</span><span class="p">.</span><span class="nc">Self</span><span class="p">)</span>
+			<span class="k">return</span> <span class="bp">()</span>
+
+		<span class="p">|</span> <span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>
+			<span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="n">data'</span> <span class="n">handler'</span><span class="p">)</span>
+	<span class="p">}</span>
+
+	<span class="n">run</span> <span class="n">initialData</span> <span class="p">(</span><span class="nn">List</span><span class="p">.</span><span class="n">head</span> <span class="n">handlers</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>We can now use this function to create stateful actors from a list of handlers and some initial data:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">actor</span> <span class="p">=</span> 
+	<span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="n">statefulActorOf</span> <span class="nn">Example</span><span class="p">.</span><span class="n">handlers</span> <span class="nn">Example</span><span class="p">.</span><span class="n">initialData</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Finally, we can implement our example actor in a functional style without mutable variables:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
+<span class="k">module</span> <span class="nc">Example</span> <span class="p">=</span> 
+
+    <span class="p">[&lt;</span><span class="nc">AutoOpen</span><span class="p">&gt;]</span>
+    <span class="k">module</span> <span class="k">private</span> <span class="nc">Helpers</span> <span class="p">=</span> 
+
+        <span class="k">let</span> <span class="n">concat</span> <span class="p">(</span><span class="n">values</span> <span class="p">:</span> <span class="nc">String</span> <span class="kt">list</span><span class="p">)</span> <span class="p">=</span> <span class="nn">String</span><span class="p">.</span><span class="nc">Join</span> <span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+    <span class="k">type</span> <span class="nc">Message</span> <span class="p">=</span> 
+        <span class="p">|</span> <span class="nc">StartCollecting</span> <span class="k">of</span> <span class="nc">Int32</span>
+        <span class="p">|</span> <span class="nc">StopCollecting</span>
+        <span class="p">|</span> <span class="nc">Collected</span> <span class="k">of</span> <span class="nc">String</span>
+
+    <span class="k">let</span> <span class="n">initialData</span> <span class="p">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">[]</span><span class="p">)</span>
+
+    <span class="k">let</span> <span class="k">rec</span> <span class="k">private</span> <span class="n">waiting</span> <span class="p">_</span> <span class="p">=</span> <span class="k">function</span>
+        <span class="p">|</span> <span class="nc">StartCollecting</span> <span class="n">count</span> <span class="p">-&gt;</span> 
+
+            <span class="n">printfn</span> <span class="s2">"Starting collection"</span>
+
+            <span class="nc">Become</span> <span class="o">((</span><span class="n">count</span><span class="p">,</span> <span class="bp">[]</span><span class="o">),</span> <span class="n">collecting</span><span class="p">)</span>
+
+        <span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> <span class="nc">Unhandled</span>
+
+    <span class="k">and</span> <span class="k">private</span> <span class="n">collecting</span> <span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="p">=</span> 
+	
+		<span class="k">let</span> <span class="n">stopCollecting</span> <span class="bp">()</span> <span class="p">=</span> 
+            <span class="nc">Become</span> <span class="p">(</span><span class="n">initialData</span><span class="p">,</span> <span class="n">waiting</span><span class="p">)</span>
+            <span class="c1">//Or stop</span>
+            <span class="c1">//Stop</span>
+	
+		<span class="k">function</span>
+        <span class="p">|</span> <span class="nc">Collected</span> <span class="n">value</span> <span class="p">-&gt;</span>
+
+            <span class="k">let</span> <span class="n">values'</span> <span class="p">=</span> <span class="n">value</span> <span class="p">::</span> <span class="n">values</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nn">List</span><span class="p">.</span><span class="n">length</span> <span class="n">values'</span><span class="p">)</span> <span class="p">=</span> <span class="n">count</span> <span class="k">then</span>
+
+                <span class="n">printfn</span> <span class="s2">"Finished collecting (%u/%u): %s"</span> 
+                <span class="p">&lt;|</span> <span class="n">count</span> 
+                <span class="p">&lt;|</span> <span class="n">count</span> 
+                <span class="p">&lt;|</span> <span class="p">(</span><span class="n">concat</span> <span class="n">values'</span><span class="p">)</span>
+
+                <span class="n">stopCollecting</span> <span class="bp">()</span> 
+
+            <span class="k">else</span>
+                <span class="nc">Continue</span> <span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">values'</span><span class="p">)</span>
+
+        <span class="p">|</span> <span class="nc">StopCollecting</span> <span class="p">-&gt;</span> 
+
+            <span class="n">printfn</span> <span class="s2">"Stopping collecting (%u/%u): %s"</span> 
+            <span class="p">&lt;|</span> <span class="p">(</span><span class="nn">List</span><span class="p">.</span><span class="n">length</span> <span class="n">values</span><span class="p">)</span> 
+            <span class="p">&lt;|</span> <span class="n">count</span> 
+            <span class="p">&lt;|</span> <span class="p">(</span><span class="n">concat</span> <span class="n">values</span><span class="p">)</span>
+                
+            <span class="n">stopCollecting</span> <span class="bp">()</span> 
+
+        <span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> <span class="nc">Unhandled</span>
+
+    <span class="k">let</span> <span class="n">handlers</span> <span class="p">=</span> <span class="p">[</span> <span class="n">waiting</span><span class="p">;</span> <span class="n">collecting</span><span class="p">;</span> <span class="p">]</span>
+</code></pre></div></div>
+
+<p>Here we use a union to model the messages received by the actor and then simply use pattern matching in the handler functions. The <code class="highlighter-rouge">'TData</code> for this actor is <code class="highlighter-rouge">(Int32 * String list)</code>
+and contains both the number of values to collect and the values collected so far. The <code class="highlighter-rouge">collecting</code> handler simply adds to the list of values with each message received until 
+the target number of values is reached, or the <code class="highlighter-rouge">StopCollecting</code> message is received.</p>
+
+<p>Notice that the handler functions are mutually recursive so that the <code class="highlighter-rouge">waiting</code> state handler can return the <code class="highlighter-rouge">collecting</code> state handler and vice versa.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>In this post I have shown how to create stateful actors in Akka.NET using a functional style. This allows you to create actor systems where all actors are created using a
+familiar style without the need to inherit base types or use mutable variables.</p>
+
+<p>The code for both the C# and F# implementations of examples are <a href="https://github.com/wattsm/stateful-akka-actors">available on GitHub</a>.</p>
+
+
+    
+
+
+
+<div class="post-tags">
+  
+    
+    <a href="/tags/#fsharp">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">fsharp</span>
+    </a>
+  
+    
+    <a href="/tags/#dotnet">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">dotnet</span>
+    </a>
+  
+    
+    <a href="/tags/#actors">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">actors</span>
+    </a>
+  
+    
+    <a href="/tags/#akka-net">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">akka-net</span>
+    </a>
+  
+</div>
+  </div>
+
+  
+  <section class="related">
+  <h2>Related Posts</h2>
+  <ul class="posts-list">
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">
+            Optimising Civ 5 cities using genetic algorithms
+            <small>19 Jan 2016</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/05/20/modeling-historical-dates/">
+            Modeling historical dates
+            <small>20 May 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">
+            Using DBSCAN for fun and (mostly) profit in Elite:Dangerous
+            <small>13 Feb 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</section>
+
+</div>
+
+    </main>
+
+    <!-- Optional footer content -->
+
+  </body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="https://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <title>
+    
+      Testing dependency registrations with Castle Windsor &middot; try/finally
+    
+  </title>
+
+  
+
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+
+  <!-- Additional head bits without overriding original head -->
+</head>
+
+
+  <body class="post">
+
+    <div id="sidebar">
+  <header>
+    <div class="site-title">
+      <a href="/">
+        
+          <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h24v24H0z" fill="none"/>
+  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+</svg></span>
+        
+        try/finally
+      </a>
+    </div>
+    <p class="lead">Occasional programming thoughts of Mark Watts.</p>
+  </header>
+  <nav id="sidebar-nav-links">
+  
+  
+
+  
+
+  
+
+
+  
+    
+  
+
+  
+    
+      <a class="page-link "
+          href="/about/">About</a>
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  
+
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  <!-- Optional additional links to insert in sidebar nav -->
+</nav>
+
+
+  
+    <span class="site-version">Currently v1.0</span>
+  
+
+  <nav id="sidebar-icon-links">
+  
+
+  
+  
+  
+  
+
+  <a id="github-link"
+      class="icon"
+      title="GitHub" aria-label="GitHub"
+      href="https://github.com/wattsm"
+      target="_blank">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" height="24" width="28"><path d="M12 2c6.625 0 12 5.375 12 12 0 5.297-3.437 9.797-8.203 11.391-0.609 0.109-0.828-0.266-0.828-0.578 0-0.391 0.016-1.687 0.016-3.297 0-1.125-0.375-1.844-0.812-2.219 2.672-0.297 5.484-1.313 5.484-5.922 0-1.313-0.469-2.375-1.234-3.219 0.125-0.313 0.531-1.531-0.125-3.187-1-0.313-3.297 1.234-3.297 1.234-0.953-0.266-1.984-0.406-3-0.406s-2.047 0.141-3 0.406c0 0-2.297-1.547-3.297-1.234-0.656 1.656-0.25 2.875-0.125 3.187-0.766 0.844-1.234 1.906-1.234 3.219 0 4.594 2.797 5.625 5.469 5.922-0.344 0.313-0.656 0.844-0.766 1.609-0.688 0.313-2.438 0.844-3.484-1-0.656-1.141-1.844-1.234-1.844-1.234-1.172-0.016-0.078 0.734-0.078 0.734 0.781 0.359 1.328 1.75 1.328 1.75 0.703 2.141 4.047 1.422 4.047 1.422 0 1 0.016 1.937 0.016 2.234 0 0.313-0.219 0.688-0.828 0.578-4.766-1.594-8.203-6.094-8.203-11.391 0-6.625 5.375-12 12-12zM4.547 19.234c0.031-0.063-0.016-0.141-0.109-0.187-0.094-0.031-0.172-0.016-0.203 0.031-0.031 0.063 0.016 0.141 0.109 0.187 0.078 0.047 0.172 0.031 0.203-0.031zM5.031 19.766c0.063-0.047 0.047-0.156-0.031-0.25-0.078-0.078-0.187-0.109-0.25-0.047-0.063 0.047-0.047 0.156 0.031 0.25 0.078 0.078 0.187 0.109 0.25 0.047zM5.5 20.469c0.078-0.063 0.078-0.187 0-0.297-0.063-0.109-0.187-0.156-0.266-0.094-0.078 0.047-0.078 0.172 0 0.281s0.203 0.156 0.266 0.109zM6.156 21.125c0.063-0.063 0.031-0.203-0.063-0.297-0.109-0.109-0.25-0.125-0.313-0.047-0.078 0.063-0.047 0.203 0.063 0.297 0.109 0.109 0.25 0.125 0.313 0.047zM7.047 21.516c0.031-0.094-0.063-0.203-0.203-0.25-0.125-0.031-0.266 0.016-0.297 0.109s0.063 0.203 0.203 0.234c0.125 0.047 0.266 0 0.297-0.094zM8.031 21.594c0-0.109-0.125-0.187-0.266-0.172-0.141 0-0.25 0.078-0.25 0.172 0 0.109 0.109 0.187 0.266 0.172 0.141 0 0.25-0.078 0.25-0.172zM8.937 21.438c-0.016-0.094-0.141-0.156-0.281-0.141-0.141 0.031-0.234 0.125-0.219 0.234 0.016 0.094 0.141 0.156 0.281 0.125s0.234-0.125 0.219-0.219z"></path>
+</svg>
+
+  </a>
+
+  
+    <a id="tags-link"
+       class="icon"
+       title="Tags" aria-label="Tags"
+       href="/tags/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+    </a>
+  
+
+  
+    <a id="search-link"
+       class="icon"
+       title="Search" aria-label="Search"
+       href="/search/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
+    </a>
+  
+
+  <!-- Optional additional links to insert for icons links -->
+</nav>
+
+  <p>
+  &copy; 2020.  
+</p>
+
+</div>
+
+    <main class="container">
+      <header>
+  <h1 class="post-title">Testing dependency registrations with Castle Windsor</h1>
+</header>
+<div class="content">
+  <div class="post-meta">
+  <span class="post-date">27 Nov 2014</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        csharp
+      
+    
+  </span>
+</div>
+
+
+  <div class="post-body">
+    <p>Until recently one of the most frustrating bugs I have routinely found in my own code is incomplete dependency registrations.</p>
+
+<p>It’s a scenario I’m sure everyone is familiar with - you’ve just written some new components and got the unit tests passing, so now it’s time to fire up the 
+application and see your creations in action. Then as soon as the application starts it falls over because you forgot to add your new components to the <a href="http://en.wikipedia.org/wiki/Inversion_of_control">IOC</a> container,
+leaving you with unresolvable dependencies.</p>
+
+<p>I would curse my own forgetfulness as I fixed the problem and would often think to myself that it would be really handy if there was a way to test your dependency registrations.
+I was pleasantly surprised then to find out that <a href="http://docs.castleproject.org/Default.aspx?Page=MainPage&amp;NS=Windsor&amp;AspxAutoDetectCookieSupport=1">Castle Windsor</a> supports exactly these kinds of tests.</p>
+
+<!-- more -->
+
+<p>The code below is an example unit test using <a href="http://xunit.github.io/">xUnit</a> which will fail if your dependency registrations are not complete - i.e. if one or more component has dependencies which cannot be
+resolved. I have used <a href="http://docs.castleproject.org/Windsor.Installers.ashx">Windsor’s installer functionality</a> to group my registrations together which helps break up potentially large numbers of dependency registrations into logical groups,
+as well helping to keep the code <a href="http://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a> when writing these tests.</p>
+
+<div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="n">Fact</span><span class="p">]</span>
+<span class="k">public</span> <span class="k">void</span> <span class="nf">all_dependencies_are_correctly_registered</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">using</span><span class="p">(</span><span class="kt">var</span> <span class="n">container</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">WindsorContainer</span><span class="p">())</span> <span class="p">{</span>		
+
+		<span class="c1">//Setup the container</span>
+		<span class="n">container</span><span class="p">.</span><span class="nf">Install</span><span class="p">(</span>
+			<span class="k">new</span> <span class="nf">InstallerOne</span><span class="p">(),</span>
+			<span class="k">new</span> <span class="nf">InstallerTwo</span><span class="p">(),</span>
+			<span class="k">new</span> <span class="nf">InstallerThree</span><span class="p">()</span>
+		<span class="p">);</span>
+
+		<span class="c1">//Inspect the container for problems</span>
+		<span class="kt">var</span> <span class="n">key</span> <span class="p">=</span> <span class="n">SubSystemConstants</span><span class="p">.</span><span class="n">DiagnosticsKey</span><span class="p">;</span>
+		<span class="kt">var</span> <span class="n">host</span> <span class="p">=</span> <span class="p">(</span><span class="n">IDiagnosticsHost</span><span class="p">)</span><span class="n">container</span><span class="p">.</span><span class="n">Kernel</span><span class="p">.</span><span class="nf">GetSubSystem</span><span class="p">(</span><span class="n">key</span><span class="p">);</span>
+		<span class="kt">var</span> <span class="n">diagnostic</span> <span class="p">=</span> <span class="n">host</span><span class="p">.</span><span class="n">GetDiagnostic</span><span class="p">&lt;</span><span class="n">IPotentiallyMisconfiguredComponentsDiagnostic</span><span class="p">&gt;();</span>
+		<span class="kt">var</span> <span class="n">problems</span> <span class="p">=</span> <span class="n">diagnostic</span><span class="p">.</span><span class="nf">Inspect</span><span class="p">();</span>
+		
+		<span class="c1">//Iterate over the problems, writing messages to the console</span>
+		<span class="k">foreach</span><span class="p">(</span><span class="n">IExposeDependencyInfo</span> <span class="n">problem</span> <span class="k">in</span> <span class="n">problems</span><span class="p">)</span> <span class="p">{</span>
+
+			<span class="kt">var</span> <span class="n">message</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">StringBuilder</span><span class="p">();</span>
+			<span class="kt">var</span> <span class="n">inspector</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">DependencyInspector</span><span class="p">(</span><span class="n">message</span><span class="p">);</span>
+
+			<span class="n">problem</span><span class="p">.</span><span class="nf">ObtainDependencyDetails</span><span class="p">(</span><span class="n">inspector</span><span class="p">);</span>
+
+			<span class="n">Console</span><span class="p">.</span><span class="nf">Write</span><span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="nf">ToString</span><span class="p">());</span>
+		<span class="p">}</span>
+
+		<span class="c1">//Fail the test if there are any problems</span>
+		<span class="n">Assert</span><span class="p">.</span><span class="nf">Equal</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="n">problems</span><span class="p">.</span><span class="nf">Count</span><span class="p">());</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This test creates a <code class="highlighter-rouge">WindsorContainer</code>, configures dependencies via installers, then looks for problems using <code class="highlighter-rouge">IDiagnosticHost</code>. Here I have chosen to write individual error messages
+to the console before failing the test if there are problems but you could just as easily concatenate the messages together and fail the test with that message. The only potential
+downside of that approach is that if you have multiple missing dependencies the message is going to be quite wordy (and also more informative).</p>
+
+<p>It may not save a huge amount of time, but having a test like this in place removes one more small but annoying gotcha in the development process.</p>
+
+
+    
+
+
+
+<div class="post-tags">
+  
+    
+    <a href="/tags/#csharp">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">csharp</span>
+    </a>
+  
+    
+    <a href="/tags/#dotnet">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">dotnet</span>
+    </a>
+  
+    
+    <a href="/tags/#castle-windsor">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">castle-windsor</span>
+    </a>
+  
+    
+    <a href="/tags/#xunit">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">xunit</span>
+    </a>
+  
+    
+    <a href="/tags/#unit-testing">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">unit-testing</span>
+    </a>
+  
+</div>
+  </div>
+
+  
+  <section class="related">
+  <h2>Related Posts</h2>
+  <ul class="posts-list">
+    
+      <li>
+        <h3>
+          <a href="/devops/2014/02/03/tfs-2010-xunit/">
+            Running xUnit tests as a part of a TFS 2010 build
+            <small>03 Feb 2014</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">
+            Optimising Civ 5 cities using genetic algorithms
+            <small>19 Jan 2016</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/05/20/modeling-historical-dates/">
+            Modeling historical dates
+            <small>20 May 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</section>
+
+</div>
+
+    </main>
+
+    <!-- Optional footer content -->
+
+  </body>
+</html>

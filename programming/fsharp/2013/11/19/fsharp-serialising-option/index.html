@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="https://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <title>
+    
+      Serialising F#'s Option type using DataContractSerialiser &middot; try/finally
+    
+  </title>
+
+  
+
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+
+  <!-- Additional head bits without overriding original head -->
+</head>
+
+
+  <body class="post">
+
+    <div id="sidebar">
+  <header>
+    <div class="site-title">
+      <a href="/">
+        
+          <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h24v24H0z" fill="none"/>
+  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+</svg></span>
+        
+        try/finally
+      </a>
+    </div>
+    <p class="lead">Occasional programming thoughts of Mark Watts.</p>
+  </header>
+  <nav id="sidebar-nav-links">
+  
+  
+
+  
+
+  
+
+
+  
+    
+  
+
+  
+    
+      <a class="page-link "
+          href="/about/">About</a>
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  
+
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  <!-- Optional additional links to insert in sidebar nav -->
+</nav>
+
+
+  
+    <span class="site-version">Currently v1.0</span>
+  
+
+  <nav id="sidebar-icon-links">
+  
+
+  
+  
+  
+  
+
+  <a id="github-link"
+      class="icon"
+      title="GitHub" aria-label="GitHub"
+      href="https://github.com/wattsm"
+      target="_blank">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" height="24" width="28"><path d="M12 2c6.625 0 12 5.375 12 12 0 5.297-3.437 9.797-8.203 11.391-0.609 0.109-0.828-0.266-0.828-0.578 0-0.391 0.016-1.687 0.016-3.297 0-1.125-0.375-1.844-0.812-2.219 2.672-0.297 5.484-1.313 5.484-5.922 0-1.313-0.469-2.375-1.234-3.219 0.125-0.313 0.531-1.531-0.125-3.187-1-0.313-3.297 1.234-3.297 1.234-0.953-0.266-1.984-0.406-3-0.406s-2.047 0.141-3 0.406c0 0-2.297-1.547-3.297-1.234-0.656 1.656-0.25 2.875-0.125 3.187-0.766 0.844-1.234 1.906-1.234 3.219 0 4.594 2.797 5.625 5.469 5.922-0.344 0.313-0.656 0.844-0.766 1.609-0.688 0.313-2.438 0.844-3.484-1-0.656-1.141-1.844-1.234-1.844-1.234-1.172-0.016-0.078 0.734-0.078 0.734 0.781 0.359 1.328 1.75 1.328 1.75 0.703 2.141 4.047 1.422 4.047 1.422 0 1 0.016 1.937 0.016 2.234 0 0.313-0.219 0.688-0.828 0.578-4.766-1.594-8.203-6.094-8.203-11.391 0-6.625 5.375-12 12-12zM4.547 19.234c0.031-0.063-0.016-0.141-0.109-0.187-0.094-0.031-0.172-0.016-0.203 0.031-0.031 0.063 0.016 0.141 0.109 0.187 0.078 0.047 0.172 0.031 0.203-0.031zM5.031 19.766c0.063-0.047 0.047-0.156-0.031-0.25-0.078-0.078-0.187-0.109-0.25-0.047-0.063 0.047-0.047 0.156 0.031 0.25 0.078 0.078 0.187 0.109 0.25 0.047zM5.5 20.469c0.078-0.063 0.078-0.187 0-0.297-0.063-0.109-0.187-0.156-0.266-0.094-0.078 0.047-0.078 0.172 0 0.281s0.203 0.156 0.266 0.109zM6.156 21.125c0.063-0.063 0.031-0.203-0.063-0.297-0.109-0.109-0.25-0.125-0.313-0.047-0.078 0.063-0.047 0.203 0.063 0.297 0.109 0.109 0.25 0.125 0.313 0.047zM7.047 21.516c0.031-0.094-0.063-0.203-0.203-0.25-0.125-0.031-0.266 0.016-0.297 0.109s0.063 0.203 0.203 0.234c0.125 0.047 0.266 0 0.297-0.094zM8.031 21.594c0-0.109-0.125-0.187-0.266-0.172-0.141 0-0.25 0.078-0.25 0.172 0 0.109 0.109 0.187 0.266 0.172 0.141 0 0.25-0.078 0.25-0.172zM8.937 21.438c-0.016-0.094-0.141-0.156-0.281-0.141-0.141 0.031-0.234 0.125-0.219 0.234 0.016 0.094 0.141 0.156 0.281 0.125s0.234-0.125 0.219-0.219z"></path>
+</svg>
+
+  </a>
+
+  
+    <a id="tags-link"
+       class="icon"
+       title="Tags" aria-label="Tags"
+       href="/tags/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+    </a>
+  
+
+  
+    <a id="search-link"
+       class="icon"
+       title="Search" aria-label="Search"
+       href="/search/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
+    </a>
+  
+
+  <!-- Optional additional links to insert for icons links -->
+</nav>
+
+  <p>
+  &copy; 2020.  
+</p>
+
+</div>
+
+    <main class="container">
+      <header>
+  <h1 class="post-title">Serialising F#'s Option type using DataContractSerialiser</h1>
+</header>
+<div class="content">
+  <div class="post-meta">
+  <span class="post-date">19 Nov 2013</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        fsharp
+      
+    
+  </span>
+</div>
+
+
+  <div class="post-body">
+    <p><a href="http://msdn.microsoft.com/en-us/library/ms733127(v=vs.110).aspx">Data contracts</a> are a quick and relatively easy way of serialising objects to XML (or JSON, but we’ll stick to XML in this post) – e.g. for use as <a href="http://en.wikipedia.org/wiki/Data_transfer_object">DTOs</a>.</p>
+
+<p>Various attributes can be used to control aspects of the generated XML, meaning you can produce clean, simple XML quite easily. Using these attributes it is possible for the DataContractSerializer to serialise and deserialise F# record types, 
+which can be really handy when writing web services. However, a few wrinkles arise when using F#’s Option<T> type.</T></p>
+
+<!-- more -->
+
+<p>For example, take this simple model of a person:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">DataContract</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"person"</span><span class="p">,</span> <span class="nc">Namespace</span> <span class="p">=</span> <span class="s2">""</span><span class="o">)&gt;]</span>
+<span class="k">type</span> <span class="nc">Person</span> <span class="p">=</span> <span class="p">{</span>
+  <span class="p">[&lt;</span><span class="n">field</span><span class="p">:</span> <span class="nc">DataMember</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"name"</span><span class="o">)&gt;]</span> <span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The default XML produced will look like this:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;person</span> <span class="na">xmlns:i=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>John Smith<span class="nt">&lt;/name&gt;</span>
+<span class="nt">&lt;/person&gt;</span>
+</code></pre></div></div>
+
+<p><em>Notice that the DataMember attribute is applied using the field modifier – this tells .Net to apply the attribute to the backing field used by the property, as the property itself has no setter which is required by the serialiser.</em></p>
+
+<p>So far, so good. However, problems start to appear when we want to represent optional parts of our model, for example take this model:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">DataContract</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"department"</span><span class="p">,</span> <span class="nc">Namespace</span> <span class="p">=</span> <span class="s2">""</span><span class="o">)&gt;]</span>
+<span class="k">type</span> <span class="nc">Department</span> <span class="p">=</span> <span class="p">{</span>
+    <span class="p">[&lt;</span><span class="n">field</span><span class="p">:</span> <span class="nc">DataMember</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"name"</span><span class="o">)&gt;]</span> <span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+<span class="p">}</span>
+ 
+<span class="p">[&lt;</span><span class="nc">DataContract</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"team"</span><span class="p">,</span> <span class="nc">Namespace</span> <span class="p">=</span> <span class="s2">""</span><span class="o">)&gt;]</span>
+<span class="k">type</span> <span class="nc">Team</span> <span class="p">=</span> <span class="p">{</span>
+    <span class="p">[&lt;</span><span class="n">field</span><span class="p">:</span> <span class="nc">DataMember</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"name"</span><span class="o">)&gt;]</span> <span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+    <span class="p">[&lt;</span><span class="n">field</span><span class="p">:</span> <span class="nc">DataMember</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"dept"</span><span class="o">)&gt;]</span> <span class="nc">Department</span> <span class="p">:</span> <span class="nc">Department</span> <span class="n">option</span><span class="p">;</span>
+<span class="p">}</span>
+ 
+<span class="p">[&lt;</span><span class="nc">DataContract</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"developer"</span><span class="p">,</span> <span class="nc">Namespace</span> <span class="p">=</span> <span class="s2">""</span><span class="o">)&gt;]</span>
+<span class="k">type</span> <span class="nc">Developer</span> <span class="p">=</span> <span class="p">{</span>
+    <span class="p">[&lt;</span><span class="n">field</span><span class="p">:</span> <span class="nc">DataMember</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"name"</span><span class="o">)&gt;]</span> <span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+    <span class="p">[&lt;</span><span class="n">field</span><span class="p">:</span> <span class="nc">DataMember</span> <span class="p">(</span><span class="nc">Name</span> <span class="p">=</span> <span class="s2">"team"</span><span class="o">)&gt;]</span> <span class="nc">Team</span> <span class="p">:</span> <span class="nc">Team</span> <span class="n">option</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here a developer can optionally be associated with a team, which in turn can optionally be associated with a department. The problem is that the DataContractSerializer does not know how to serialise Option<T> and so you end up with ugly XML containing platform specific information. Here’s an example:</T></p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;developer</span> <span class="na">xmlns:i=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>John Smith<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;team</span> <span class="na">xmlns:a=</span><span class="s">"http://schemas.datacontract.org/2004/07/Microsoft.FSharp.Core"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;a:value&gt;</span>
+      <span class="nt">&lt;dept&gt;</span>
+        <span class="nt">&lt;a:value&gt;</span>
+          <span class="nt">&lt;name&gt;</span>Product Development<span class="nt">&lt;/name&gt;</span>
+        <span class="nt">&lt;/a:value&gt;</span>
+      <span class="nt">&lt;/dept&gt;</span>
+      <span class="nt">&lt;name&gt;</span>Red Team<span class="nt">&lt;/name&gt;</span>
+    <span class="nt">&lt;/a:value&gt;</span>
+  <span class="nt">&lt;/team&gt;</span>
+<span class="nt">&lt;/developer&gt;</span>
+</code></pre></div></div>
+
+<p>If we wanted to use this XML for a web service or similar we would ideally want Some X to be serialised as X and None to be omitted or empty, e.g.:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;developer</span> <span class="na">xmlns:i=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>John Smith<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;team&gt;</span>
+    <span class="nt">&lt;dept&gt;</span>
+      <span class="nt">&lt;name&gt;</span>Product Development<span class="nt">&lt;/name&gt;</span>
+    <span class="nt">&lt;/dept&gt;</span>
+    <span class="nt">&lt;name&gt;</span>Red Team<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;/team&gt;</span>
+<span class="nt">&lt;/developer&gt;</span>
+</code></pre></div></div>
+
+<p>Luckily there are a couple of tricks at our disposal.</p>
+
+<h2 id="using-idatacontractsurrogate">Using IDataContractSurrogate</h2>
+
+<p>The first thing we can do is use a <a href="http://msdn.microsoft.com/en-us/library/system.runtime.serialization.idatacontractsurrogate(v=vs.110).aspx">data contract surrogate</a> to tell the serialiser that Some X should be serialised as X and None should be treated as null. The interface defines several methods but we only need to implement three of them:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">OptionSurrogate</span> <span class="bp">()</span> <span class="p">=</span> 
+  <span class="k">interface</span> <span class="nc">IDataContractSurrogate</span> <span class="k">with</span>
+ 
+      <span class="c1">///Tell the serialiser to treat Option&lt;'T&gt; as 'T</span>
+      <span class="k">member</span> <span class="n">this</span><span class="p">.</span><span class="nc">GetDataContractType</span> <span class="p">(</span><span class="n">currentType</span> <span class="p">:</span> <span class="nc">Type</span><span class="p">)</span> <span class="p">=</span> 
+          <span class="k">match</span> <span class="p">(</span><span class="n">getOptionalType</span> <span class="n">currentType</span><span class="p">)</span> <span class="k">with</span>
+          <span class="p">|</span> <span class="nc">Some</span> <span class="n">baseType</span> <span class="p">-&gt;</span> <span class="n">baseType</span>
+          <span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> <span class="n">currentType</span>
+ 
+      <span class="c1">///When deserialising, convert null to None and 'T to Some&lt;'T&gt;</span>
+      <span class="k">member</span> <span class="n">this</span><span class="p">.</span><span class="nc">GetDeserializedObject</span> <span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">currentType</span><span class="p">)</span> <span class="p">=</span> 
+          <span class="k">if</span> <span class="p">(</span><span class="n">isOptionalType</span> <span class="n">currentType</span><span class="p">)</span> <span class="k">then</span>
+              <span class="k">if</span> <span class="p">(</span><span class="n">current</span> <span class="p">&lt;&gt;</span> <span class="k">null</span><span class="p">)</span> <span class="k">then</span>
+                  <span class="nn">Activator</span><span class="p">.</span><span class="nc">CreateInstance</span> <span class="p">(</span><span class="n">currentType</span><span class="p">,</span> <span class="p">[|</span> <span class="n">current</span> <span class="o">|])</span>
+              <span class="k">else</span>
+              
+                  <span class="k">let</span> <span class="n">noneProperty</span> <span class="p">=</span> <span class="n">currentType</span><span class="p">.</span><span class="nc">GetProperty</span> <span class="p">(</span><span class="s2">"None"</span><span class="p">)</span>
+                  <span class="n">noneProperty</span><span class="p">.</span><span class="nc">GetValue</span> <span class="p">(</span><span class="k">null</span><span class="p">)</span>
+ 
+          <span class="k">else</span>
+              <span class="n">current</span>
+ 
+      <span class="c1">///When serialising, convert Some&lt;'T&gt; to 'T and None to null</span>
+      <span class="k">member</span> <span class="n">this</span><span class="p">.</span><span class="nc">GetObjectToSerialize</span> <span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="o">_)</span> <span class="p">=</span> 
+          <span class="k">if</span> <span class="p">(</span><span class="n">current</span> <span class="p">&lt;&gt;</span> <span class="k">null</span><span class="p">)</span> <span class="k">then</span>
+          
+              <span class="k">let</span> <span class="n">currentType</span> <span class="p">=</span> <span class="n">current</span><span class="p">.</span><span class="nc">GetType</span> <span class="bp">()</span>
+ 
+              <span class="k">if</span> <span class="p">(</span><span class="n">isOptionalType</span> <span class="n">currentType</span><span class="p">)</span> <span class="k">then</span>
+ 
+                  <span class="k">let</span> <span class="n">isSomeProperty</span> <span class="p">=</span> <span class="n">currentType</span><span class="p">.</span><span class="nc">GetProperty</span> <span class="s2">"IsSome"</span>
+                  <span class="k">let</span> <span class="n">isSome</span> <span class="p">=</span> <span class="n">isSomeProperty</span><span class="p">.</span><span class="nc">GetValue</span> <span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="p">[|</span> <span class="n">current</span> <span class="o">|])</span> <span class="o">:?&gt;</span> <span class="kt">bool</span>
+ 
+                  <span class="k">if</span> <span class="n">isSome</span> <span class="k">then</span>
+ 
+                      <span class="k">let</span> <span class="n">valueProperty</span> <span class="p">=</span> <span class="n">currentType</span><span class="p">.</span><span class="nc">GetProperty</span> <span class="s2">"Value"</span>
+                      <span class="n">valueProperty</span><span class="p">.</span><span class="nc">GetValue</span> <span class="p">(</span><span class="n">current</span><span class="p">)</span>
+ 
+                  <span class="k">else</span>
+                      <span class="k">null</span>
+              <span class="k">else</span>
+                  <span class="n">current</span>
+          <span class="k">else</span>
+              <span class="n">current</span>
+ 
+      <span class="k">member</span> <span class="n">this</span><span class="p">.</span><span class="nc">GetCustomDataToExport</span> <span class="o">(_</span> <span class="p">:</span> <span class="nc">MemberInfo</span><span class="p">,</span> <span class="p">_</span> <span class="p">:</span> <span class="nc">Type</span><span class="p">)</span> <span class="p">=</span> <span class="n">box</span> <span class="k">null</span>
+      <span class="k">member</span> <span class="n">this</span><span class="p">.</span><span class="nc">GetCustomDataToExport</span> <span class="o">(_</span> <span class="p">:</span> <span class="nc">Type</span><span class="p">,</span> <span class="p">_</span> <span class="p">:</span> <span class="nc">Type</span><span class="p">)</span> <span class="p">=</span> <span class="n">box</span> <span class="k">null</span>
+      <span class="k">member</span> <span class="n">this</span><span class="p">.</span><span class="nc">GetKnownCustomDataTypes</span> <span class="p">_</span> <span class="p">=</span> <span class="bp">()</span>
+      <span class="k">member</span> <span class="n">this</span><span class="p">.</span><span class="nc">ProcessImportedType</span> <span class="p">(</span><span class="n">decl</span><span class="p">,</span> <span class="o">_)</span> <span class="p">=</span> <span class="n">decl</span>
+      <span class="k">member</span> <span class="n">this</span><span class="p">.</span><span class="nc">GetReferencedTypeOnImport</span> <span class="o">(_,</span> <span class="o">_,</span> <span class="o">_)</span> <span class="p">=</span> <span class="k">null</span>
+</code></pre></div></div>
+
+<p>Now when you create your DataContractSerializer you need to give it an instance of the surrogate:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">surrogate</span> <span class="p">=</span> <span class="nc">OptionSurrogate</span> <span class="bp">()</span>
+
+<span class="k">let</span> <span class="n">serialiser</span> <span class="p">=</span> <span class="nc">DataContractSerializer</span> <span class="p">(</span>
+	<span class="n">typeof</span><span class="p">&lt;</span><span class="nc">Developer</span><span class="o">&gt;,</span> 
+	<span class="nn">Seq</span><span class="p">.</span><span class="n">empty</span><span class="p">,</span> 
+	<span class="nn">Int32</span><span class="p">.</span><span class="nc">MaxValue</span><span class="p">,</span> 
+	<span class="bp">true</span><span class="p">,</span> 
+	<span class="bp">false</span><span class="p">,</span> 
+	<span class="n">surrogate</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>When we serialise our model optional types will be slightly cleaner. For example:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;developer</span> <span class="na">xmlns:i=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>John Smith<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;team</span> <span class="na">xmlns:a=</span><span class="s">"http://schemas.datacontract.org/2004/07/Microsoft.FSharp.Core"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;dept&gt;</span>
+      <span class="nt">&lt;name&gt;</span>Product Development<span class="nt">&lt;/name&gt;</span>
+    <span class="nt">&lt;/dept&gt;</span>
+    <span class="nt">&lt;name&gt;</span>Red Team<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;/team&gt;</span>
+<span class="nt">&lt;/developer&gt;</span>
+</code></pre></div></div>
+
+<p>Or when Team is None:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;developer</span> <span class="na">xmlns:i=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>John Smith<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;team</span> <span class="na">i:nil=</span><span class="s">"true"</span> <span class="na">xmlns:a=</span><span class="s">"http://schemas.datacontract.org/2004/07/Microsoft.FSharp.Core"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/developer&gt;</span>
+</code></pre></div></div>
+
+<p>*Setting the EmitDefaultValue property to false on the DataMember attribute for the Team property will cause the element to be omitted entirely as None is considered to be the default value of Option<T>.*</T></p>
+
+<p>Although the XML structure is cleaner the serialiser has now started to decorate elements with attributes relating to the Option<T> type, despite it no longer being serialised.</T></p>
+
+<h2 id="cleaning-up">Cleaning up</h2>
+
+<p>Luckily, removing these unnecessary attributes is fairly easy. In fact, the only attributes that are of any use to us are the ones that reside in the XML schema namespace (prefixed “i” in the examples) – so we can take the stream written to by the data contract serialiser and simply tweak the generated XML so that all attributes not in the XML schema namespace are removed.</p>
+
+<p>For example, a simple function which cleans up a stream of XML is shown below:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///castMany&lt;'T&gt; : IEnumerable -&gt; 'T list</span>
+<span class="c1">///getXml : Stream -&gt; XmlDocument</span>
+ 
+<span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">XmlnsNamespace</span> <span class="p">=</span> <span class="s2">"http://www.w3.org/2000/xmlns/"</span>
+<span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">SchemaNamespace</span> <span class="p">=</span> <span class="s2">"http://www.w3.org/2001/XMLSchema-instance"</span>
+ 
+<span class="k">let</span> <span class="n">cleanUp</span> <span class="p">(</span><span class="n">input</span> <span class="p">:</span> <span class="nc">Stream</span><span class="p">)</span> <span class="p">=</span> 
+ 
+  <span class="k">let</span> <span class="k">rec</span> <span class="n">removeAttrs</span> <span class="p">(</span><span class="n">node</span> <span class="p">:</span> <span class="nc">XmlNode</span><span class="p">)</span> <span class="p">=</span> 
+ 
+      <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="p">.</span><span class="nc">Attributes</span> <span class="p">&lt;&gt;</span> <span class="k">null</span> <span class="p">&amp;&amp;</span> <span class="n">node</span><span class="p">.</span><span class="nn">Attributes</span><span class="p">.</span><span class="nc">Count</span> <span class="p">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">then</span>
+          <span class="n">node</span><span class="p">.</span><span class="nc">Attributes</span>
+          <span class="p">|&gt;</span> <span class="n">castMany</span><span class="p">&lt;</span><span class="nc">XmlAttribute</span><span class="p">&gt;</span>
+          <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">filter</span> <span class="p">(</span><span class="k">fun</span> <span class="n">attr</span> <span class="p">-&gt;</span> <span class="k">not</span> <span class="p">(</span><span class="n">attr</span><span class="p">.</span><span class="nc">NamespaceURI</span> <span class="p">=</span> <span class="nc">SchemaNamespace</span><span class="o">))</span>
+          <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">iter</span> <span class="p">(</span><span class="k">fun</span> <span class="n">attr</span> <span class="p">-&gt;</span> <span class="n">node</span><span class="p">.</span><span class="nn">Attributes</span><span class="p">.</span><span class="nc">Remove</span> <span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="p">|&gt;</span> <span class="n">ignore</span><span class="p">)</span>
+ 
+      <span class="k">if</span> <span class="n">node</span><span class="p">.</span><span class="nc">HasChildNodes</span> <span class="k">then</span>
+          <span class="n">node</span><span class="p">.</span><span class="nc">ChildNodes</span>
+          <span class="p">|&gt;</span> <span class="n">castMany</span><span class="p">&lt;</span><span class="nc">XmlNode</span><span class="p">&gt;</span>
+          <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">iter</span> <span class="n">removeAttrs</span>
+ 
+  <span class="k">let</span> <span class="n">appendXmlns</span> <span class="p">(</span><span class="n">xml</span> <span class="p">:</span> <span class="nc">XmlDocument</span><span class="p">)</span> <span class="p">=</span> 
+ 
+      <span class="k">let</span> <span class="n">attr</span> <span class="p">=</span> <span class="n">xml</span><span class="p">.</span><span class="nc">CreateAttribute</span> <span class="p">(</span><span class="s2">"xmlns"</span><span class="p">,</span> <span class="s2">"i"</span><span class="p">,</span> <span class="nc">XmlnsNamespace</span><span class="p">)</span>
+      <span class="n">attr</span><span class="p">.</span><span class="nc">Value</span> <span class="p">&lt;-</span> <span class="nc">SchemaNamespace</span>
+ 
+      <span class="n">xml</span><span class="p">.</span><span class="nn">DocumentElement</span><span class="p">.</span><span class="nn">Attributes</span><span class="p">.</span><span class="nc">Append</span> <span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+      <span class="p">|&gt;</span> <span class="n">ignore</span>
+ 
+  <span class="k">let</span> <span class="n">xml</span> <span class="p">=</span> <span class="n">getXml</span> <span class="n">input</span>
+ 
+  <span class="n">removeAttrs</span> <span class="n">xml</span><span class="p">.</span><span class="nc">DocumentElement</span>
+  <span class="n">appendXmlns</span> <span class="n">xml</span>
+ 
+  <span class="k">let</span> <span class="n">settings</span> <span class="p">=</span> <span class="nc">XmlWriterSettings</span> <span class="bp">()</span>
+  <span class="n">settings</span><span class="p">.</span><span class="nc">OmitXmlDeclaration</span> <span class="p">&lt;-</span> <span class="bp">true</span>
+  <span class="n">settings</span><span class="p">.</span><span class="nc">NamespaceHandling</span> <span class="p">&lt;-</span> <span class="nn">NamespaceHandling</span><span class="p">.</span><span class="nc">OmitDuplicates</span>
+ 
+  <span class="k">let</span> <span class="n">output</span> <span class="p">=</span> <span class="k">new</span> <span class="nc">MemoryStream</span> <span class="bp">()</span>
+  <span class="k">use</span> <span class="n">writer</span> <span class="p">=</span> <span class="nn">XmlWriter</span><span class="p">.</span><span class="nc">Create</span> <span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+ 
+  <span class="n">xml</span><span class="p">.</span><span class="nc">WriteTo</span> <span class="p">(</span><span class="n">writer</span><span class="p">)</span>
+ 
+  <span class="n">output</span>
+</code></pre></div></div>
+
+<p>When the previous examples are passed through this function we end up with:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;developer</span> <span class="na">xmlns:i=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>John Smith<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;team&gt;</span>
+    <span class="nt">&lt;dept&gt;</span>
+      <span class="nt">&lt;name&gt;</span>Product Development<span class="nt">&lt;/name&gt;</span>
+    <span class="nt">&lt;/dept&gt;</span>
+    <span class="nt">&lt;name&gt;</span>Red Team<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;/team&gt;</span>
+<span class="nt">&lt;/developer&gt;</span>
+</code></pre></div></div>
+
+<p>And:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;developer</span> <span class="na">xmlns:i=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>John Smith<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;team</span> <span class="na">i:nil=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/developer&gt;</span>
+</code></pre></div></div>
+
+<p>Much better!</p>
+
+<p>Handily the additional attributes added by the serialiser are not needed to deserialise the XML – so the above examples will both be deserialised correctly.</p>
+
+<h2 id="cavaet">Cavaet</h2>
+
+<p>An unfortunate cavaet to this is that the surrogate’s GetDeserializedObject which is used to convert from T to Some T during deserialisation only appears to be called if T is a data contract. That means you cannot use this approach for optional properties which are not data contracts – e.g. String option.</p>
+
+<h2 id="example-code">Example code</h2>
+
+<p>An example application which demonstrates default serialisation, serialisation using the surrogate and serialisation using the surrogate and clean-up can be <a href="https://github.com/wattsm/serialising-f-sharp-options">found on here on GitHub</a>.</p>
+
+    
+
+
+
+<div class="post-tags">
+  
+    
+    <a href="/tags/#fsharp">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">fsharp</span>
+    </a>
+  
+    
+    <a href="/tags/#dotnet">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">dotnet</span>
+    </a>
+  
+</div>
+  </div>
+
+  
+  <section class="related">
+  <h2>Related Posts</h2>
+  <ul class="posts-list">
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">
+            Optimising Civ 5 cities using genetic algorithms
+            <small>19 Jan 2016</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/05/20/modeling-historical-dates/">
+            Modeling historical dates
+            <small>20 May 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/11/13/stateful-akka-actors-with-fsharp/">
+            Stateful Akka.NET actors with F#
+            <small>13 Nov 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</section>
+
+</div>
+
+    </main>
+
+    <!-- Optional footer content -->
+
+  </body>
+</html>

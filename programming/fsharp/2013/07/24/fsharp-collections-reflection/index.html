@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="https://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <title>
+    
+      Creating F# collections via reflection &middot; try/finally
+    
+  </title>
+
+  
+
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+
+  <!-- Additional head bits without overriding original head -->
+</head>
+
+
+  <body class="post">
+
+    <div id="sidebar">
+  <header>
+    <div class="site-title">
+      <a href="/">
+        
+          <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h24v24H0z" fill="none"/>
+  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+</svg></span>
+        
+        try/finally
+      </a>
+    </div>
+    <p class="lead">Occasional programming thoughts of Mark Watts.</p>
+  </header>
+  <nav id="sidebar-nav-links">
+  
+  
+
+  
+
+  
+
+
+  
+    
+  
+
+  
+    
+      <a class="page-link "
+          href="/about/">About</a>
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  
+
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  <!-- Optional additional links to insert in sidebar nav -->
+</nav>
+
+
+  
+    <span class="site-version">Currently v1.0</span>
+  
+
+  <nav id="sidebar-icon-links">
+  
+
+  
+  
+  
+  
+
+  <a id="github-link"
+      class="icon"
+      title="GitHub" aria-label="GitHub"
+      href="https://github.com/wattsm"
+      target="_blank">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" height="24" width="28"><path d="M12 2c6.625 0 12 5.375 12 12 0 5.297-3.437 9.797-8.203 11.391-0.609 0.109-0.828-0.266-0.828-0.578 0-0.391 0.016-1.687 0.016-3.297 0-1.125-0.375-1.844-0.812-2.219 2.672-0.297 5.484-1.313 5.484-5.922 0-1.313-0.469-2.375-1.234-3.219 0.125-0.313 0.531-1.531-0.125-3.187-1-0.313-3.297 1.234-3.297 1.234-0.953-0.266-1.984-0.406-3-0.406s-2.047 0.141-3 0.406c0 0-2.297-1.547-3.297-1.234-0.656 1.656-0.25 2.875-0.125 3.187-0.766 0.844-1.234 1.906-1.234 3.219 0 4.594 2.797 5.625 5.469 5.922-0.344 0.313-0.656 0.844-0.766 1.609-0.688 0.313-2.438 0.844-3.484-1-0.656-1.141-1.844-1.234-1.844-1.234-1.172-0.016-0.078 0.734-0.078 0.734 0.781 0.359 1.328 1.75 1.328 1.75 0.703 2.141 4.047 1.422 4.047 1.422 0 1 0.016 1.937 0.016 2.234 0 0.313-0.219 0.688-0.828 0.578-4.766-1.594-8.203-6.094-8.203-11.391 0-6.625 5.375-12 12-12zM4.547 19.234c0.031-0.063-0.016-0.141-0.109-0.187-0.094-0.031-0.172-0.016-0.203 0.031-0.031 0.063 0.016 0.141 0.109 0.187 0.078 0.047 0.172 0.031 0.203-0.031zM5.031 19.766c0.063-0.047 0.047-0.156-0.031-0.25-0.078-0.078-0.187-0.109-0.25-0.047-0.063 0.047-0.047 0.156 0.031 0.25 0.078 0.078 0.187 0.109 0.25 0.047zM5.5 20.469c0.078-0.063 0.078-0.187 0-0.297-0.063-0.109-0.187-0.156-0.266-0.094-0.078 0.047-0.078 0.172 0 0.281s0.203 0.156 0.266 0.109zM6.156 21.125c0.063-0.063 0.031-0.203-0.063-0.297-0.109-0.109-0.25-0.125-0.313-0.047-0.078 0.063-0.047 0.203 0.063 0.297 0.109 0.109 0.25 0.125 0.313 0.047zM7.047 21.516c0.031-0.094-0.063-0.203-0.203-0.25-0.125-0.031-0.266 0.016-0.297 0.109s0.063 0.203 0.203 0.234c0.125 0.047 0.266 0 0.297-0.094zM8.031 21.594c0-0.109-0.125-0.187-0.266-0.172-0.141 0-0.25 0.078-0.25 0.172 0 0.109 0.109 0.187 0.266 0.172 0.141 0 0.25-0.078 0.25-0.172zM8.937 21.438c-0.016-0.094-0.141-0.156-0.281-0.141-0.141 0.031-0.234 0.125-0.219 0.234 0.016 0.094 0.141 0.156 0.281 0.125s0.234-0.125 0.219-0.219z"></path>
+</svg>
+
+  </a>
+
+  
+    <a id="tags-link"
+       class="icon"
+       title="Tags" aria-label="Tags"
+       href="/tags/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+    </a>
+  
+
+  
+    <a id="search-link"
+       class="icon"
+       title="Search" aria-label="Search"
+       href="/search/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
+    </a>
+  
+
+  <!-- Optional additional links to insert for icons links -->
+</nav>
+
+  <p>
+  &copy; 2020.  
+</p>
+
+</div>
+
+    <main class="container">
+      <header>
+  <h1 class="post-title">Creating F# collections via reflection</h1>
+</header>
+<div class="content">
+  <div class="post-meta">
+  <span class="post-date">24 Jul 2013</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        fsharp
+      
+    
+  </span>
+</div>
+
+
+  <div class="post-body">
+    <p>During the course of a recent project I needed to instantiate some F# types via reflection. 
+This is a well documented and fairly simple process for C#, but F#’s immutable collections pose an interesting challenge.</p>
+
+<p>In this post I will describe the process of creating and populating an F# list using reflection, as well as an F# sequence for good measure.</p>
+
+<!-- more -->
+
+<p><em>Note that it is possible to create generic versions of the functions in this post, but when you’re working with reflection you are normally working with Type and Object rather than types you know about at compile type.</em></p>
+
+<h2 id="creating-a-generic-type">Creating a generic type</h2>
+
+<p>Both the list and sequence type are generic in F# (Microsoft.FSharp.Collections.List<T> and System.Collections.Generic.IEnumerable<T> respectively), so we will need a way of creating new generic types from the collection and item types.</T></T></p>
+
+<p>Luckily this is fairly straight forward.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">makeGenericType</span> <span class="p">(</span><span class="n">baseType</span> <span class="p">:</span> <span class="nc">Type</span><span class="p">)</span> <span class="p">(</span><span class="n">types</span> <span class="p">:</span> <span class="nc">Type</span> <span class="kt">list</span><span class="p">)</span> <span class="p">=</span> 
+
+  <span class="k">if</span> <span class="p">(</span><span class="k">not</span> <span class="n">baseType</span><span class="p">.</span><span class="nc">IsGenericTypeDefinition</span><span class="p">)</span> <span class="k">then</span>
+    <span class="n">invalidArg</span> <span class="s2">"baseType"</span> <span class="s2">"baseType must be a generic type definition."</span>
+
+  <span class="n">baseType</span><span class="p">.</span><span class="nc">MakeGenericType</span> <span class="p">(</span>
+    <span class="n">types</span>
+    <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">toArray</span>
+  <span class="p">)</span>
+</code></pre></div></div>
+
+<p>We can use this function to create generic types from a base type and type arguments. For example, here is how to create the type of int option:</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">intOptionType</span> <span class="p">=</span> 
+  <span class="n">makeGenericType</span>
+  <span class="p">&lt;|</span> <span class="n">typedefof</span><span class="p">&lt;</span><span class="nc">Option</span><span class="o">&lt;_&gt;&gt;</span>
+  <span class="p">&lt;|</span> <span class="p">[</span> <span class="n">typeof</span><span class="p">&lt;</span><span class="nc">Int32</span><span class="p">&gt;</span> <span class="p">]</span>
+</code></pre></div></div>
+
+<p>Note the use of typedefof rather than typeof. typedefof gives you a generic type definition (e.g. Option<T>) while typeof will “fill in the blanks” and give you a full type definition (e.g. Option<obj>).</obj></T></p>
+
+<h2 id="creating-a-sequence">Creating a sequence</h2>
+
+<p>Now that we have a way of creating our collection’s type we can go about actually creating and populating it. F#’s sequence is actually just System.Collections.IEnumerable<T> so we can use any type implementing that interface as a sequence – so let’s keep it simple and use List<T>.</T></T></p>
+
+<p>In order to create a sequence and populate it with some items we need to:</p>
+
+<p>Create the desired sequence type, e.g. List<String>.
+Create an instance of our sequence type using the default constructor.
+Add the items to the sequence.
+As List<T> is mutable this is fairly straight forward.</T></String></p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">makeSeqOf</span> <span class="n">itemType</span> <span class="p">(</span><span class="n">items</span> <span class="p">:</span> <span class="n">obj</span> <span class="kt">list</span><span class="p">)</span> <span class="p">=</span> 
+
+        <span class="k">let</span> <span class="n">seqType</span> <span class="p">=</span> 
+            <span class="n">makeGenericType</span>
+            <span class="p">&lt;|</span> <span class="n">typedefof</span><span class="p">&lt;</span><span class="nc">List</span><span class="o">&lt;_&gt;&gt;</span>
+            <span class="p">&lt;|</span> <span class="p">[</span> <span class="n">itemType</span><span class="p">;</span> <span class="p">]</span>
+
+        <span class="k">let</span> <span class="n">sequence</span> <span class="p">=</span> 
+            <span class="nn">Activator</span><span class="p">.</span><span class="nc">CreateInstance</span> <span class="n">seqType</span>
+
+        <span class="k">let</span> <span class="n">add</span> <span class="p">=</span> 
+
+            <span class="k">let</span> <span class="n">addMethod</span> <span class="p">=</span> 
+                <span class="n">seqType</span><span class="p">.</span><span class="nc">GetMethod</span> <span class="p">(</span><span class="s2">"Add"</span><span class="p">)</span>           
+            
+            <span class="k">fun</span> <span class="n">item</span> <span class="p">-&gt;</span>
+                <span class="n">addMethod</span><span class="p">.</span><span class="nc">Invoke</span> <span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="p">[|</span> <span class="n">item</span><span class="p">;</span> <span class="o">|])</span> 
+                <span class="p">|&gt;</span> <span class="n">ignore</span>
+
+        <span class="n">items</span>
+        <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">iter</span> <span class="n">add</span>
+
+        <span class="n">sequence</span>
+<span class="err">```</span><span class="n">fsharp</span>
+
+<span class="o">##</span> <span class="nc">Creating</span> <span class="n">a</span> <span class="kt">list</span>
+
+<span class="nc">Creating</span> <span class="n">an</span> <span class="nc">F</span><span class="p">#</span> <span class="kt">list</span> <span class="n">follows</span> <span class="n">the</span> <span class="n">same</span> <span class="n">basic</span> <span class="n">principles</span> <span class="n">but</span> <span class="n">whereas</span> <span class="n">any</span> <span class="nc">IEnumerable</span><span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;</span> <span class="n">can</span> <span class="n">be</span> <span class="n">used</span> <span class="k">for</span> <span class="n">a</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">meaning</span> <span class="n">we</span> <span class="n">can</span> <span class="k">use</span> <span class="n">the</span> <span class="k">mutable</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">T</span><span class="o">&gt;,</span> <span class="n">the</span> <span class="n">same</span> <span class="n">is</span> <span class="k">not</span> <span class="bp">true</span> <span class="k">for</span> <span class="n">lists</span><span class="p">.</span>
+
+<span class="nc">The</span> <span class="nc">F</span><span class="p">#</span> <span class="kt">list</span> <span class="n">is</span> <span class="k">of</span> <span class="k">type</span> <span class="nn">Microsoft</span><span class="p">.</span><span class="nn">FSharp</span><span class="p">.</span><span class="nn">Collections</span><span class="p">.</span><span class="nc">List</span><span class="p">&lt;</span><span class="nc">T</span><span class="p">&gt;</span> <span class="k">and</span> <span class="n">it</span> <span class="n">is</span> <span class="n">immutable</span><span class="p">,</span> <span class="n">which</span> <span class="n">makes</span> <span class="n">our</span> <span class="n">job</span> <span class="n">a</span> <span class="n">little</span> <span class="n">bit</span> <span class="n">more</span> <span class="n">complicated</span><span class="p">:</span>
+
+<span class="nc">Create</span> <span class="n">the</span> <span class="n">desired</span> <span class="n">generic</span> <span class="k">type</span><span class="p">.</span>
+<span class="nc">Get</span> <span class="n">a</span> <span class="n">reference</span> <span class="k">to</span> <span class="n">the</span> <span class="n">empty</span> <span class="kt">list</span> <span class="k">for</span> <span class="n">that</span> <span class="k">type</span><span class="p">.</span>
+<span class="nc">Fold</span> <span class="n">the</span> <span class="n">items</span> <span class="n">into</span> <span class="n">the</span> <span class="kt">list</span><span class="p">,</span> <span class="n">creating</span> <span class="n">an</span> <span class="n">extended</span> <span class="kt">list</span> <span class="n">each</span> <span class="n">time</span><span class="p">.</span>
+
+<span class="err">```</span><span class="n">fsharp</span>
+<span class="k">let</span> <span class="n">makeListOf</span> <span class="n">itemType</span> <span class="p">(</span><span class="n">items</span> <span class="p">:</span> <span class="n">obj</span> <span class="kt">list</span><span class="p">)</span>  <span class="p">=</span> 
+
+        <span class="k">let</span> <span class="n">listType</span> <span class="p">=</span> 
+            <span class="n">makeGenericType</span> 
+            <span class="p">&lt;|</span> <span class="n">typedefof</span><span class="p">&lt;</span><span class="nn">Microsoft</span><span class="p">.</span><span class="nn">FSharp</span><span class="p">.</span><span class="nn">Collections</span><span class="p">.</span><span class="nc">List</span><span class="o">&lt;_&gt;&gt;</span> 
+            <span class="p">&lt;|</span> <span class="p">[</span> <span class="n">itemType</span><span class="p">;</span> <span class="p">]</span>
+
+        <span class="k">let</span> <span class="n">add</span> <span class="p">=</span> 
+
+            <span class="k">let</span> <span class="n">cons</span> <span class="p">=</span> 
+                <span class="n">listType</span><span class="p">.</span><span class="nc">GetMethod</span> <span class="p">(</span><span class="s2">"Cons"</span><span class="p">)</span>
+            
+            <span class="k">fun</span> <span class="n">item</span> <span class="kt">list</span> <span class="p">-&gt;</span>
+                <span class="n">cons</span><span class="p">.</span><span class="nc">Invoke</span> <span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="p">[|</span> <span class="n">item</span><span class="p">;</span> <span class="kt">list</span><span class="p">;</span> <span class="o">|])</span>                
+
+        <span class="k">let</span> <span class="kt">list</span> <span class="p">=</span> 
+
+            <span class="k">let</span> <span class="n">empty</span> <span class="p">=</span> 
+                <span class="n">listType</span><span class="p">.</span><span class="nc">GetProperty</span> <span class="p">(</span><span class="s2">"Empty"</span><span class="p">)</span>
+
+            <span class="n">empty</span><span class="p">.</span><span class="nc">GetValue</span> <span class="p">(</span><span class="k">null</span><span class="p">)</span>
+
+        <span class="kt">list</span>
+        <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">foldBack</span> <span class="n">add</span> <span class="n">items</span>
+</code></pre></div></div>
+
+<p>F#’s list type has no default constructor, instead we need to get a reference to the empty list (the equivalent of List.empty<T> or []). Empty is a static property on the list type so we just need to get its value using GetValue.</T></p>
+
+<p>In order to add items our list we need to use the cons function (more commonly seen as ::) which creates a new list by prepending an item to the head of an existing list. Cons is a static method on the list type so we call it using Invoke and pass it the item to be added and the existing list, in that order (analogous to head :: tail).</p>
+
+<p>By using foldBack we maintain the list order (because items are added in reverse order and cons prepends to the list rather than appending).</p>
+
+<h2 id="source-code">Source code</h2>
+
+<p>The code for the three functions described in this post, as well as various others, are available in my <a href="https://github.com/wattsm/handyfs">HandyFS project on GitHub</a> (MIT licence).</p>
+
+    
+
+
+
+<div class="post-tags">
+  
+    
+    <a href="/tags/#fsharp">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">fsharp</span>
+    </a>
+  
+    
+    <a href="/tags/#dotnet">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">dotnet</span>
+    </a>
+  
+    
+    <a href="/tags/#reflection">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">reflection</span>
+    </a>
+  
+</div>
+  </div>
+
+  
+  <section class="related">
+  <h2>Related Posts</h2>
+  <ul class="posts-list">
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">
+            Optimising Civ 5 cities using genetic algorithms
+            <small>19 Jan 2016</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/05/20/modeling-historical-dates/">
+            Modeling historical dates
+            <small>20 May 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/11/13/stateful-akka-actors-with-fsharp/">
+            Stateful Akka.NET actors with F#
+            <small>13 Nov 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</section>
+
+</div>
+
+    </main>
+
+    <!-- Optional footer content -->
+
+  </body>
+</html>

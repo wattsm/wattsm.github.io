@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="https://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <title>
+    
+      Modeling Mars rovers with F# &middot; try/finally
+    
+  </title>
+
+  
+
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+
+  <!-- Additional head bits without overriding original head -->
+</head>
+
+
+  <body class="post">
+
+    <div id="sidebar">
+  <header>
+    <div class="site-title">
+      <a href="/">
+        
+          <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h24v24H0z" fill="none"/>
+  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+</svg></span>
+        
+        try/finally
+      </a>
+    </div>
+    <p class="lead">Occasional programming thoughts of Mark Watts.</p>
+  </header>
+  <nav id="sidebar-nav-links">
+  
+  
+
+  
+
+  
+
+
+  
+    
+  
+
+  
+    
+      <a class="page-link "
+          href="/about/">About</a>
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  
+
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  <!-- Optional additional links to insert in sidebar nav -->
+</nav>
+
+
+  
+    <span class="site-version">Currently v1.0</span>
+  
+
+  <nav id="sidebar-icon-links">
+  
+
+  
+  
+  
+  
+
+  <a id="github-link"
+      class="icon"
+      title="GitHub" aria-label="GitHub"
+      href="https://github.com/wattsm"
+      target="_blank">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" height="24" width="28"><path d="M12 2c6.625 0 12 5.375 12 12 0 5.297-3.437 9.797-8.203 11.391-0.609 0.109-0.828-0.266-0.828-0.578 0-0.391 0.016-1.687 0.016-3.297 0-1.125-0.375-1.844-0.812-2.219 2.672-0.297 5.484-1.313 5.484-5.922 0-1.313-0.469-2.375-1.234-3.219 0.125-0.313 0.531-1.531-0.125-3.187-1-0.313-3.297 1.234-3.297 1.234-0.953-0.266-1.984-0.406-3-0.406s-2.047 0.141-3 0.406c0 0-2.297-1.547-3.297-1.234-0.656 1.656-0.25 2.875-0.125 3.187-0.766 0.844-1.234 1.906-1.234 3.219 0 4.594 2.797 5.625 5.469 5.922-0.344 0.313-0.656 0.844-0.766 1.609-0.688 0.313-2.438 0.844-3.484-1-0.656-1.141-1.844-1.234-1.844-1.234-1.172-0.016-0.078 0.734-0.078 0.734 0.781 0.359 1.328 1.75 1.328 1.75 0.703 2.141 4.047 1.422 4.047 1.422 0 1 0.016 1.937 0.016 2.234 0 0.313-0.219 0.688-0.828 0.578-4.766-1.594-8.203-6.094-8.203-11.391 0-6.625 5.375-12 12-12zM4.547 19.234c0.031-0.063-0.016-0.141-0.109-0.187-0.094-0.031-0.172-0.016-0.203 0.031-0.031 0.063 0.016 0.141 0.109 0.187 0.078 0.047 0.172 0.031 0.203-0.031zM5.031 19.766c0.063-0.047 0.047-0.156-0.031-0.25-0.078-0.078-0.187-0.109-0.25-0.047-0.063 0.047-0.047 0.156 0.031 0.25 0.078 0.078 0.187 0.109 0.25 0.047zM5.5 20.469c0.078-0.063 0.078-0.187 0-0.297-0.063-0.109-0.187-0.156-0.266-0.094-0.078 0.047-0.078 0.172 0 0.281s0.203 0.156 0.266 0.109zM6.156 21.125c0.063-0.063 0.031-0.203-0.063-0.297-0.109-0.109-0.25-0.125-0.313-0.047-0.078 0.063-0.047 0.203 0.063 0.297 0.109 0.109 0.25 0.125 0.313 0.047zM7.047 21.516c0.031-0.094-0.063-0.203-0.203-0.25-0.125-0.031-0.266 0.016-0.297 0.109s0.063 0.203 0.203 0.234c0.125 0.047 0.266 0 0.297-0.094zM8.031 21.594c0-0.109-0.125-0.187-0.266-0.172-0.141 0-0.25 0.078-0.25 0.172 0 0.109 0.109 0.187 0.266 0.172 0.141 0 0.25-0.078 0.25-0.172zM8.937 21.438c-0.016-0.094-0.141-0.156-0.281-0.141-0.141 0.031-0.234 0.125-0.219 0.234 0.016 0.094 0.141 0.156 0.281 0.125s0.234-0.125 0.219-0.219z"></path>
+</svg>
+
+  </a>
+
+  
+    <a id="tags-link"
+       class="icon"
+       title="Tags" aria-label="Tags"
+       href="/tags/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+    </a>
+  
+
+  
+    <a id="search-link"
+       class="icon"
+       title="Search" aria-label="Search"
+       href="/search/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
+    </a>
+  
+
+  <!-- Optional additional links to insert for icons links -->
+</nav>
+
+  <p>
+  &copy; 2020.  
+</p>
+
+</div>
+
+    <main class="container">
+      <header>
+  <h1 class="post-title">Modeling Mars rovers with F#</h1>
+</header>
+<div class="content">
+  <div class="post-meta">
+  <span class="post-date">18 Nov 2014</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        fsharp
+      
+    
+  </span>
+</div>
+
+
+  <div class="post-body">
+    <p>Although currently somewhat overshadowed by <a href="http://www.esa.int/Our_Activities/Space_Science/Rosetta">ESA’s amazing Rosetta mission</a>, <a href="http://en.wikipedia.org/wiki/Sojourner_(rover)">Mars rovers</a> <a href="http://en.wikipedia.org/wiki/Opportunity_(rover)">are awesome</a> <a href="http://en.wikipedia.org/wiki/Spirit_(rover)">in their</a> <a href="http://en.wikipedia.org/wiki/Curiosity_(rover)">own right</a>. 
+So when <a href="http://www.readcopyupdate.com/">a colleague</a> pointed me in the direction of 
+<a href="http://www.techinterviewpuzzles.com/2010/09/mars-rovers-thoughtworks-puzzles.html#Mars_Rovers_Puzzle">an interview puzzle about modeling Mars rovers</a>
+and mentioned that he was writing an (immutable) F# implementation I decided to follow suit and have a go myself.</p>
+
+<!-- more -->
+
+<h3 id="the-problem">The problem</h3>
+
+<p>The basic problem described in the puzzle is modeling the movements of rovers on the surface of Mars. The surface is represented by a simple grid with the point (0,0) being
+at the left hand corner. Rovers land at a given point facing a given direction and are then commanded to either move in the direction they are facing or rotate 90° either to
+the left or the right.</p>
+
+<p>The program should accept as an input a series of commands. The first defines the planet surface as a maximum value of the X and Y coordinates. Subsequent commands
+describe the landing position of rovers followed by their movements.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>5 5
+1 2 N
+LMLMLMLMM
+3 3 E
+MMRMMRMRRM
+</code></pre></div></div>
+
+<p>In this example the first line initialises the planet surface to have maximum X and Y coordinates of 5. Then a rover is added to (1,2), facing north. Instructions for this rover follow, with 
+L turning the rover 90° to the left, R turning it 90° to the right and M moving it forwards one place in the direction it is facing. The process is then repeated for another rover starting at (3,3) and facing
+east.</p>
+
+<p>Once the input has been processed the final position and direction of the rovers should be printed.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1 3 N
+5 1 E
+</code></pre></div></div>
+
+<p>The original problem does not explicitly state error conditions but I think that at a minimum movement out of bounds and rover collisions should be covered. The original problem
+also does not state how the input should be processed. There are two possibilities:</p>
+
+<ul>
+  <li>Initialise the planet surface, place all rovers, circle through the rovers processing one movement instruction at a time.</li>
+  <li>Initialise the planet surface, place each rover in turn, processing its movement instructions immediately afterwards.</li>
+</ul>
+
+<p>I decided to adopt the second approach as it is implied by the format of the input and is simpler.</p>
+
+<p>Finally, for the sake of clarity I gave the rovers names, so the input now becomes:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>5 5
+Opportunity 1 2 N
+LMLMLMLMM
+Curiousity 3 3 E
+MMRMMRMRRM
+</code></pre></div></div>
+
+<h3 id="the-solution">The solution</h3>
+
+<p>The solution I arrived at <a href="https://github.com/wattsm/mars-rovers">can be found on GitHub</a>, with the majority of the interesting code in <a href="https://github.com/wattsm/mars-rovers/blob/master/MarsRovers/Model.fs">Model.fs</a>.</p>
+
+<h4 id="basic-design">Basic design</h4>
+
+<p>I decided to use single case unions when writing my model, as described in <a href="http://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/">this 
+post over at F# for fun and profit</a>. I really like the elegance of this approach and was interested
+to see how it would work in practice. (I did not use <code class="highlighter-rouge">.fsi</code> files as described in the post as I found them to be more trouble than they were worth.)</p>
+
+<p>Using this approach is a nice compromise between <a href="http://en.wikipedia.org/wiki/Encapsulation_(object-oriented_programming)">object oriented style encapsulation</a> and a more
+functional approach.</p>
+
+<p>The article above defines an <code class="highlighter-rouge">apply</code> method which grants a function access to the union’s underlying data. I also defined a <code class="highlighter-rouge">mutate</code> function which creates a new
+value based on a function which updates the underlying data.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">module</span> <span class="nc">Rover</span> <span class="p">=</span> 
+
+  <span class="k">type</span> <span class="nc">State</span> <span class="p">=</span> <span class="p">{</span> <span class="o">...</span> <span class="p">}</span>  
+  <span class="k">type</span> <span class="nc">Instance</span> <span class="p">=</span> <span class="nc">Rover</span> <span class="k">of</span> <span class="nc">State</span>
+  
+  <span class="k">let</span> <span class="k">private</span> <span class="n">apply</span> <span class="n">f</span> <span class="p">(</span><span class="nc">Rover</span> <span class="n">state</span><span class="p">)</span> <span class="p">=</span> <span class="n">f</span> <span class="n">state</span>  
+  <span class="k">let</span> <span class="k">private</span> <span class="n">mutate</span> <span class="n">f</span> <span class="p">=</span> <span class="n">apply</span> <span class="p">(</span><span class="k">fun</span> <span class="n">state</span> <span class="p">-&gt;</span> <span class="nc">Rover</span> <span class="p">(</span><span class="n">f</span> <span class="n">state</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p>This function can then be used to create new values.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Rover.Instance -&gt; Rover.Instance</span>
+<span class="k">let</span> <span class="n">move</span> <span class="p">=</span> <span class="n">mutate</span> <span class="p">(</span><span class="k">fun</span> <span class="n">state</span> <span class="p">-&gt;</span>
+  <span class="k">let</span> <span class="n">location</span> <span class="p">=</span> <span class="o">...</span>
+  <span class="k">in</span> <span class="p">{</span> <span class="n">state</span> <span class="k">with</span> <span class="nc">Location</span> <span class="p">=</span> <span class="n">location</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<h4 id="errors">Errors</h4>
+
+<p>In order to represent the success/failure of an operation I created a new union type, <code class="highlighter-rouge">Outcome&lt;'T&gt;</code>. This is essentially the same as <code class="highlighter-rouge">Choice&lt;'T,String&gt;</code> but with nicer
+semantics and syntax.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Using Choice&lt;'T,String&gt;</span>
+<span class="k">match</span> <span class="n">value</span> <span class="k">with</span>
+<span class="p">|</span> <span class="nc">Choice1Of2</span> <span class="n">result</span> <span class="p">-&gt;</span> <span class="o">...</span>
+<span class="p">|</span> <span class="nc">Choice2Of2</span> <span class="n">message</span> <span class="p">-&gt;</span> <span class="o">...</span>
+
+<span class="c1">//Using Outcome&lt;'T&gt;</span>
+<span class="k">match</span> <span class="n">value</span> <span class="k">with</span>
+<span class="p">|</span> <span class="nc">Success</span> <span class="n">result</span> <span class="p">-&gt;</span> <span class="o">...</span>
+<span class="p">|</span> <span class="nc">Problem</span> <span class="n">message</span> <span class="p">-&gt;</span> <span class="o">...</span>
+</code></pre></div></div>
+
+<p>Using the <code class="highlighter-rouge">Outcome&lt;'T&gt;</code> type I could represent errors without the need for exceptions.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">create</span> <span class="n">name</span> <span class="n">location</span> <span class="n">orientation</span> <span class="p">=</span> 
+  <span class="k">if</span> <span class="p">(</span><span class="nn">String</span><span class="p">.</span><span class="nc">IsNullEmptyOrWhitespace</span> <span class="n">name</span><span class="p">)</span> <span class="k">then</span>
+	<span class="nc">Problem</span> <span class="p">(</span><span class="s2">"The rover name cannot be null, empty or whitespace."</span><span class="p">)</span>
+  <span class="k">else</span>
+    <span class="nc">Success</span> <span class="o">(...)</span>
+</code></pre></div></div>
+
+<h4 id="composing-functions">Composing functions</h4>
+
+<p>In order to be able to compose multiple functions of the form <code class="highlighter-rouge">'a -&gt; Outcome&lt;'b&gt;</code> I created a <code class="highlighter-rouge">bind</code> function and gave it an alias, <code class="highlighter-rouge">--&gt;</code>, as a custom
+operator.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">let</span> <span class="n">bind</span> <span class="p">(</span><span class="n">f</span> <span class="p">:</span> <span class="k">'</span><span class="n">a</span> <span class="p">-&gt;</span> <span class="nc">Outcome</span><span class="p">&lt;</span><span class="k">'</span><span class="n">b</span><span class="o">&gt;)</span> <span class="p">(</span><span class="n">g</span> <span class="p">:</span> <span class="k">'</span><span class="n">b</span> <span class="p">-&gt;</span> <span class="nc">Outcome</span><span class="p">&lt;</span><span class="k">'</span><span class="n">c</span><span class="o">&gt;)</span> <span class="p">=</span> 
+  <span class="k">fun</span> <span class="n">x</span> <span class="p">-&gt;</span>
+    <span class="k">match</span> <span class="p">(</span><span class="n">f</span> <span class="n">x</span><span class="p">)</span> <span class="k">with</span>
+	<span class="p">|</span> <span class="nc">Success</span> <span class="n">x'</span> <span class="p">-&gt;</span> <span class="n">g</span> <span class="n">x'</span>
+	<span class="p">|</span> <span class="nc">Problem</span> <span class="n">msg</span> <span class="p">-&gt;</span> <span class="nc">Problem</span> <span class="n">msg</span>
+	
+<span class="k">let</span> <span class="o">(--&gt;)</span> <span class="p">=</span> <span class="n">bind</span>
+</code></pre></div></div>
+
+<p>This allowed me to create composite functions where each component function was only called if the previous one had been successful, with error messages
+being propogated otherwise. A good example of this is the <code class="highlighter-rouge">validatedAdd</code> function in <code class="highlighter-rouge">Planet.MissionControl</code>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//(Planet.State * Rover.Instance) -&gt; Outcome&lt;Planet.Instance&gt;</span>
+<span class="k">let</span> <span class="k">private</span> <span class="n">validatedAdd</span> <span class="p">=</span> 
+  <span class="nn">State</span><span class="p">.</span><span class="n">checkBounds</span>
+  <span class="o">--&gt;</span> <span class="nn">State</span><span class="p">.</span><span class="n">checkCollissions</span>
+  <span class="o">--&gt;</span> <span class="nn">Rover</span><span class="p">.</span><span class="n">add</span>
+  <span class="o">--&gt;</span> <span class="nn">State</span><span class="p">.</span><span class="n">toPlanet</span>
+</code></pre></div></div>
+
+<p>(This is an example of a monad. There are <a href="https://www.haskell.org/haskellwiki/Monad_tutorials_timeline">a lot of monad tutorials out there</a> if you are interested in finding out more.)</p>
+
+<h4 id="issuing-instructions">Issuing instructions</h4>
+
+<p>Once the planet surface has been initialised there are two types of command:</p>
+
+<ul>
+  <li>Add a new rover.</li>
+  <li>Move an existing rover.</li>
+</ul>
+
+<p>These commands share two validation rules regarding the state of the planet surface:</p>
+
+<ul>
+  <li>No rover should be out of bounds.</li>
+  <li>No rover should occupy the same position as another.</li>
+</ul>
+
+<p>The model of the planet surface is fairly straight forward.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">module</span> <span class="nc">Planet</span> <span class="p">=</span> 
+  <span class="k">type</span> <span class="nc">State</span> <span class="p">=</span> <span class="p">{</span>
+    <span class="nc">Width</span> <span class="p">:</span> <span class="kt">int</span><span class="p">;</span>
+	<span class="nc">Height</span> <span class="p">:</span> <span class="kt">int</span><span class="p">;</span>
+	<span class="nc">Rovers</span> <span class="p">:</span> <span class="nn">Rover</span><span class="p">.</span><span class="nc">Instance</span> <span class="kt">list</span><span class="p">;</span>
+  <span class="p">}</span>
+</code></pre></div></div>
+
+<p>Rovers are responsible for keeping track of their current position.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">module</span> <span class="nc">Rover</span> <span class="p">=</span>
+  <span class="k">type</span> <span class="nc">State</span> <span class="p">=</span> <span class="p">{</span>
+	<span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+	<span class="nc">Location</span> <span class="p">:</span> <span class="nn">Location</span><span class="p">.</span><span class="nc">Instance</span><span class="p">;</span> <span class="c1">//X and Y coordinates</span>
+	<span class="nc">Orientation</span> <span class="p">:</span> <span class="nn">Orientation</span><span class="p">.</span><span class="nc">Instance</span><span class="p">;</span> <span class="c1">//Direction the rover is facing</span>
+  <span class="p">}</span>
+</code></pre></div></div>
+
+<p>In order make my solution as simple as possible I made the second command, moving a rover, a case of the new rover command. When modeling a move command
+a new planet <code class="highlighter-rouge">State</code> is created minus the moving rover, the rover’s position is then updated and the rover re-added to the <code class="highlighter-rouge">State</code> as if it were a new rover. This
+can be seen in the functions <code class="highlighter-rouge">touchdown</code> and <code class="highlighter-rouge">instruct</code> in the <code class="highlighter-rouge">Planet.MissionControl</code> module.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="k">private</span> <span class="n">validatedAdd</span> <span class="p">=</span>   
+  <span class="nn">State</span><span class="p">.</span><span class="n">checkBounds</span>           <span class="c1">//Ensure within bounds</span>
+  <span class="o">--&gt;</span> <span class="nn">State</span><span class="p">.</span><span class="n">checkCollissions</span>  <span class="c1">//Ensure not at same location as another</span>
+  <span class="o">--&gt;</span> <span class="nn">Rovers</span><span class="p">.</span><span class="n">add</span>              <span class="c1">//Add to the surface</span>
+  <span class="o">--&gt;</span> <span class="nn">State</span><span class="p">.</span><span class="n">toPlanet</span> 
+  
+<span class="c1">///Rover.Instance -&gt; Planet.Instance -&gt; Outcome&lt;Planet.Instance&gt;</span>
+<span class="k">let</span> <span class="n">touchdown</span> <span class="n">rover</span> <span class="p">(</span><span class="nc">Planet</span> <span class="n">state</span><span class="p">)</span> <span class="p">=</span>
+  <span class="n">validatedAdd</span> <span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rover</span><span class="p">)</span>
+  
+<span class="c1">///String -&gt; (Rover.Instance -&gt; Rover.Instance) -&gt; Planet.Instance -&gt; Outcome&lt;Planet.Instance&gt;</span>
+<span class="k">let</span> <span class="n">instruct</span> <span class="n">name</span> <span class="n">instruction</span> <span class="p">(</span><span class="nc">Planet</span> <span class="n">state</span><span class="p">)</span> <span class="p">=</span> 
+  <span class="k">let</span> <span class="n">f</span> <span class="p">=</span> 
+    <span class="nn">Rovers</span><span class="p">.</span><span class="n">find</span>                    <span class="c1">//Find by name</span>
+	<span class="o">--&gt;</span> <span class="nn">Rovers</span><span class="p">.</span><span class="n">extract</span>             <span class="c1">//Remove from planet surface</span>
+	<span class="o">--&gt;</span> <span class="nn">Rovers</span><span class="p">.</span><span class="n">update</span> <span class="n">instruction</span>  <span class="c1">//Issue the instruction</span>
+	<span class="o">--&gt;</span> <span class="n">validatedAdd</span>               <span class="c1">//Re-add to the planet surface</span>
+  <span class="k">in</span> <span class="n">f</span> <span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Processing the input defined in the puzzle is now a case of simply creating the initial, empty, model of the planet and then folding over a list
+of instructions.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>You can see the model in action in <a href="https://github.com/wattsm/mars-rovers/blob/master/MarsRovers/Program.fs">Program.fs</a>, which is somewhat less elegant. I think that although the model could certainly be polished and expanded 
+it is a good solution to the problem.</p>
+
+<p>Running the program with the standard input will give the following response.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Rovers:
+Curiousity | (5, 1) | Facing East
+Opportunity | (1, 3) | Facing North
+</code></pre></div></div>
+
+<p>One of the things that really impressed me when writing this was how easy it is in F# to create a viable working solution without the missteps and gotchas 
+that you tend to associated with the same process in languages like C#. The single case union model also worked really well and allowed me to think broadly in
+terms of real world objects while using a functional style.</p>
+
+
+    
+
+
+
+<div class="post-tags">
+  
+    
+    <a href="/tags/#fsharp">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">fsharp</span>
+    </a>
+  
+    
+    <a href="/tags/#dotnet">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">dotnet</span>
+    </a>
+  
+    
+    <a href="/tags/#science">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">science</span>
+    </a>
+  
+</div>
+  </div>
+
+  
+  <section class="related">
+  <h2>Related Posts</h2>
+  <ul class="posts-list">
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">
+            Optimising Civ 5 cities using genetic algorithms
+            <small>19 Jan 2016</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/05/20/modeling-historical-dates/">
+            Modeling historical dates
+            <small>20 May 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">
+            Using DBSCAN for fun and (mostly) profit in Elite:Dangerous
+            <small>13 Feb 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</section>
+
+</div>
+
+    </main>
+
+    <!-- Optional footer content -->
+
+  </body>
+</html>

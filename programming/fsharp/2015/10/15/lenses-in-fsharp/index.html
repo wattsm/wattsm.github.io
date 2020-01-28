@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="https://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <title>
+    
+      Lenses in F# &middot; try/finally
+    
+  </title>
+
+  
+
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+
+  <!-- Additional head bits without overriding original head -->
+</head>
+
+
+  <body class="post">
+
+    <div id="sidebar">
+  <header>
+    <div class="site-title">
+      <a href="/">
+        
+          <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h24v24H0z" fill="none"/>
+  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+</svg></span>
+        
+        try/finally
+      </a>
+    </div>
+    <p class="lead">Occasional programming thoughts of Mark Watts.</p>
+  </header>
+  <nav id="sidebar-nav-links">
+  
+  
+
+  
+
+  
+
+
+  
+    
+  
+
+  
+    
+      <a class="page-link "
+          href="/about/">About</a>
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  
+
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  <!-- Optional additional links to insert in sidebar nav -->
+</nav>
+
+
+  
+    <span class="site-version">Currently v1.0</span>
+  
+
+  <nav id="sidebar-icon-links">
+  
+
+  
+  
+  
+  
+
+  <a id="github-link"
+      class="icon"
+      title="GitHub" aria-label="GitHub"
+      href="https://github.com/wattsm"
+      target="_blank">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" height="24" width="28"><path d="M12 2c6.625 0 12 5.375 12 12 0 5.297-3.437 9.797-8.203 11.391-0.609 0.109-0.828-0.266-0.828-0.578 0-0.391 0.016-1.687 0.016-3.297 0-1.125-0.375-1.844-0.812-2.219 2.672-0.297 5.484-1.313 5.484-5.922 0-1.313-0.469-2.375-1.234-3.219 0.125-0.313 0.531-1.531-0.125-3.187-1-0.313-3.297 1.234-3.297 1.234-0.953-0.266-1.984-0.406-3-0.406s-2.047 0.141-3 0.406c0 0-2.297-1.547-3.297-1.234-0.656 1.656-0.25 2.875-0.125 3.187-0.766 0.844-1.234 1.906-1.234 3.219 0 4.594 2.797 5.625 5.469 5.922-0.344 0.313-0.656 0.844-0.766 1.609-0.688 0.313-2.438 0.844-3.484-1-0.656-1.141-1.844-1.234-1.844-1.234-1.172-0.016-0.078 0.734-0.078 0.734 0.781 0.359 1.328 1.75 1.328 1.75 0.703 2.141 4.047 1.422 4.047 1.422 0 1 0.016 1.937 0.016 2.234 0 0.313-0.219 0.688-0.828 0.578-4.766-1.594-8.203-6.094-8.203-11.391 0-6.625 5.375-12 12-12zM4.547 19.234c0.031-0.063-0.016-0.141-0.109-0.187-0.094-0.031-0.172-0.016-0.203 0.031-0.031 0.063 0.016 0.141 0.109 0.187 0.078 0.047 0.172 0.031 0.203-0.031zM5.031 19.766c0.063-0.047 0.047-0.156-0.031-0.25-0.078-0.078-0.187-0.109-0.25-0.047-0.063 0.047-0.047 0.156 0.031 0.25 0.078 0.078 0.187 0.109 0.25 0.047zM5.5 20.469c0.078-0.063 0.078-0.187 0-0.297-0.063-0.109-0.187-0.156-0.266-0.094-0.078 0.047-0.078 0.172 0 0.281s0.203 0.156 0.266 0.109zM6.156 21.125c0.063-0.063 0.031-0.203-0.063-0.297-0.109-0.109-0.25-0.125-0.313-0.047-0.078 0.063-0.047 0.203 0.063 0.297 0.109 0.109 0.25 0.125 0.313 0.047zM7.047 21.516c0.031-0.094-0.063-0.203-0.203-0.25-0.125-0.031-0.266 0.016-0.297 0.109s0.063 0.203 0.203 0.234c0.125 0.047 0.266 0 0.297-0.094zM8.031 21.594c0-0.109-0.125-0.187-0.266-0.172-0.141 0-0.25 0.078-0.25 0.172 0 0.109 0.109 0.187 0.266 0.172 0.141 0 0.25-0.078 0.25-0.172zM8.937 21.438c-0.016-0.094-0.141-0.156-0.281-0.141-0.141 0.031-0.234 0.125-0.219 0.234 0.016 0.094 0.141 0.156 0.281 0.125s0.234-0.125 0.219-0.219z"></path>
+</svg>
+
+  </a>
+
+  
+    <a id="tags-link"
+       class="icon"
+       title="Tags" aria-label="Tags"
+       href="/tags/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+    </a>
+  
+
+  
+    <a id="search-link"
+       class="icon"
+       title="Search" aria-label="Search"
+       href="/search/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
+    </a>
+  
+
+  <!-- Optional additional links to insert for icons links -->
+</nav>
+
+  <p>
+  &copy; 2020.  
+</p>
+
+</div>
+
+    <main class="container">
+      <header>
+  <h1 class="post-title">Lenses in F#</h1>
+</header>
+<div class="content">
+  <div class="post-meta">
+  <span class="post-date">15 Oct 2015</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        fsharp
+      
+    
+  </span>
+</div>
+
+
+  <div class="post-body">
+    <p>I recently came across the concept of lenses in functional programming - a useful tool that can significantly reduce the amount of boilerplate code required when working
+with <a href="https://msdn.microsoft.com/en-us/library/dd233184.aspx">record types</a>. I first noticed them in <a href="http://suave.io/">suave</a>’s source code and, intrigued, did some further research which lead me to <a href="https://www21.in.tum.de/teaching/fp/SS15/papers/17.pdf">this paper</a> by Albert Steckermeier 
+which describes the concept in detail (using Haskell).</p>
+
+<p>As my background is primarily with OO languages I find that I quite often stumble across concepts in functional programming that more experienced practitioners would 
+take for granted. There did not seem to a huge amount of information on lenses out there, so I thought I would write a short post about lenses in F#.</p>
+
+<!-- more -->
+
+<h3 id="what-is-a-lens">What is a lens?</h3>
+
+<p>A lens is simply a tuple of two functions, <code class="highlighter-rouge">get</code> and <code class="highlighter-rouge">put</code>, for a given part of a data structure. Using Steckermeier’s terminology the data structure is 
+the <em>source</em> and the part focused on is the <em>view</em>.</p>
+
+<p>Using this terminology we can define a lens quite simply in F#.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">Lens</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">S</span><span class="p">,</span> <span class="k">'</span><span class="nc">V</span><span class="p">&gt;</span> <span class="p">=</span> <span class="p">(</span><span class="k">'</span><span class="nc">S</span> <span class="p">-&gt;</span> <span class="k">'</span><span class="nc">V</span><span class="p">)</span> <span class="p">*</span> <span class="p">(</span><span class="k">'</span><span class="nc">V</span> <span class="p">-&gt;</span> <span class="k">'</span><span class="nc">S</span> <span class="p">-&gt;</span> <span class="k">'</span><span class="nc">S</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>We can trivially create a <code class="highlighter-rouge">Lens</code> module to allow us to elegantly call the <code class="highlighter-rouge">get</code> and <code class="highlighter-rouge">put</code> functions of a lens.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
+<span class="k">module</span> <span class="nc">Lens</span> <span class="p">=</span> 
+	<span class="k">let</span> <span class="n">get</span> <span class="p">=</span> <span class="n">fst</span>
+	<span class="k">let</span> <span class="n">put</span> <span class="p">=</span> <span class="n">snd</span>
+</code></pre></div></div>
+
+<p>As lenses are just tuples we can easily select the <code class="highlighter-rouge">get</code> or <code class="highlighter-rouge">put</code> function using the standard <code class="highlighter-rouge">fst</code> and <code class="highlighter-rouge">snd</code> functions.</p>
+
+<p>Below is an example of a type with an associated lens and how that lens would be used.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">Address</span> <span class="p">=</span> <span class="p">{</span>
+  <span class="nc">City</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+  <span class="nc">PostCode</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">with</span>
+
+  <span class="c1">//A lens for the PostCode field. The trailing underscore is a naming convention</span>
+  <span class="c1">//used to denote lenses.</span>
+  <span class="k">static</span> <span class="k">member</span> <span class="nc">PostCode_</span> <span class="p">=</span> 
+    <span class="p">(</span><span class="k">fun</span> <span class="n">address</span> <span class="p">-&gt;</span> <span class="n">address</span><span class="p">.</span><span class="nc">PostCode</span><span class="o">),</span>
+	<span class="p">(</span><span class="k">fun</span> <span class="n">postCode</span> <span class="n">address</span> <span class="p">-&gt;</span> <span class="p">{</span> <span class="n">address</span> <span class="k">with</span> <span class="nc">PostCode</span> <span class="p">=</span> <span class="n">postCode</span><span class="p">;</span> <span class="o">})</span>
+	
+<span class="k">let</span> <span class="n">original</span> <span class="p">=</span> <span class="p">{</span> <span class="nc">City</span> <span class="p">=</span> <span class="s2">"Cityville"</span><span class="p">;</span> <span class="nc">PostCode</span> <span class="p">=</span> <span class="s2">"CV1"</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="c1">//Get the post code using the lens</span>
+<span class="k">let</span> <span class="n">postCode</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">get</span> <span class="nn">Address</span><span class="p">.</span><span class="nc">PostCode_</span> <span class="n">address</span>
+
+<span class="c1">//Update the post code using the lens</span>
+<span class="k">let</span> <span class="n">updated</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="nn">Address</span><span class="p">.</span><span class="nc">PostCode_</span> <span class="s2">"CV3"</span> <span class="n">address</span>
+</code></pre></div></div>
+
+<p>Here we define a type <code class="highlighter-rouge">Address</code> (source) with an associated lens for the <code class="highlighter-rouge">PostCode</code> field (view). We then use the lens to get the value of the post code and to create an updated address 
+with a different post code.</p>
+
+<h3 id="composing-lenses">Composing lenses</h3>
+
+<p>The real power of lenses is that they are composable - you can combine two or more lenses to create a new lens which allows you to focus in on a part of the source that is normally only accessible
+by drilling down into the data structure - e.g. <code class="highlighter-rouge">person.Address.PostCode</code>.</p>
+
+<p>Composing two lenses is simply a case of creating a new lens by composing the two sets of <code class="highlighter-rouge">get</code> and <code class="highlighter-rouge">put</code> functions. In order to do this the type of the view of the first lens 
+must be the same as the type of the source of the second lens, i.e. composition has the signature <code class="highlighter-rouge">Lens&lt;'A, 'B&gt; -&gt; Lens&lt;'B, 'C&gt; -&gt; Lens&lt;'A, 'C&gt;</code>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
+<span class="k">module</span> <span class="nc">Lens</span> <span class="p">=</span> 
+	
+	<span class="k">let</span> <span class="n">compose</span> <span class="p">(</span><span class="n">xLens</span> <span class="p">:</span> <span class="nc">Lens</span><span class="o">&lt;_,_&gt;)</span> <span class="p">(</span><span class="n">yLens</span> <span class="p">:</span> <span class="nc">Lens</span><span class="o">&lt;_,_&gt;)</span> <span class="p">=</span> 
+	
+		<span class="k">let</span> <span class="n">xGet</span><span class="p">,</span> <span class="n">xPut</span> <span class="p">=</span> <span class="n">xLens</span>
+		<span class="k">let</span> <span class="n">yGet</span><span class="p">,</span> <span class="n">yPut</span> <span class="p">=</span> <span class="n">yLens</span>
+		
+		<span class="k">let</span> <span class="n">composedGet</span> <span class="p">=</span> <span class="n">xGet</span> <span class="o">&gt;&gt;</span> <span class="n">yGet</span>
+		
+		<span class="k">let</span> <span class="n">composedPut</span> <span class="n">yView</span> <span class="n">xSource</span> <span class="p">=</span> 		
+		
+			<span class="k">let</span> <span class="n">yUpdatedSource</span> <span class="p">=</span> <span class="n">yPut</span> <span class="n">yView</span> <span class="p">(</span><span class="n">xGet</span> <span class="n">xSource</span><span class="p">)</span>
+			<span class="k">let</span> <span class="n">xUpdatedSource</span> <span class="p">=</span> <span class="n">xPut</span> <span class="n">yUpdatedSource</span> <span class="n">xSource</span>
+			
+			<span class="n">xUpdatedSource</span>
+			
+		<span class="p">(</span><span class="n">composedGet</span><span class="p">,</span> <span class="n">composedPut</span><span class="p">)</span>
+		
+<span class="p">[&lt;</span><span class="nc">AutoOpen</span><span class="p">&gt;]</span>
+<span class="k">module</span> <span class="nc">Operators</span> <span class="p">=</span> 
+
+	<span class="k">let</span> <span class="o">(&gt;=&gt;)</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">compose</span>
+</code></pre></div></div>
+
+<p>For the sake of clarity I have made this implementation quite verbose, it can be written far more succintly. The infix operator <code class="highlighter-rouge">&gt;=&gt;</code> is included as a useful shorthand for composing
+lenses.</p>
+
+<p>We can now demonstrate why lenses are so useful. Consider the following record types.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">Address</span> <span class="p">=</span> <span class="p">{</span>
+	<span class="nc">City</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+	<span class="nc">PostCode</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">type</span> <span class="nc">Person</span> <span class="p">=</span> <span class="p">{</span>
+	<span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+	<span class="nc">Address</span> <span class="p">:</span> <span class="nc">Address</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Now let’s imagine that we have a <code class="highlighter-rouge">Person</code> record and we want to change the post code of the address.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">person'</span> <span class="p">=</span> <span class="p">{</span> <span class="n">person</span> <span class="k">with</span> <span class="nc">Address</span> <span class="p">=</span> <span class="p">{</span> <span class="n">person</span><span class="p">.</span><span class="nc">Address</span> <span class="k">with</span> <span class="nc">PostCode</span> <span class="p">=</span> <span class="n">postCode</span><span class="p">;</span> <span class="o">};</span> <span class="p">}</span>
+</code></pre></div></div>
+
+<p>That’s quite ugly, and it only gets worse as the data structures become more complicated. We can use lenses to neaten this code and reduce the amount of boilerplate code required. Assume that
+we have lenses <code class="highlighter-rouge">Address.PostCode_</code> and <code class="highlighter-rouge">Person.Address_</code>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">person'</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="p">(</span><span class="nn">Person</span><span class="p">.</span><span class="nc">Address_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Address</span><span class="p">.</span><span class="nc">PostCode_</span><span class="p">)</span> <span class="n">postCode</span> <span class="n">person</span>
+</code></pre></div></div>
+
+<p>This ability to compose lenses becomes increasingly useful the more complex the data structure becomes. They can be used inline, as above, or to create new functions.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">CompilationRepresentation</span><span class="p">(</span><span class="nn">CompilationRepresentationFlags</span><span class="p">.</span><span class="nc">ModuleSuffix</span><span class="o">)&gt;]</span>
+<span class="k">module</span> <span class="nc">Person</span> <span class="p">=</span> 
+
+	<span class="c1">//String -&gt; Person -&gt; Person</span>
+	<span class="k">let</span> <span class="n">setPostCode</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="p">(</span><span class="nn">Person</span><span class="p">.</span><span class="nc">Address_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Address</span><span class="p">.</span><span class="nc">PostCode_</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Finally, another useful aspect of lenses is that they are not restricted to working on single values. For example, let’s expand our <code class="highlighter-rouge">Address</code> type and use a lens to work with multiple
+fields simultaneously.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">type</span> <span class="nc">Address</span> <span class="p">=</span> <span class="p">{</span>
+	<span class="nc">HouseNumber</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+	<span class="nc">StreetName</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+	<span class="nc">City</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+	<span class="nc">PostCode</span> <span class="p">:</span> <span class="nc">String</span>
+<span class="p">}</span>
+<span class="k">with</span>
+
+	<span class="k">static</span> <span class="k">member</span> <span class="nc">Street_</span> <span class="p">=</span> 
+		<span class="p">(</span><span class="k">fun</span> <span class="n">address</span> <span class="p">-&gt;</span> <span class="n">address</span><span class="p">.</span><span class="nc">HouseNumber</span><span class="p">,</span> <span class="n">address</span><span class="p">.</span><span class="nc">StreetName</span><span class="o">),</span>
+		<span class="p">(</span><span class="k">fun</span> <span class="p">(</span><span class="n">houseNumber</span><span class="p">,</span> <span class="n">streetName</span><span class="p">)</span> <span class="n">address</span> <span class="p">-&gt;</span> 
+			<span class="p">{</span> <span class="n">address</span> <span class="k">with</span> <span class="nc">HouseNumber</span> <span class="p">=</span> <span class="n">houseNumber</span><span class="p">;</span> <span class="nc">StreetName</span> <span class="p">=</span> <span class="n">streetName</span><span class="p">;</span> <span class="o">})</span>
+		
+<span class="k">let</span> <span class="n">address</span> <span class="p">=</span> <span class="p">{</span> <span class="nc">HouseNumber</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nc">StreetName</span> <span class="p">=</span> <span class="s2">"Main Street"</span><span class="p">;</span> <span class="nc">City</span> <span class="p">=</span> <span class="s2">"Cityville"</span><span class="p">;</span> <span class="nc">PostCode</span> <span class="p">=</span> <span class="s2">"CV1"</span><span class="p">;</span> <span class="p">}</span>
+<span class="k">let</span> <span class="n">person</span> <span class="p">=</span> <span class="p">{</span> <span class="nc">Name</span> <span class="p">=</span> <span class="s2">"Bob"</span><span class="p">;</span> <span class="nc">Address</span> <span class="p">=</span> <span class="n">address</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="k">let</span> <span class="n">person'</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="p">(</span><span class="nn">Person</span><span class="p">.</span><span class="nc">Address_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Address</span><span class="p">.</span><span class="nc">Street_</span><span class="p">)</span> <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="s2">"High Street"</span><span class="p">)</span> <span class="n">person</span>
+</code></pre></div></div>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>In this post I’ve given a quick overview of lenses and their implementation in F# and shown how they can be used to make working with record types a little more elegant.</p>
+
+<p>If you are interested in seeing a more complete implementation of lenses in F# then I would suggest having a look at <a href="https://github.com/xyncro/aether">Aether on GitHub</a>.</p>
+
+
+    
+
+
+
+<div class="post-tags">
+  
+    
+    <a href="/tags/#fsharp">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">fsharp</span>
+    </a>
+  
+    
+    <a href="/tags/#dotnet">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">dotnet</span>
+    </a>
+  
+    
+    <a href="/tags/#lenses">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">lenses</span>
+    </a>
+  
+</div>
+  </div>
+
+  
+  <section class="related">
+  <h2>Related Posts</h2>
+  <ul class="posts-list">
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2016/01/19/optimising-civ5-cities-using-genetic-algorithms/">
+            Optimising Civ 5 cities using genetic algorithms
+            <small>19 Jan 2016</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/11/20/constructing-lenses-using-quotations/">
+            Constructing lenses using quotations
+            <small>20 Nov 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/05/20/modeling-historical-dates/">
+            Modeling historical dates
+            <small>20 May 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</section>
+
+</div>
+
+    </main>
+
+    <!-- Optional footer content -->
+
+  </body>
+</html>

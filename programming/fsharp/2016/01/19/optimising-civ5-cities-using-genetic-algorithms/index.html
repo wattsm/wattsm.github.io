@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="https://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+  <title>
+    
+      Optimising Civ 5 cities using genetic algorithms &middot; try/finally
+    
+  </title>
+
+  
+
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml" />
+
+  <!-- Additional head bits without overriding original head -->
+</head>
+
+
+  <body class="post">
+
+    <div id="sidebar">
+  <header>
+    <div class="site-title">
+      <a href="/">
+        
+          <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h24v24H0z" fill="none"/>
+  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+</svg></span>
+        
+        try/finally
+      </a>
+    </div>
+    <p class="lead">Occasional programming thoughts of Mark Watts.</p>
+  </header>
+  <nav id="sidebar-nav-links">
+  
+  
+
+  
+
+  
+
+
+  
+    
+  
+
+  
+    
+      <a class="page-link "
+          href="/about/">About</a>
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  
+
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+  
+    
+  
+
+
+  <!-- Optional additional links to insert in sidebar nav -->
+</nav>
+
+
+  
+    <span class="site-version">Currently v1.0</span>
+  
+
+  <nav id="sidebar-icon-links">
+  
+
+  
+  
+  
+  
+
+  <a id="github-link"
+      class="icon"
+      title="GitHub" aria-label="GitHub"
+      href="https://github.com/wattsm"
+      target="_blank">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" height="24" width="28"><path d="M12 2c6.625 0 12 5.375 12 12 0 5.297-3.437 9.797-8.203 11.391-0.609 0.109-0.828-0.266-0.828-0.578 0-0.391 0.016-1.687 0.016-3.297 0-1.125-0.375-1.844-0.812-2.219 2.672-0.297 5.484-1.313 5.484-5.922 0-1.313-0.469-2.375-1.234-3.219 0.125-0.313 0.531-1.531-0.125-3.187-1-0.313-3.297 1.234-3.297 1.234-0.953-0.266-1.984-0.406-3-0.406s-2.047 0.141-3 0.406c0 0-2.297-1.547-3.297-1.234-0.656 1.656-0.25 2.875-0.125 3.187-0.766 0.844-1.234 1.906-1.234 3.219 0 4.594 2.797 5.625 5.469 5.922-0.344 0.313-0.656 0.844-0.766 1.609-0.688 0.313-2.438 0.844-3.484-1-0.656-1.141-1.844-1.234-1.844-1.234-1.172-0.016-0.078 0.734-0.078 0.734 0.781 0.359 1.328 1.75 1.328 1.75 0.703 2.141 4.047 1.422 4.047 1.422 0 1 0.016 1.937 0.016 2.234 0 0.313-0.219 0.688-0.828 0.578-4.766-1.594-8.203-6.094-8.203-11.391 0-6.625 5.375-12 12-12zM4.547 19.234c0.031-0.063-0.016-0.141-0.109-0.187-0.094-0.031-0.172-0.016-0.203 0.031-0.031 0.063 0.016 0.141 0.109 0.187 0.078 0.047 0.172 0.031 0.203-0.031zM5.031 19.766c0.063-0.047 0.047-0.156-0.031-0.25-0.078-0.078-0.187-0.109-0.25-0.047-0.063 0.047-0.047 0.156 0.031 0.25 0.078 0.078 0.187 0.109 0.25 0.047zM5.5 20.469c0.078-0.063 0.078-0.187 0-0.297-0.063-0.109-0.187-0.156-0.266-0.094-0.078 0.047-0.078 0.172 0 0.281s0.203 0.156 0.266 0.109zM6.156 21.125c0.063-0.063 0.031-0.203-0.063-0.297-0.109-0.109-0.25-0.125-0.313-0.047-0.078 0.063-0.047 0.203 0.063 0.297 0.109 0.109 0.25 0.125 0.313 0.047zM7.047 21.516c0.031-0.094-0.063-0.203-0.203-0.25-0.125-0.031-0.266 0.016-0.297 0.109s0.063 0.203 0.203 0.234c0.125 0.047 0.266 0 0.297-0.094zM8.031 21.594c0-0.109-0.125-0.187-0.266-0.172-0.141 0-0.25 0.078-0.25 0.172 0 0.109 0.109 0.187 0.266 0.172 0.141 0 0.25-0.078 0.25-0.172zM8.937 21.438c-0.016-0.094-0.141-0.156-0.281-0.141-0.141 0.031-0.234 0.125-0.219 0.234 0.016 0.094 0.141 0.156 0.281 0.125s0.234-0.125 0.219-0.219z"></path>
+</svg>
+
+  </a>
+
+  
+    <a id="tags-link"
+       class="icon"
+       title="Tags" aria-label="Tags"
+       href="/tags/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+    </a>
+  
+
+  
+    <a id="search-link"
+       class="icon"
+       title="Search" aria-label="Search"
+       href="/search/">
+      <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+</svg>
+    </a>
+  
+
+  <!-- Optional additional links to insert for icons links -->
+</nav>
+
+  <p>
+  &copy; 2020.  
+</p>
+
+</div>
+
+    <main class="container">
+      <header>
+  <h1 class="post-title">Optimising Civ 5 cities using genetic algorithms</h1>
+</header>
+<div class="content">
+  <div class="post-meta">
+  <span class="post-date">19 Jan 2016</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        fsharp
+      
+    
+  </span>
+</div>
+
+
+  <div class="post-body">
+    <p>I recently came across <a href="https://www.cs.auckland.ac.nz/research/gameai/projects/GA%20in%20FreeCiv.pdf">a paper from 2005 about using genetic algorithms to optimise cities in FreeCiv</a>, a free game similar to Sid Meier’s Civilization. Genetic algorithms
+are an interesting approach to complex problems. Their brute force, trial and error approach means that they are often less effective than other algorithms but
+for some scenarios they can be surprisingly effective.</p>
+
+<p>The paper spurred me to publish this post as over the course of 2015 I sporadically worked on a similar side project which used genetic algorithms to assign citizens in 
+Civilization 5. The 2005 paper does not include any actual algorithms and there does not appear to be any follow up, so in this post I will discuss the algorithm I 
+arrived at and its results.</p>
+
+<!-- more -->
+
+<h3 id="contents">Contents</h3>
+
+<p>As this is quite a long post I have broken it down into sections so you can skip the preamble. If you just want to peruse the code then it’s <a href="https://github.com/wattsm/civ5-genetic-algorithm">all here on GitHub</a>.</p>
+
+<ul>
+  <li><a href="#intro-civ5">Civilization 5 city management</a></li>
+  <li><a href="#intro-ga">A (very) short introduction to genetic algorithms</a></li>
+  <li><a href="#impl">Implementation</a>
+    <ul>
+      <li><a href="#impl-foundations">Foundations</a></li>
+      <li><a href="#impl-civ5">Civilization 5</a></li>
+    </ul>
+  </li>
+  <li><a href="#running">Running the algorithm</a></li>
+  <li><a href="#results">Results</a>
+    <ul>
+      <li><a href="#constantinople">Constantinople (11 citizens)</a>
+        <ul>
+          <li><a href="#mecca">Mecca (28 citizens)</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#conclusion">Conclusion and source code</a></li>
+</ul>
+
+<h3 id="civilization-5-city-management"><a name="intro-civ5"></a>Civilization 5 city management</h3>
+
+<p>A core part of Civilization 5 is managing your cities. A city has a population of citizens that can be assigned to assets within the city. These assets are either tiles representing
+the terrain within the city’s borders (e.g. farmed grassland, mines or desert trading posts) or buildings within the city itself. A tile can be assigned a maximum of one citizen. 
+Buildings can be assigned one or more citizens, depending on the type of building.</p>
+
+<p>At its greatest extent a city will have access to 3 rings of hexagonal tiles surrounding its base tile. The first ring contains 6 tiles, the second 12 and the third 18. The screenshot
+below shows the city management screen with assignable tiles being highlighted in green (currently assigned) and blue (not assigned) and assignable buildings appearing on the right
+under the heading of “Specialist Buildings”.</p>
+
+<p><a href="/public/img/2016-01-15-constantinople.jpg" target="_blank">
+	<img src="/public/img/2016-01-15-constantinople.jpg" alt="The Civilization 5 city screen" style="width:450px;" />
+</a></p>
+
+<p>When a citizen is assigned to a tile or building they generate resources that contribute towards the success of the city and your empire. There are a number of resource types but
+the most important ones are food, production, gold and science. Citizens can also be left unassigned in which case they might also produce some resources (usually not much) 
+depending on game factors which are not relevant here.</p>
+
+<p>In order to squeeze the most out of your cities it is often necessary to micromanage citizen assignments. In a newly founded city you might want to prioritise food in order to 
+stimulate growth, in a city with access to luxuries (e.g. gems, spices or truffles) you might want to maximise gold and so on.</p>
+
+<p>The game has built-in shortcuts for citizen assignment which can be used to assign citizens automatically to maximise a given resource type. This is fine if you simply want to 
+focus on one particular resource type (apart from the minimal amount of food necessary to feed your citizens). However if you want to take a more 
+nuanced approach - e.g. focusing primarily on production but also favouring science over gold - then it becomes more complicated.</p>
+
+<p>This is the kind of complex scenario to which genetic algorithms can be applied to good effect.</p>
+
+<p><a href="#top">Back to top</a></p>
+
+<h3 id="a-very-short-introduction-to-genetic-algorithms"><a name="intro-ga"></a>A (very) short introduction to genetic algorithms</h3>
+
+<p>Genetic algorithms are a topic that crops up every now and then on programming sites like <a href="https://www.reddit.com/r/programming/search?q=genetic&amp;restrict_sr=on">/r/programming</a> so there is a good chance you are already familiar with them. If not, 
+<a href="http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3">this post by Lee Jacobson</a> is an excellent basic introduction using Java.</p>
+
+<p>A genetic algorithm aims to solve a problem by mimicking the process of evolution via natural selection. For a given problem a genetic algorithm requires 4 things:</p>
+
+<ul>
+  <li>An initial population of solutions.</li>
+  <li>A way of evaluating the fitness of a solution.</li>
+  <li>A way of combining two solutions to create a third.</li>
+  <li>A way of mutating (slightly changing) a solution.</li>
+</ul>
+
+<p>The process is then fairly simple. A basic genetic algorithm might take the initial population and evaluate the fitness of each solution - if an acceptable solution exists 
+then return that solution as the result. If no acceptable solution exists then use the combination and mutation functions to create a new population based on the fittest 
+members of the current population and re-evaluate. The process can be repeated until an acceptable solution is found or some other exit criteria is reached. Note that genetic 
+algorithms are essentially informed trial and error and so are not guaranteed to find the optimal solution for any given scenario.</p>
+
+<p>The algorithm will generally have a limit on the number of times the process can be repeated before exiting. If the combination, mutation and fitness functions are suitably
+written then in general the fitness of the population as a whole should rise with successive generations.</p>
+
+<p><strong>That last sentence is really important.</strong> The complexity of the combination, mutation and fitness functions can increase enormously as the complexity of the scenario increases. 
+Before turning my attention to Civilization 5 I originally looked at using genetic algorithms to try and create effective armies in Total War: Rome II. The sheer number
+of factors to consider (e.g. the multitude of unit stats and abilities, the definition of an effective army etc.) meant that the algorithm could just about produce viable
+armies but very little else.</p>
+
+<p>So, before using a genetic algorithm for anything ensure that you are confident that you can effectively define combination, mutation and fitness functions.</p>
+
+<p><a href="#top">Back to top</a></p>
+
+<h3 id="implementation"><a name="impl"></a>Implementation</h3>
+
+<p>The algorithm I arrived at works on a basic model of the Civilization 5 city screen that provides useful functions like the ability to assign/unassign citizens, calculate resource 
+yields etc. I will not describe this model in detail here, but if you are interested then <a href="https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Model.fs">see Model.fs</a>. Similarly there are a number of utility functions for working with
+random numbers, lists, optional values etc. that can be <a href="https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Shared.fs">seen in Shared.fs</a></p>
+
+<p>There are two parts to the algorithm - a set of foundational functions that describe how populations are evolved and a set of functions specific to Civilization 5 citizen assignments
+that can be passed to those foundational functions.</p>
+
+<p><a href="#top">Back to top</a></p>
+
+<h4 id="foundations"><a name="impl-foundations"></a>Foundations</h4>
+
+<p>The first thing we need to do is give proper definitions to our combination, mutation and fitness functions given a solution type <code class="highlighter-rouge">'T</code>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">CombineFunction</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">T</span><span class="p">&gt;</span> <span class="p">=</span> <span class="k">'</span><span class="nc">T</span> <span class="p">-&gt;</span> <span class="k">'</span><span class="nc">T</span> <span class="p">-&gt;</span> <span class="k">'</span><span class="nc">T</span>
+<span class="k">type</span> <span class="nc">MutateFunction</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">T</span><span class="p">&gt;</span> <span class="p">=</span> <span class="k">'</span><span class="nc">T</span> <span class="p">-&gt;</span> <span class="k">'</span><span class="nc">T</span>
+<span class="k">type</span> <span class="nc">EvaluateFunction</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">T</span><span class="p">&gt;</span> <span class="p">=</span> <span class="k">'</span><span class="nc">T</span> <span class="p">-&gt;</span> <span class="nc">Decimal</span>
+</code></pre></div></div>
+
+<p>So the combine function takes two instances of <code class="highlighter-rouge">'T</code> and combines them to create a third. The mutation function takes an instance of  <code class="highlighter-rouge">'T</code> and mutates it, usually
+in a fairly minor way. Finally, the fitness evaluation function takes an instance of <code class="highlighter-rouge">'T</code> and returns a decimal score. Depending on the problem domain this might be a percentage
+or a points score of some kind.</p>
+
+<p>Next, we can define a record type that contains settings for the algorithm.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">AlgorithmSettings</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">T</span><span class="p">&gt;</span> <span class="p">=</span> <span class="p">{</span>
+    <span class="nc">IsElitist</span> <span class="p">:</span> <span class="nc">Boolean</span><span class="p">;</span> 
+    <span class="nc">TournamentSize</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+    <span class="nc">MutationRate</span> <span class="p">:</span> <span class="nc">Decimal</span><span class="p">;</span>
+    <span class="nc">Combine</span> <span class="p">:</span> <span class="nc">CombineFunction</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">T</span><span class="o">&gt;;</span>
+    <span class="nc">Mutate</span> <span class="p">:</span> <span class="nc">MutateFunction</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">T</span><span class="o">&gt;;</span>
+    <span class="nc">Evaluate</span> <span class="p">:</span> <span class="nc">EvaluateFunction</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">T</span><span class="o">&gt;;</span>
+    <span class="nc">Population</span> <span class="p">:</span> <span class="k">'</span><span class="nc">T</span> <span class="kt">list</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This record contains the current population, the three functions used to evolve the population and some settings that control how that evolution is affected.</p>
+
+<p>The <code class="highlighter-rouge">IsElitist</code> flag is used to specify whether the fittest individual in a population should be carried forward to the next generation.</p>
+
+<p>The <code class="highlighter-rouge">MutationRate</code> setting is used to control how often mutations occur during evolution - e.g. a setting of <code class="highlighter-rouge">0.25</code> would result in the mutation function 
+being applied to approximately 1 in 4 of the offspring produced by the combination function.</p>
+
+<p>Finally, the <code class="highlighter-rouge">TournamentSize</code> setting controls how large the tournament that is used to select individuals during combination is (<a href="http://www.theprojectspot.com/tutorial-post/creating-a-genetic-algorithm-for-beginners/3">see Lee Jacobson’s post for information about 
+tournaments</a>).</p>
+
+<p>Running a tournament given an instance of our settings record is straight forward - randomly select competitors from the population and return the fittest.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">run</span> <span class="n">settings</span> <span class="p">=</span> 
+	<span class="n">settings</span><span class="p">.</span><span class="nc">Population</span>
+	<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">selectMany</span> <span class="n">settings</span><span class="p">.</span><span class="nc">TournamentSize</span>
+	<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">maxBy</span> <span class="n">settings</span><span class="p">.</span><span class="nc">Evaluate</span>
+</code></pre></div></div>
+
+<p>Creating a new population based on the current one is similarly straight forward - run tournaments and use the combination function to create offspring until we have a new
+population of the desired size.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">combine</span> <span class="n">settings</span> <span class="p">=</span> 
+
+	<span class="k">let</span> <span class="n">init</span> <span class="p">_</span> <span class="p">=</span> 
+
+		<span class="k">let</span> <span class="n">x</span> <span class="p">=</span> <span class="nn">Tournament</span><span class="p">.</span><span class="n">run</span> <span class="n">settings</span>
+		<span class="k">let</span> <span class="n">y</span> <span class="p">=</span> <span class="nn">Tournament</span><span class="p">.</span><span class="n">run</span> <span class="n">settings</span>
+
+		<span class="n">settings</span><span class="p">.</span><span class="nc">Combine</span> <span class="n">x</span> <span class="n">y</span>
+
+	<span class="k">let</span> <span class="n">size</span> <span class="p">=</span> <span class="nn">List</span><span class="p">.</span><span class="n">length</span> <span class="n">settings</span><span class="p">.</span><span class="nc">Population</span>
+
+	<span class="k">let</span> <span class="n">offspring</span> <span class="p">=</span> <span class="nn">Array</span><span class="p">.</span><span class="nn">Parallel</span><span class="p">.</span><span class="n">init</span> <span class="n">size</span> <span class="n">init</span>
+	<span class="k">in</span> <span class="nn">Array</span><span class="p">.</span><span class="n">toList</span> <span class="n">offspring</span>
+</code></pre></div></div>
+
+<p>Note that this method allows what we shall delicately call “self combination” - the same individual could be selected from the population by both tournaments.</p>
+
+<p>Now that we have a new population all that remains is to apply mutations.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">mutate</span> <span class="n">settings</span> <span class="n">individual</span> <span class="p">=</span> 
+	<span class="k">if</span> <span class="p">(</span><span class="nn">RNG</span><span class="p">.</span><span class="n">rate</span> <span class="n">settings</span><span class="p">.</span><span class="nc">MutationRate</span><span class="p">)</span> <span class="k">then</span>
+		<span class="n">settings</span><span class="p">.</span><span class="nc">Mutate</span> <span class="n">individual</span>
+	<span class="k">else</span>
+		<span class="n">individual</span>
+</code></pre></div></div>
+
+<p>The implementation of the <code class="highlighter-rouge">RNG</code> module as well as the related <code class="highlighter-rouge">List.selectOne</code> and <code class="highlighter-rouge">List.selectMany</code> functions can be <a href="https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Shared.fs">seen in Shared.fs</a>.</p>
+
+<p>We can put all of this together to create a function which evolves a population based on a settings record.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">evolve</span> <span class="n">settings</span> <span class="p">=</span> 
+
+	<span class="k">let</span> <span class="n">offspring</span> <span class="p">=</span> 
+		<span class="k">if</span> <span class="n">settings</span><span class="p">.</span><span class="nc">IsElitist</span> <span class="k">then</span>
+
+			<span class="k">let</span> <span class="n">fittest</span><span class="p">,</span> <span class="n">remaining</span> <span class="p">=</span> 
+				<span class="n">settings</span><span class="p">.</span><span class="nc">Population</span>
+				<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">sortBy</span> <span class="n">settings</span><span class="p">.</span><span class="nc">Evaluate</span>
+				<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">rev</span>
+				<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">detach</span>
+
+			<span class="k">let</span> <span class="n">settings'</span> <span class="p">=</span> <span class="p">{</span> <span class="n">settings</span> <span class="k">with</span> <span class="nc">Population</span> <span class="p">=</span> <span class="n">remaining</span><span class="p">;</span> <span class="p">}</span>
+			<span class="k">in</span> <span class="n">fittest</span> <span class="p">::</span> <span class="p">(</span><span class="n">combine</span> <span class="n">settings'</span><span class="p">)</span>
+
+		<span class="k">else</span>
+			<span class="n">combine</span> <span class="n">settings</span>
+	
+	<span class="n">offspring</span>
+	<span class="p">|&gt;</span> <span class="nn">Array</span><span class="p">.</span><span class="n">ofList</span>
+	<span class="p">|&gt;</span> <span class="nn">Array</span><span class="p">.</span><span class="nn">Parallel</span><span class="p">.</span><span class="n">map</span> <span class="p">(</span><span class="n">mutate</span> <span class="n">settings</span><span class="p">)</span>
+	<span class="p">|&gt;</span> <span class="nn">Array</span><span class="p">.</span><span class="n">toList</span>
+</code></pre></div></div>
+
+<p>This function will use the population combination function defined above to create a new population, carrying forward the fittest member of the current population 
+if the <code class="highlighter-rouge">IsElitist</code> flag is set, before applying mutations to the result. Note that when the <code class="highlighter-rouge">IsElitist</code> flag is set it is possible for the fittest member of 
+the current population to be mutated.</p>
+
+<p>Finally, we can now create a function which will evolve a population for a given number of generations, keeping a record of the fittest individual in each generation.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
+<span class="k">module</span> <span class="nc">Algorithm</span> <span class="p">=</span> 
+
+    <span class="k">let</span> <span class="n">run</span> <span class="n">generations</span> <span class="n">settings</span> <span class="p">=</span> 
+
+        <span class="k">let</span> <span class="k">rec</span> <span class="n">runWithHistory</span> <span class="n">generations</span> <span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span> <span class="p">=</span> 
+            <span class="k">if</span> <span class="p">(</span><span class="n">generations</span> <span class="p">=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">then</span>
+
+                <span class="k">let</span> <span class="n">history'</span> <span class="p">=</span> 
+                    <span class="n">history</span>
+                    <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">rev</span>
+                    <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">index</span>
+                <span class="k">in</span> <span class="p">(</span><span class="n">history'</span><span class="p">,</span> <span class="n">settings</span><span class="p">.</span><span class="nc">Population</span><span class="p">)</span>
+
+            <span class="k">else</span>
+                <span class="k">let</span> <span class="n">population</span> <span class="p">=</span> <span class="nn">Population</span><span class="p">.</span><span class="n">evolve</span> <span class="n">settings</span>            
+                <span class="k">let</span> <span class="n">fittest</span> <span class="p">=</span> <span class="nn">List</span><span class="p">.</span><span class="n">maxBy</span> <span class="n">settings</span><span class="p">.</span><span class="nc">Evaluate</span> <span class="n">population</span>
+
+                <span class="k">let</span> <span class="n">generations'</span> <span class="p">=</span> <span class="p">(</span><span class="n">generations</span> <span class="p">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">let</span> <span class="n">history'</span> <span class="p">=</span> <span class="n">fittest</span> <span class="p">::</span> <span class="n">history</span>
+                <span class="k">let</span> <span class="n">settings'</span> <span class="p">=</span> <span class="p">{</span> <span class="n">settings</span> <span class="k">with</span> <span class="nc">Population</span> <span class="p">=</span> <span class="n">population</span><span class="p">;</span> <span class="p">}</span>
+
+                <span class="n">runWithHistory</span> <span class="n">generations'</span> <span class="p">(</span><span class="n">history'</span><span class="p">,</span> <span class="n">settings'</span><span class="p">)</span>
+    
+        <span class="n">runWithHistory</span> <span class="n">generations</span> <span class="o">([],</span> <span class="n">settings</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>All of the code for the foundational functions can be <a href="https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Genetics.fs">seen in Genetics.fs</a>.</p>
+
+<p><a href="#top">Back to top</a></p>
+
+<h4 id="civilization-5"><a name="impl-civ5"></a>Civilization 5</h4>
+
+<p>Now that we have foundational set of functions that can be used to run generic genetic algorithms we need to implement the combine, mutate and fitness functions for our
+Civilization 5 citizen assignment scenario.</p>
+
+<p>Our code algorithm can be thought of as an additional Civilization 5 advisor, so it will reside in the <code class="highlighter-rouge">Advisor</code> module. Firstly, we can define a record type which contains 
+the advisor’s settings. We can then use this record type to create our foundational <code class="highlighter-rouge">AlgorithmSettings&lt;'T&gt;</code> record where <code class="highlighter-rouge">'T</code> will be the model type <code class="highlighter-rouge">City.Instance</code>.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">AdvisorSettings</span> <span class="p">=</span> <span class="p">{</span>
+    <span class="nc">PopulationSize</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+    <span class="nc">TournamentSize</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+    <span class="nc">Generations</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+    <span class="nc">MutationRate</span> <span class="p">:</span> <span class="nc">Decimal</span><span class="p">;</span>
+    <span class="nc">Weightings</span> <span class="p">:</span> <span class="p">(</span><span class="nc">YieldType</span> <span class="p">*</span> <span class="nc">Decimal</span><span class="p">)</span> <span class="kt">list</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">with</span>
+    <span class="k">static</span> <span class="k">member</span> <span class="nc">Default</span> <span class="p">=</span>
+        <span class="p">{</span>
+            <span class="nc">PopulationSize</span> <span class="p">=</span> <span class="mi">40</span><span class="p">;</span>
+            <span class="nc">TournamentSize</span> <span class="p">=</span> <span class="mi">8</span><span class="p">;</span>
+            <span class="nc">Generations</span> <span class="p">=</span> <span class="mi">100</span><span class="p">;</span>
+            <span class="nc">MutationRate</span> <span class="p">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">3</span><span class="nc">M</span><span class="p">;</span>
+            <span class="nc">Weightings</span> <span class="p">=</span> 
+                <span class="p">[</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">Food</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">Production</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">Gold</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">Faith</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">Culture</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">Science</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">GreatArtist</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">GreatWriter</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">GreatMusician</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">GreatEngineer</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">GreatScientist</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                    <span class="p">(</span><span class="nn">YieldType</span><span class="p">.</span><span class="nc">GreatMerchant</span><span class="p">,</span> <span class="mi">1</span><span class="nc">M</span><span class="o">);</span>
+                <span class="o">];</span>
+        <span class="p">}</span>
+</code></pre></div></div>
+
+<p>Most of the properties of this record are self explanatory. The <code class="highlighter-rouge">Weightings</code> property is used when calculating the fitness of a solution and allows us to specify the relative
+importance that each resource type should be given.</p>
+
+<p>We can use the weightings to define a fitness evaluation function.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">evaluate</span> <span class="n">weightings</span> <span class="p">=</span>
+
+	<span class="k">let</span> <span class="n">getWeightedValue</span> <span class="n">yield'</span> <span class="p">=</span> 
+
+		<span class="k">let</span> <span class="n">type'</span> <span class="p">=</span> <span class="nn">Yield</span><span class="p">.</span><span class="n">getType</span> <span class="n">yield'</span>
+		<span class="k">let</span> <span class="n">value</span> <span class="p">=</span> <span class="n">decimal</span> <span class="p">(</span><span class="nn">Yield</span><span class="p">.</span><span class="n">getValue</span> <span class="n">yield'</span><span class="p">)</span>
+
+		<span class="k">let</span> <span class="n">factor</span> <span class="p">=</span> 
+			<span class="n">weightings</span>
+			<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">tryFind</span> <span class="p">(</span><span class="n">fst</span> <span class="o">&gt;&gt;</span> <span class="o">((=)</span> <span class="n">type'</span><span class="o">))</span>
+			<span class="p">|&gt;</span> <span class="nn">Option</span><span class="p">.</span><span class="n">map</span> <span class="n">snd</span>
+			<span class="p">|&gt;</span> <span class="nn">Option</span><span class="p">.</span><span class="n">unwrap</span> <span class="n">defaultWeighting</span>
+
+		<span class="p">(</span><span class="n">value</span> <span class="p">*</span> <span class="n">factor</span><span class="p">)</span>  
+
+	<span class="k">fun</span> <span class="n">city</span> <span class="p">-&gt;</span>
+		<span class="k">match</span> <span class="n">city</span> <span class="k">with</span>
+		<span class="p">|</span> <span class="nc">Starving</span> <span class="p">-&gt;</span> <span class="mi">0</span><span class="nc">M</span>
+		<span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> 
+			<span class="n">city</span>
+			<span class="p">|&gt;</span> <span class="nn">City</span><span class="p">.</span><span class="n">getYields</span>
+			<span class="p">|&gt;</span>  <span class="nn">List</span><span class="p">.</span><span class="n">sumBy</span> <span class="n">getWeightedValue</span>
+
+</code></pre></div></div>
+
+<p>Here we simply take the yields of the city, weight them accordingly and sum them. We use an <a href="https://msdn.microsoft.com/en-us/library/dd233248.aspx">active pattern</a> to detect starving cities and arbitrarily give them a fitness of 0. Note
+that the <code class="highlighter-rouge">defaultWeighting</code> is 0 so if no weighting is supplied for a resource type then its yield will not contribute towards the city’s fitness score.</p>
+
+<p>Combining two cities is slightly more complex. The approach I have taken here is for each citizen to randomly choose between their assignment in the first city and their 
+assignment in the second. If the chosen assignment cannot be used (e.g. the asset is a building and is at full capacity in the new city) then the citizen is left unassigned.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">combine</span> <span class="p">=</span>
+    
+	<span class="c1">//Get a flattened list of assignments - e.g. [ (asset, 2); ] becomes [ asset; asset; ]</span>
+	<span class="k">let</span> <span class="n">getAssignments</span> <span class="p">=</span>
+		<span class="nn">City</span><span class="p">.</span><span class="n">getCitizenAssignments</span>
+		<span class="o">&gt;&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">collect</span> <span class="p">(</span><span class="k">fun</span> <span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">init</span> <span class="n">count</span> <span class="p">(</span><span class="k">fun</span> <span class="p">_</span> <span class="p">-&gt;</span> <span class="n">asset</span><span class="o">))</span>
+
+	<span class="c1">//Randomly chose between a city X and a city Y assignment</span>
+	<span class="k">let</span> <span class="n">pickAssignment</span> <span class="p">(</span><span class="n">assignmentX</span><span class="p">,</span> <span class="n">assignmentY</span><span class="p">)</span> <span class="p">=</span> 
+		<span class="k">if</span> <span class="p">(</span><span class="nn">RNG</span><span class="p">.</span><span class="n">flip</span> <span class="bp">()</span><span class="p">)</span> <span class="k">then</span>
+			<span class="n">assignmentX</span>
+		<span class="k">else</span>
+			<span class="n">assignmentY</span>
+
+	<span class="c1">//Apply an assignment if possible. If not, the citizen is unemployed.</span>
+	<span class="k">let</span> <span class="n">applyAssignment</span> <span class="n">city</span> <span class="n">asset</span> <span class="p">=</span> 
+
+		<span class="k">let</span> <span class="n">assetId</span> <span class="p">=</span> <span class="nn">Asset</span><span class="p">.</span><span class="n">getId</span> <span class="n">asset</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nn">City</span><span class="p">.</span><span class="n">isAssignable</span> <span class="n">assetId</span> <span class="n">city</span><span class="p">)</span> <span class="k">then</span>
+			<span class="nn">City</span><span class="p">.</span><span class="n">assign</span> <span class="n">assetId</span> <span class="n">city</span>
+		<span class="k">else</span>
+			<span class="n">city</span>
+	
+	<span class="k">fun</span> <span class="n">cityX</span> <span class="n">cityY</span> <span class="p">-&gt;</span> 
+		<span class="k">let</span> <span class="n">assignmentsX</span> <span class="p">=</span> <span class="n">getAssignments</span> <span class="n">cityX</span>
+		<span class="k">let</span> <span class="n">assignmentsY</span> <span class="p">=</span> <span class="n">getAssignments</span> <span class="n">cityY</span>
+
+		<span class="k">let</span> <span class="n">unassignedCity</span> <span class="p">=</span> <span class="nn">City</span><span class="p">.</span><span class="n">unassignAll</span> <span class="n">cityX</span>
+
+		<span class="nn">List</span><span class="p">.</span><span class="n">zip</span> <span class="n">assignmentsX</span> <span class="n">assignmentsY</span>
+		<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">map</span> <span class="n">pickAssignment</span>
+		<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">choose</span> <span class="n">id</span>               
+		<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">fold</span> <span class="n">applyAssignment</span> <span class="n">unassignedCity</span>
+</code></pre></div></div>
+
+<p>Similarly mutation is fairly complicated. The approach I have taken here is that if a city has unassigned citizens there is a 50/50 chance that one of them will be assigned to
+a randomly chosen asset. Otherwise a citizen will be unassigned and there is a 50/50 chance that they will be reassigned to a randomly chosen asset.</p>
+
+<p>There is a bias here towards assigning rather than unassigning citizens - I took this approach because unassigned citizens rarely contribute towards a city as much as assigned 
+citizens.</p>
+
+<div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">mutate</span> <span class="n">city</span> <span class="p">=</span> 
+
+	<span class="k">let</span> <span class="n">unassign</span><span class="p">,</span> <span class="n">assign</span> <span class="p">=</span> 
+		<span class="k">if</span> <span class="o">((</span><span class="nn">RNG</span><span class="p">.</span><span class="n">flip</span> <span class="bp">()</span><span class="p">)</span> <span class="p">&amp;&amp;</span> <span class="p">(</span><span class="nn">City</span><span class="p">.</span><span class="n">hasUnemployedCitizens</span> <span class="n">city</span><span class="o">))</span> <span class="k">then</span>
+			<span class="c1">//50% chance of assigning an unemployed citizen, if possible...</span>
+			<span class="bp">false</span><span class="p">,</span> <span class="bp">true</span> 
+		<span class="k">else</span>
+			<span class="c1">//Otherwise definitely unassign a citizen and 50% chance of assigning them elsewhere</span>
+			<span class="bp">true</span><span class="p">,</span> <span class="p">(</span><span class="nn">RNG</span><span class="p">.</span><span class="n">flip</span> <span class="bp">()</span><span class="p">)</span>
+
+	<span class="k">let</span> <span class="n">city'</span> <span class="p">=</span> 
+		<span class="k">if</span> <span class="n">unassign</span> <span class="k">then</span>
+			<span class="k">let</span> <span class="n">assetId</span> <span class="p">=</span> 
+				<span class="n">city</span>
+				<span class="p">|&gt;</span> <span class="nn">City</span><span class="p">.</span><span class="n">getAssignedAssets</span>
+				<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">map</span> <span class="p">(</span><span class="n">fst</span> <span class="o">&gt;&gt;</span> <span class="nn">Asset</span><span class="p">.</span><span class="n">getId</span><span class="p">)</span>
+				<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">selectOne</span> 
+			<span class="k">in</span> <span class="nn">City</span><span class="p">.</span><span class="n">unassign</span> <span class="n">assetId</span> <span class="n">city</span>
+		<span class="k">else</span>
+			<span class="n">city</span>
+
+	<span class="k">if</span> <span class="n">assign</span> <span class="k">then</span>
+
+		<span class="k">let</span> <span class="n">assets</span> <span class="p">=</span> <span class="nn">City</span><span class="p">.</span><span class="n">getAssignableAssets</span> <span class="n">city'</span>
+
+		<span class="k">match</span> <span class="n">assets</span> <span class="k">with</span>
+		<span class="p">|</span> <span class="bp">[]</span> <span class="p">-&gt;</span> <span class="n">city'</span>
+		<span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> 
+			<span class="k">let</span> <span class="n">assetId</span> <span class="p">=</span> 
+				<span class="n">assets</span>
+				<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">map</span> <span class="nn">Asset</span><span class="p">.</span><span class="n">getId</span>
+				<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">selectOne</span>
+			<span class="k">in</span> <span class="nn">City</span><span class="p">.</span><span class="n">assign</span> <span class="n">assetId</span> <span class="n">city'</span>
+	<span class="k">else</span>
+		<span class="n">city'</span>
+</code></pre></div></div>
+
+<p>We can use these functions and the <code class="highlighter-rouge">AdvisorSettings</code> record to create an <code class="highlighter-rouge">AlgorithmSettings&lt;City.Instance&gt;</code> record that can be passed to our foundational <code class="highlighter-rouge">Algorithm.run</code> function. 
+The initial population is created by taking a prototypical <code class="highlighter-rouge">City.Instance</code> that has no assignments and assigning citizens to the highest food producing assets until the 
+city can feed itself, and then randomly assigning any remaining citizens.</p>
+
+<p>For the purposes of this scenario we reformat the results of the <code class="highlighter-rouge">Algorithm.run</code> function. That reformatting and all of the various utility functions used above can be found
+in the <code class="highlighter-rouge">Advisor</code> module and can be <a href="https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Civ.fs">seen in Civ.fs</a>.</p>
+
+<p><a href="#top">Back to top</a></p>
+
+<h3 id="running-the-algorithm"><a name="running"></a>Running the algorithm</h3>
+
+<p>The example program included in <a href="https://github.com/wattsm/civ5-genetic-algorithm">the GitHub repository</a> loads details of the city from an embedded JSON file. This file contains the city’s size (number of assignable citizens),
+base yields and details of tiles and buildings. The algorithm is run for the city and details of the 
+final solution and fittest solution in each generation are printed to the console.</p>
+
+<p>As you can see in the code above, the default settings for the algorithm are a population size of 40, a tournament size of 8, 100 generations and a mutation rate of 1/3. This is
+probably overkill for smaller cities.</p>
+
+<p>You can run the program for yourself - simply configure the settings at the top of <a href="https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Program.fs">Program.fs</a> and run the project. After a brief pause the results will be printed to the console.</p>
+
+<p>In order to make the program’s output as readable as possible I have assigned tiles a label in the format “ring/index”. <a href="/public/img/2016-01-15-city-map.jpg">This diagram illustrates this system</a>, 
+where B is the base tile.</p>
+
+<h3 id="results"><a name="results"></a>Results</h3>
+
+<p>We shall run our algorithm against two cities, one small and one large, and compare our results against the game’s built-in shortcuts. These shortcuts allow you to quickly
+change citizen assignments within a city to focus on a particular resource type.</p>
+
+<p>Firstly we shall compare the “default focus” shortcut which should be broadly equivalent to running our algorithm with every resource type given a weighting of 1.</p>
+
+<p>Then we shall compare the built-in shortcuts for the four primary resource types (food, production, gold and science) to our algorithm. In this scenario the selected resource
+type will be given a weighting of 1 and all others will be given a weighting of 0.</p>
+
+<p>Finally we shall run our algorithm with a variety of multi-focus weightings to see if the related resource type yields respond as we’d expect.</p>
+
+<p>Some notes on the results:</p>
+
+<ul>
+  <li>Yields shown are base yields and do not include percentage multipliers from buildings or other game factors;</li>
+  <li>Maximum values are calculated based purely on assigning citizens to maximise a resource type. No consideration is given to meeting the city’s food requirements.</li>
+  <li>The tables below focus only the primary four resource types - yields for other resource types are not shown.</li>
+</ul>
+
+<h4 id="constantinople-11-citizens"><a name="constantinople"></a>Constantinople (11 citizens)</h4>
+
+<p>Our first set of tests will by run against the <a href="https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Constantinople.json">city of Constantinople</a> (<a href="/public/img/2016-01-15-constantinople.jpg">screenshot</a>), a modest city with a few resource 
+producing buildings.</p>
+
+<p>The table below shows yields for the “default focus” scenario. Maximum possible yields for resource types are included in the headers.</p>
+
+<table>
+	<thead>
+		<tr>
+			<th></th>
+			<th>Food (65)</th>
+			<th>Production (41)</th>
+			<th>Gold (35)</th>
+			<th>Science (9)</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Built-in shortcut</td>
+			<td>56</td>
+			<td>32</td>
+			<td>32</td>
+			<td>6</td>
+		</tr>
+		<tr>
+			<td>Genetic algorithm</td>
+			<td>54</td>
+			<td>30</td>
+			<td>33</td>
+			<td>9</td>
+		</tr>
+	</tbody>
+</table>
+
+<p>As expected our algorithm, while significantly slower, produces similar yields to the built-in shortcut.</p>
+
+<p>The next table shows yields for the four primary resource focus scenarios.</p>
+
+<table>
+	<thead>
+		<tr>
+			<th>Resource</th>
+			<th>Maximum</th>
+			<th>Built-in shortcut</th>
+			<th>Genetic algorithm</th>
+		</tr>
+	</thead>
+	<tbody>		
+		<tr>
+			<td>Food</td>
+			<td>65</td>
+			<td>65</td>
+			<td>65</td>
+		</tr>
+		<tr>
+			<td>Production</td>
+			<td>41</td>			
+			<td>35</td>
+			<td>40</td>
+		</tr>
+		<tr>
+			<td>Gold</td>
+			<td>35</td>
+			<td>35</td>
+			<td>35</td>
+		</tr>
+		<tr>
+			<td>Science</td>
+			<td>9</td>
+			<td>9</td>
+			<td>9</td>
+		</tr>
+	</tbody>
+</table>
+
+<p>For the most part our algorithm achieves similar yields as the built-in shortcuts. The notable exception is production, where our genetic algorithm sacrifices food for 
+more production leaving the city stagnant with just enough food to feed itself (42). I did consider implementing a penalty for this condition but in the end I have only penalised
+starving cities.</p>
+
+<p>Our algorithm is significantly slower than the built-in shortcuts, however the most useful property or our algorithm is that we can request more nuanced solutions 
+than simply maximising a given resource.</p>
+
+<p>The table below shows some example outputs for various focus scenarios. Weightings are shown as an abbreviation (food = F, production = P, gold = G, science = S) and 
+their decimal value.</p>
+
+<table>
+	<thead>
+		<tr>
+			<th>Weightings</th>
+			<th>Food (65)</th>
+			<th>Production (41)</th>
+			<th>Gold (35)</th>
+			<th>Science (9)</th>
+		</tr>
+	</thead>
+	<tbody>				
+		<tr>
+			<td>1.0F, 1.0P</td>
+			<td>61</td>
+			<td>34</td>
+			<td>25</td>
+			<td>3</td>			
+		</tr>
+		<tr>
+			<td>1.0F, 0.75P</td>
+			<td>65</td>
+			<td>30</td>
+			<td>24</td>
+			<td>3</td>
+		</tr>
+		<tr>
+			<td>1.0F, 0.5P, 0.5G</td>
+			<td>64</td>
+			<td>31</td>
+			<td>33</td>
+			<td>3</td>
+		</tr>		
+		<tr>
+			<td>1.0G, 0.5P</td>
+			<td>43</td>
+			<td>38</td>
+			<td>35</td>
+			<td>3</td>
+		</tr>
+		<tr>
+			<td>1.0S, 1.0G, 1.0P</td>
+			<td>45</td>
+			<td>36</td>
+			<td>35</td>
+			<td>9</td>
+		</tr>		
+	</tbody>
+</table>
+
+<p>Despite the trial and error approach the genetic algorithm seems to be arriving at good solutions. Production and food are produced by a large number of assets and
+so nearly always have high values. Gold and science, which are produced by fewer assets, vary more dramatically based on their weighting.</p>
+
+<h4 id="-mecca-28-citizens"><a name="mecca"></a> Mecca (28 citizens)</h4>
+
+<p>Below are tables of similar test runs using the much larger <a href="https://github.com/wattsm/civ5-genetic-algorithm/blob/master/Civ5.CitizenAssignments/Mecca.json">city of Mecca</a> (<a href="/public/img/2016-01-15-mecca.jpg">city screen</a>). As before we shall start by comparing the
+“default focus” yields.</p>
+
+<table>
+	<thead>
+		<tr>
+			<th></th>
+			<th>Food (90)</th>
+			<th>Production (99)</th>
+			<th>Gold (51)</th>
+			<th>Science (40)</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Built-in shortcut</td>
+			<td>68</td>
+			<td>87</td>
+			<td>25</td>
+			<td>37</td>
+		</tr>
+		<tr>
+			<td>Genetic algorithm</td>
+			<td>58</td>
+			<td>76</td>
+			<td>33</td>
+			<td>40</td>
+		</tr>
+	</tbody>
+</table>
+
+<p>With more citizens and more assets to assign the differences between our algorithm and the built-in shortcut become more noticeable. I believe this is because the built-in shortcut
+does not actually give exactly equal weighting whereas our algorithm does - e.g. it treats food exactly the same as Great Merchant points, whereas I suspect the built-in shortcut
+is slightly more nuanced.</p>
+
+<p>The next table shows yields for the four primary resource focus scenarios.</p>
+
+<table>
+	<thead>
+		<tr>
+			<th>Resource</th>
+			<th>Maximum</th>
+			<th>Built-in shortcut</th>
+			<th>Genetic algorithm</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Food</td>
+			<td>90</td>
+			<td>83</td>
+			<td>90</td>
+		</tr>
+		<tr>
+			<td>Production</td>
+			<td>99</td>			
+			<td>96</td>
+			<td>99</td>
+		</tr>
+		<tr>
+			<td>Gold</td>
+			<td>51</td>
+			<td>51</td>
+			<td>51</td>
+		</tr>
+		<tr>
+			<td>Science</td>
+			<td>40</td>
+			<td>40</td>
+			<td>40</td>
+		</tr>
+	</tbody>
+</table>
+
+<p>As expected, our algorithm is slightly better at squeezing resources out of a city but not by much.</p>
+
+<p>Finally, the table below shows the yields for the same example focus scenarios used previously.</p>
+
+<table>
+	<thead>
+		<tr>
+			<th>Weightings</th>
+			<th>Food (90)</th>
+			<th>Production (99)</th>
+			<th>Gold (51)</th>
+			<th>Science (40)</th> 
+		</tr>
+	</thead>
+	<tbody>				
+		<tr>
+			<td>1.0F, 1.0P</td>
+			<td>87</td>
+			<td>92</td>
+			<td>25</td>
+			<td>16</td>			
+		</tr>
+		<tr>
+			<td>1.0F, 0.75P</td>
+			<td>86</td>
+			<td>94</td>
+			<td>25</td>
+			<td>16</td>
+		</tr>
+		<tr>
+			<td>1.0F, 0.5P, 0.5G</td>
+			<td>86</td>
+			<td>86</td>
+			<td>37</td>
+			<td>16</td>
+		</tr>		
+		<tr>
+			<td>1.0G, 0.5P</td>
+			<td>56</td>
+			<td>87</td>
+			<td>51</td>
+			<td>16</td>
+		</tr>
+		<tr>
+			<td>1.0S, 1.0G, 1.0P</td>
+			<td>57</td>
+			<td>85</td>
+			<td>40</td>
+			<td>40</td>
+		</tr>		
+	</tbody>
+</table>
+
+<p>It is notable here that, in the first two cases, the production yield is lower when weighted by 1.0 than by 0.75. This illustrates the imperfect nature of genetic algorithms - 
+they will, with suitable combine, mutate and fitness functions, generally produce reasonable results but they are not guaranteed to find the “best” solution for any given problem, if
+such a thing even exists. All you can say is that it will generally arrive at a good solution.</p>
+
+<p><a href="#top">Back to top</a></p>
+
+<h3 id="conclusion"><a name="conclusion"></a>Conclusion</h3>
+
+<p>In this post I have shown how I approached the problem of optimising citizen assignments in Civilization 5 using genetic algorithms.</p>
+
+<p>Genetic algorithms can be applied effectively to this kind of complex problem. The results show that, while significantly slower, for simple cases the algorithm 
+produces similar solutions to the built-in shortcuts. However it is when the desired outcome is more complicated, and cannot be expressed simply as “maximise X”, that 
+genetic algorithms come into their own.</p>
+
+<p>There are a number of optimisations which could be made to the algorithm that would improve performance. The population size and maximum number of generations could be set according
+to the population of the city - larger cities will likely require more work to optimise. There are a number of early exit strategies which could also be adopted - e.g. if a plateau in
+fitness scores is detected. I believe that with further optimisations the performance of my implementation could be improved significantly.</p>
+
+<p><a href="https://github.com/wattsm/civ5-genetic-algorithm">The full source code for the project is available on GitHub</a>.</p>
+
+<p><a href="#top">Back to top</a></p>
+
+
+    
+
+
+
+<div class="post-tags">
+  
+    
+    <a href="/tags/#fsharp">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">fsharp</span>
+    </a>
+  
+    
+    <a href="/tags/#dotnet">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">dotnet</span>
+    </a>
+  
+    
+    <a href="/tags/#games">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">games</span>
+    </a>
+  
+    
+    <a href="/tags/#civilization-5">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">civilization-5</span>
+    </a>
+  
+    
+    <a href="/tags/#genetic-algorithms">
+    
+      <span class="icon">
+        <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+</svg>
+      </span>&nbsp;<span class="tag-name">genetic-algorithms</span>
+    </a>
+  
+</div>
+  </div>
+
+  
+  <section class="related">
+  <h2>Related Posts</h2>
+  <ul class="posts-list">
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/05/20/modeling-historical-dates/">
+            Modeling historical dates
+            <small>20 May 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/02/13/using-dbscan-for-fun-and-profit-in-elite-dangerous/">
+            Using DBSCAN for fun and (mostly) profit in Elite:Dangerous
+            <small>13 Feb 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/programming/fsharp/2015/11/13/stateful-akka-actors-with-fsharp/">
+            Stateful Akka.NET actors with F#
+            <small>13 Nov 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</section>
+
+</div>
+
+    </main>
+
+    <!-- Optional footer content -->
+
+  </body>
+</html>

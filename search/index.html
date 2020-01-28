@@ -11,7 +11,7 @@
 
   <title>
     
-      try/finally
+      Google Search &middot; try/finally
     
   </title>
 
@@ -35,11 +35,11 @@
 </head>
 
 
-  <body class="index">
+  <body class="search">
 
     <div id="sidebar">
   <header>
-    <h1 class="site-title">
+    <div class="site-title">
       <a href="/">
         
           <span class="back-arrow icon"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
@@ -49,7 +49,7 @@
         
         try/finally
       </a>
-    </h1>
+    </div>
     <p class="lead">Occasional programming thoughts of Mark Watts.</p>
   </header>
   <nav id="sidebar-nav-links">
@@ -201,174 +201,25 @@
 </div>
 
     <main class="container">
-      <div class="content">
-  
-<div class="pagination">
-  <a class="pagination-item newer"
-     href="/page3">
-    Newer
-  </a>
-</div>
-
-
-
-  
-
-  
-  <article class="post-body">
-    <h2 class="post-title">
-      <a href="/devops/2014/02/03/tfs-2010-xunit/">
-        Running xUnit tests as a part of a TFS 2010 build
-      </a>
-    </h2>
-    <div class="post-meta">
-  <span class="post-date">03 Feb 2014</span>
-  <span class="post-categories">
-    
-      &bull;
-
-      
-      
-      
-
-      
-        devops
-      
-    
-  </span>
-</div>
-
+      <header>
+  <h1 class="page-title"><label for="search-bar">Google Search</label></h1>
+</header>
+<div class="content">
+  <form action="https://google.com/search" class="search-form">
+  <div class="search-row">
+    <input id="search-bar" type="search" name="q" />
 
     
-      <p>Getting TFS 2010 to include xUnit tests in its build process can be a tricky process. 
-<a href="http://blog.strobaek.org/2011/10/03/howto-team-foundation-server-and-xunit/">I recently used this post by Karsten Strøbæk</a> 
-to edit several of our continuous integration builds to do just that and thought I would expand upon and update Karsten’s process.</p>
-
-
     
-
     
-      
-      
-      
-
-      
-        <a href="/devops/2014/02/03/tfs-2010-xunit/">More &hellip;</a>
-      
     
-  </article>
-  
-  <article class="post-body">
-    <h2 class="post-title">
-      <a href="/programming/fsharp/2013/11/19/fsharp-serialising-option/">
-        Serialising F#'s Option type using DataContractSerialiser
-      </a>
-    </h2>
-    <div class="post-meta">
-  <span class="post-date">19 Nov 2013</span>
-  <span class="post-categories">
     
-      &bull;
+    <input name="sitesearch" type="hidden"
+           value="blog.tryfinally.com/" />
 
-      
-      
-      
-
-      
-        programming
-      
-    
-      &bull;
-
-      
-      
-      
-
-      
-        fsharp
-      
-    
-  </span>
-</div>
-
-
-    
-      <p><a href="http://msdn.microsoft.com/en-us/library/ms733127(v=vs.110).aspx">Data contracts</a> are a quick and relatively easy way of serialising objects to XML (or JSON, but we’ll stick to XML in this post) – e.g. for use as <a href="http://en.wikipedia.org/wiki/Data_transfer_object">DTOs</a>.</p>
-
-<p>Various attributes can be used to control aspects of the generated XML, meaning you can produce clean, simple XML quite easily. Using these attributes it is possible for the DataContractSerializer to serialise and deserialise F# record types, 
-which can be really handy when writing web services. However, a few wrinkles arise when using F#’s Option<T> type.</T></p>
-
-
-    
-
-    
-      
-      
-      
-
-      
-        <a href="/programming/fsharp/2013/11/19/fsharp-serialising-option/">More &hellip;</a>
-      
-    
-  </article>
-  
-  <article class="post-body">
-    <h2 class="post-title">
-      <a href="/programming/fsharp/2013/07/24/fsharp-collections-reflection/">
-        Creating F# collections via reflection
-      </a>
-    </h2>
-    <div class="post-meta">
-  <span class="post-date">24 Jul 2013</span>
-  <span class="post-categories">
-    
-      &bull;
-
-      
-      
-      
-
-      
-        programming
-      
-    
-      &bull;
-
-      
-      
-      
-
-      
-        fsharp
-      
-    
-  </span>
-</div>
-
-
-    
-      <p>During the course of a recent project I needed to instantiate some F# types via reflection. 
-This is a well documented and fairly simple process for C#, but F#’s immutable collections pose an interesting challenge.</p>
-
-<p>In this post I will describe the process of creating and populating an F# list using reflection, as well as an F# sequence for good measure.</p>
-
-
-    
-
-    
-      
-      
-      
-
-      
-        <a href="/programming/fsharp/2013/07/24/fsharp-collections-reflection/">More &hellip;</a>
-      
-    
-  </article>
-  
-
-  
-
+    <input type="submit" value="Search" />
+  </div>
+</form>
 </div>
     </main>
 
