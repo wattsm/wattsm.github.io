@@ -347,8 +347,8 @@ arrived at and its results.</p>
 record types, most notably when performing updates. However, the lenses themselves contain a fair amount of boilerplate, with most taking the form:</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="k">member</span> <span class="nc">Lens_</span> <span class="p">=</span> 
-	<span class="p">(</span><span class="k">fun</span> <span class="n">source</span> <span class="p">-&gt;</span> <span class="n">source</span><span class="p">.</span><span class="nc">View</span><span class="o">),</span>
-	<span class="p">(</span><span class="k">fun</span> <span class="n">view</span> <span class="n">source</span> <span class="p">-&gt;</span> <span class="p">{</span> <span class="n">source</span> <span class="k">with</span> <span class="nc">View</span> <span class="p">=</span> <span class="n">view</span><span class="p">;</span> <span class="o">})</span>
+  <span class="p">(</span><span class="k">fun</span> <span class="n">source</span> <span class="p">-&gt;</span> <span class="n">source</span><span class="p">.</span><span class="nc">View</span><span class="o">),</span>
+  <span class="p">(</span><span class="k">fun</span> <span class="n">view</span> <span class="n">source</span> <span class="p">-&gt;</span> <span class="p">{</span> <span class="n">source</span> <span class="k">with</span> <span class="nc">View</span> <span class="p">=</span> <span class="n">view</span><span class="p">;</span> <span class="o">})</span>
 </code></pre></div></div>
 
 <p>I was intrigued, then, when I saw <a href="https://medium.com/@devboy_org/generic-lenses-for-f-record-types-6aea9f4cba40">Dominic Graefen’s post</a> about dynamic lenses using quotations and reflection. His post outlines a way to create a type of lens that 

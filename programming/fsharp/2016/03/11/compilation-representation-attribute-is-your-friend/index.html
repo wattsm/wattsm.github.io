@@ -241,19 +241,19 @@ organising code as seen in core language features like <code class="highlighter-
 common practice in F#. Good examples are the <code class="highlighter-rouge">Option&lt;'T&gt;</code> and <code class="highlighter-rouge">Async&lt;'T&gt;</code> types and associated <code class="highlighter-rouge">Option</code> and <code class="highlighter-rouge">Async</code> modules from F#’s core language features.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">Option</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">T</span><span class="p">&gt;</span> <span class="p">=</span> 
-    <span class="p">|</span> <span class="nc">Some</span> <span class="k">of</span> <span class="k">'</span><span class="nc">T</span>
-    <span class="p">|</span> <span class="nc">None</span>
-    
+  <span class="p">|</span> <span class="nc">Some</span> <span class="k">of</span> <span class="k">'</span><span class="nc">T</span>
+  <span class="p">|</span> <span class="nc">None</span>
+  
 <span class="k">module</span> <span class="nc">Option</span> <span class="p">=</span>
-    <span class="o">...</span>
+  <span class="o">...</span>
 </code></pre></div></div>
 
 <p>This style helps keep your code both tidy and readable, particularly when piping or composing multiple functions.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">runParallel</span> <span class="p">=</span> 
-    <span class="nn">Async</span><span class="p">.</span><span class="nc">Parallel</span>
-    <span class="o">&gt;&gt;</span> <span class="nn">Async</span><span class="p">.</span><span class="nc">Catch</span>
-    <span class="o">&gt;&gt;</span> <span class="nn">Async</span><span class="p">.</span><span class="nc">RunSynchronously</span>
+  <span class="nn">Async</span><span class="p">.</span><span class="nc">Parallel</span>
+  <span class="o">&gt;&gt;</span> <span class="nn">Async</span><span class="p">.</span><span class="nc">Catch</span>
+  <span class="o">&gt;&gt;</span> <span class="nn">Async</span><span class="p">.</span><span class="nc">RunSynchronously</span>
 </code></pre></div></div>
 
 <h3 id="compilationrepresentationflags">CompilationRepresentationFlags</h3>
@@ -261,13 +261,13 @@ common practice in F#. Good examples are the <code class="highlighter-rouge">Opt
 <p>Writing F# in this style is straight forward if your union or record type is generic.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">Widget</span><span class="p">&lt;</span><span class="k">'</span><span class="nc">T</span><span class="p">&gt;</span> <span class="p">=</span> <span class="p">{</span>
-    <span class="nc">Value</span> <span class="p">:</span> <span class="k">'</span><span class="nc">T</span><span class="p">;</span>
-    <span class="nc">Keywords</span> <span class="p">:</span> <span class="nc">String</span> <span class="kt">list</span><span class="p">;</span>
+  <span class="nc">Value</span> <span class="p">:</span> <span class="k">'</span><span class="nc">T</span><span class="p">;</span>
+  <span class="nc">Keywords</span> <span class="p">:</span> <span class="nc">String</span> <span class="kt">list</span><span class="p">;</span>
 <span class="p">}</span>   
 
 <span class="k">module</span> <span class="nc">Widget</span> <span class="p">=</span> 
-    <span class="k">let</span> <span class="n">create</span> <span class="n">value</span> <span class="p">=</span> <span class="o">...</span>
-    <span class="k">let</span> <span class="n">add</span> <span class="n">keyword</span> <span class="n">value</span> <span class="p">=</span> <span class="o">...</span>
+  <span class="k">let</span> <span class="n">create</span> <span class="n">value</span> <span class="p">=</span> <span class="o">...</span>
+  <span class="k">let</span> <span class="n">add</span> <span class="n">keyword</span> <span class="n">value</span> <span class="p">=</span> <span class="o">...</span>
 </code></pre></div></div>
 
 <p>The compiler will happily compile this code. When viewed in the object browser or from C# you can see that this code results in two types with different names - <code class="highlighter-rouge">Widget&lt;T&gt;</code> for 
@@ -304,9 +304,9 @@ as <code class="highlighter-rouge">Widget</code> within F#, but in C# it would a
 record and module having the same name.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">init</span> <span class="p">=</span>
-    <span class="nn">Widget</span><span class="p">.</span><span class="n">create</span>
-    <span class="o">&gt;&gt;</span> <span class="nn">Widget</span><span class="p">.</span><span class="n">add</span> <span class="s2">"Key"</span>
-    <span class="o">&gt;&gt;</span> <span class="nn">Widget</span><span class="p">.</span><span class="n">add</span> <span class="s2">"Words"</span>
+  <span class="nn">Widget</span><span class="p">.</span><span class="n">create</span>
+  <span class="o">&gt;&gt;</span> <span class="nn">Widget</span><span class="p">.</span><span class="n">add</span> <span class="s2">"Key"</span>
+  <span class="o">&gt;&gt;</span> <span class="nn">Widget</span><span class="p">.</span><span class="n">add</span> <span class="s2">"Words"</span>
 </code></pre></div></div>
 
 

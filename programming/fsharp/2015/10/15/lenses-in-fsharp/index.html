@@ -253,8 +253,8 @@ the <em>source</em> and the part focused on is the <em>view</em>.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
 <span class="k">module</span> <span class="nc">Lens</span> <span class="p">=</span> 
-	<span class="k">let</span> <span class="n">get</span> <span class="p">=</span> <span class="n">fst</span>
-	<span class="k">let</span> <span class="n">put</span> <span class="p">=</span> <span class="n">snd</span>
+  <span class="k">let</span> <span class="n">get</span> <span class="p">=</span> <span class="n">fst</span>
+  <span class="k">let</span> <span class="n">put</span> <span class="p">=</span> <span class="n">snd</span>
 </code></pre></div></div>
 
 <p>As lenses are just tuples we can easily select the <code class="highlighter-rouge">get</code> or <code class="highlighter-rouge">put</code> function using the standard <code class="highlighter-rouge">fst</code> and <code class="highlighter-rouge">snd</code> functions.</p>
@@ -270,9 +270,9 @@ the <em>source</em> and the part focused on is the <em>view</em>.</p>
   <span class="c1">//A lens for the PostCode field. The trailing underscore is a naming convention</span>
   <span class="c1">//used to denote lenses.</span>
   <span class="k">static</span> <span class="k">member</span> <span class="nc">PostCode_</span> <span class="p">=</span> 
-    <span class="p">(</span><span class="k">fun</span> <span class="n">address</span> <span class="p">-&gt;</span> <span class="n">address</span><span class="p">.</span><span class="nc">PostCode</span><span class="o">),</span>
-	<span class="p">(</span><span class="k">fun</span> <span class="n">postCode</span> <span class="n">address</span> <span class="p">-&gt;</span> <span class="p">{</span> <span class="n">address</span> <span class="k">with</span> <span class="nc">PostCode</span> <span class="p">=</span> <span class="n">postCode</span><span class="p">;</span> <span class="o">})</span>
-	
+  <span class="p">(</span><span class="k">fun</span> <span class="n">address</span> <span class="p">-&gt;</span> <span class="n">address</span><span class="p">.</span><span class="nc">PostCode</span><span class="o">),</span>
+  <span class="p">(</span><span class="k">fun</span> <span class="n">postCode</span> <span class="n">address</span> <span class="p">-&gt;</span> <span class="p">{</span> <span class="n">address</span> <span class="k">with</span> <span class="nc">PostCode</span> <span class="p">=</span> <span class="n">postCode</span><span class="p">;</span> <span class="o">})</span>
+  
 <span class="k">let</span> <span class="n">original</span> <span class="p">=</span> <span class="p">{</span> <span class="nc">City</span> <span class="p">=</span> <span class="s2">"Cityville"</span><span class="p">;</span> <span class="nc">PostCode</span> <span class="p">=</span> <span class="s2">"CV1"</span><span class="p">;</span> <span class="p">}</span>
 
 <span class="c1">//Get the post code using the lens</span>
@@ -295,27 +295,27 @@ must be the same as the type of the source of the second lens, i.e. composition 
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
 <span class="k">module</span> <span class="nc">Lens</span> <span class="p">=</span> 
-	
-	<span class="k">let</span> <span class="n">compose</span> <span class="p">(</span><span class="n">xLens</span> <span class="p">:</span> <span class="nc">Lens</span><span class="o">&lt;_,_&gt;)</span> <span class="p">(</span><span class="n">yLens</span> <span class="p">:</span> <span class="nc">Lens</span><span class="o">&lt;_,_&gt;)</span> <span class="p">=</span> 
-	
-		<span class="k">let</span> <span class="n">xGet</span><span class="p">,</span> <span class="n">xPut</span> <span class="p">=</span> <span class="n">xLens</span>
-		<span class="k">let</span> <span class="n">yGet</span><span class="p">,</span> <span class="n">yPut</span> <span class="p">=</span> <span class="n">yLens</span>
-		
-		<span class="k">let</span> <span class="n">composedGet</span> <span class="p">=</span> <span class="n">xGet</span> <span class="o">&gt;&gt;</span> <span class="n">yGet</span>
-		
-		<span class="k">let</span> <span class="n">composedPut</span> <span class="n">yView</span> <span class="n">xSource</span> <span class="p">=</span> 		
-		
-			<span class="k">let</span> <span class="n">yUpdatedSource</span> <span class="p">=</span> <span class="n">yPut</span> <span class="n">yView</span> <span class="p">(</span><span class="n">xGet</span> <span class="n">xSource</span><span class="p">)</span>
-			<span class="k">let</span> <span class="n">xUpdatedSource</span> <span class="p">=</span> <span class="n">xPut</span> <span class="n">yUpdatedSource</span> <span class="n">xSource</span>
-			
-			<span class="n">xUpdatedSource</span>
-			
-		<span class="p">(</span><span class="n">composedGet</span><span class="p">,</span> <span class="n">composedPut</span><span class="p">)</span>
-		
+  
+  <span class="k">let</span> <span class="n">compose</span> <span class="p">(</span><span class="n">xLens</span> <span class="p">:</span> <span class="nc">Lens</span><span class="o">&lt;_,_&gt;)</span> <span class="p">(</span><span class="n">yLens</span> <span class="p">:</span> <span class="nc">Lens</span><span class="o">&lt;_,_&gt;)</span> <span class="p">=</span> 
+  
+    <span class="k">let</span> <span class="n">xGet</span><span class="p">,</span> <span class="n">xPut</span> <span class="p">=</span> <span class="n">xLens</span>
+    <span class="k">let</span> <span class="n">yGet</span><span class="p">,</span> <span class="n">yPut</span> <span class="p">=</span> <span class="n">yLens</span>
+    
+    <span class="k">let</span> <span class="n">composedGet</span> <span class="p">=</span> <span class="n">xGet</span> <span class="o">&gt;&gt;</span> <span class="n">yGet</span>
+    
+    <span class="k">let</span> <span class="n">composedPut</span> <span class="n">yView</span> <span class="n">xSource</span> <span class="p">=</span>     
+    
+      <span class="k">let</span> <span class="n">yUpdatedSource</span> <span class="p">=</span> <span class="n">yPut</span> <span class="n">yView</span> <span class="p">(</span><span class="n">xGet</span> <span class="n">xSource</span><span class="p">)</span>
+      <span class="k">let</span> <span class="n">xUpdatedSource</span> <span class="p">=</span> <span class="n">xPut</span> <span class="n">yUpdatedSource</span> <span class="n">xSource</span>
+      
+      <span class="n">xUpdatedSource</span>
+      
+    <span class="p">(</span><span class="n">composedGet</span><span class="p">,</span> <span class="n">composedPut</span><span class="p">)</span>
+    
 <span class="p">[&lt;</span><span class="nc">AutoOpen</span><span class="p">&gt;]</span>
 <span class="k">module</span> <span class="nc">Operators</span> <span class="p">=</span> 
 
-	<span class="k">let</span> <span class="o">(&gt;=&gt;)</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">compose</span>
+  <span class="k">let</span> <span class="o">(&gt;=&gt;)</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">compose</span>
 </code></pre></div></div>
 
 <p>For the sake of clarity I have made this implementation quite verbose, it can be written far more succintly. The infix operator <code class="highlighter-rouge">&gt;=&gt;</code> is included as a useful shorthand for composing
@@ -324,13 +324,13 @@ lenses.</p>
 <p>We can now demonstrate why lenses are so useful. Consider the following record types.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="nc">Address</span> <span class="p">=</span> <span class="p">{</span>
-	<span class="nc">City</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
-	<span class="nc">PostCode</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+  <span class="nc">City</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+  <span class="nc">PostCode</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="k">type</span> <span class="nc">Person</span> <span class="p">=</span> <span class="p">{</span>
-	<span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
-	<span class="nc">Address</span> <span class="p">:</span> <span class="nc">Address</span><span class="p">;</span>
+  <span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+  <span class="nc">Address</span> <span class="p">:</span> <span class="nc">Address</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div></div>
 
@@ -350,8 +350,8 @@ we have lenses <code class="highlighter-rouge">Address.PostCode_</code> and <cod
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[&lt;</span><span class="nc">CompilationRepresentation</span><span class="p">(</span><span class="nn">CompilationRepresentationFlags</span><span class="p">.</span><span class="nc">ModuleSuffix</span><span class="o">)&gt;]</span>
 <span class="k">module</span> <span class="nc">Person</span> <span class="p">=</span> 
 
-	<span class="c1">//String -&gt; Person -&gt; Person</span>
-	<span class="k">let</span> <span class="n">setPostCode</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="p">(</span><span class="nn">Person</span><span class="p">.</span><span class="nc">Address_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Address</span><span class="p">.</span><span class="nc">PostCode_</span><span class="p">)</span>
+  <span class="c1">//String -&gt; Person -&gt; Person</span>
+  <span class="k">let</span> <span class="n">setPostCode</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="p">(</span><span class="nn">Person</span><span class="p">.</span><span class="nc">Address_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Address</span><span class="p">.</span><span class="nc">PostCode_</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>Finally, another useful aspect of lenses is that they are not restricted to working on single values. For example, let’s expand our <code class="highlighter-rouge">Address</code> type and use a lens to work with multiple
@@ -359,18 +359,18 @@ fields simultaneously.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 <span class="k">type</span> <span class="nc">Address</span> <span class="p">=</span> <span class="p">{</span>
-	<span class="nc">HouseNumber</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
-	<span class="nc">StreetName</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
-	<span class="nc">City</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
-	<span class="nc">PostCode</span> <span class="p">:</span> <span class="nc">String</span>
+  <span class="nc">HouseNumber</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+  <span class="nc">StreetName</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+  <span class="nc">City</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+  <span class="nc">PostCode</span> <span class="p">:</span> <span class="nc">String</span>
 <span class="p">}</span>
 <span class="k">with</span>
 
-	<span class="k">static</span> <span class="k">member</span> <span class="nc">Street_</span> <span class="p">=</span> 
-		<span class="p">(</span><span class="k">fun</span> <span class="n">address</span> <span class="p">-&gt;</span> <span class="n">address</span><span class="p">.</span><span class="nc">HouseNumber</span><span class="p">,</span> <span class="n">address</span><span class="p">.</span><span class="nc">StreetName</span><span class="o">),</span>
-		<span class="p">(</span><span class="k">fun</span> <span class="p">(</span><span class="n">houseNumber</span><span class="p">,</span> <span class="n">streetName</span><span class="p">)</span> <span class="n">address</span> <span class="p">-&gt;</span> 
-			<span class="p">{</span> <span class="n">address</span> <span class="k">with</span> <span class="nc">HouseNumber</span> <span class="p">=</span> <span class="n">houseNumber</span><span class="p">;</span> <span class="nc">StreetName</span> <span class="p">=</span> <span class="n">streetName</span><span class="p">;</span> <span class="o">})</span>
-		
+  <span class="k">static</span> <span class="k">member</span> <span class="nc">Street_</span> <span class="p">=</span> 
+    <span class="p">(</span><span class="k">fun</span> <span class="n">address</span> <span class="p">-&gt;</span> <span class="n">address</span><span class="p">.</span><span class="nc">HouseNumber</span><span class="p">,</span> <span class="n">address</span><span class="p">.</span><span class="nc">StreetName</span><span class="o">),</span>
+    <span class="p">(</span><span class="k">fun</span> <span class="p">(</span><span class="n">houseNumber</span><span class="p">,</span> <span class="n">streetName</span><span class="p">)</span> <span class="n">address</span> <span class="p">-&gt;</span> 
+      <span class="p">{</span> <span class="n">address</span> <span class="k">with</span> <span class="nc">HouseNumber</span> <span class="p">=</span> <span class="n">houseNumber</span><span class="p">;</span> <span class="nc">StreetName</span> <span class="p">=</span> <span class="n">streetName</span><span class="p">;</span> <span class="o">})</span>
+    
 <span class="k">let</span> <span class="n">address</span> <span class="p">=</span> <span class="p">{</span> <span class="nc">HouseNumber</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nc">StreetName</span> <span class="p">=</span> <span class="s2">"Main Street"</span><span class="p">;</span> <span class="nc">City</span> <span class="p">=</span> <span class="s2">"Cityville"</span><span class="p">;</span> <span class="nc">PostCode</span> <span class="p">=</span> <span class="s2">"CV1"</span><span class="p">;</span> <span class="p">}</span>
 <span class="k">let</span> <span class="n">person</span> <span class="p">=</span> <span class="p">{</span> <span class="nc">Name</span> <span class="p">=</span> <span class="s2">"Bob"</span><span class="p">;</span> <span class="nc">Address</span> <span class="p">=</span> <span class="n">address</span><span class="p">;</span> <span class="p">}</span>
 

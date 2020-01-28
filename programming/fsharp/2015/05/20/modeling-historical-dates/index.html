@@ -244,26 +244,26 @@ further complicated by the surprisingly chequered history of leap years.</p>
 <p>To put the issues with historical dates into some context, consider the following list of dates taken from this <a href="http://en.wikipedia.org/wiki/List_of_Roman_battles">list of Roman battles</a>:</p>
 
 <table style="text-align:left;">
-  <thead>
-	<tr>
-		<th>Date</th>
-		<th>Description</th>
-	</tr>
-  </thead>
-  <tbody>
-	<tr>
-		<td>June 58 BCE</td>
-		<td>Battle of Arar</td>
-	</tr>
-	<tr>
-		<td>9th August 48 BCE</td>
-		<td>Battle of Pharsalus</td>
-	</tr>
-	<tr>
-		<td>43 CE</td>
-		<td>Battle of the Medway</td>
-	</tr>	
-  </tbody>
+ <thead>
+  <tr>
+    <th>Date</th>
+    <th>Description</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+    <td>June 58 BCE</td>
+    <td>Battle of Arar</td>
+  </tr>
+  <tr>
+    <td>9th August 48 BCE</td>
+    <td>Battle of Pharsalus</td>
+  </tr>
+  <tr>
+    <td>43 CE</td>
+    <td>Battle of the Medway</td>
+  </tr>  
+ </tbody>
 </table>
 
 <p>As you can see, the dates range from complete to just the year. In addition you will frequently see events described as occuring “some time before July 77 CE” or “some time
@@ -288,31 +288,31 @@ Jun 865 CE. We can do this by splitting these concepts between two model types.<
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Discriminated union for the two eras</span>
 <span class="k">type</span> <span class="nc">Era</span> <span class="p">=</span> 
-    <span class="p">|</span> <span class="nc">BCE</span>
-    <span class="p">|</span> <span class="nc">CE</span>
+  <span class="p">|</span> <span class="nc">BCE</span>
+  <span class="p">|</span> <span class="nc">CE</span>
 
 <span class="c1">///Contains functions and types for working with "fuzzy" historical dates</span>
 <span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
 <span class="k">module</span> <span class="nc">FuzzyDate</span> <span class="p">=</span> 
 
-    <span class="c1">///Describes a basic fuzzy date</span>
-    <span class="k">type</span> <span class="nc">Data</span> <span class="p">=</span> <span class="p">{</span>
-        <span class="nc">Day</span> <span class="p">:</span> <span class="nc">Int32</span> <span class="n">option</span><span class="p">;</span>
-        <span class="nc">Month</span> <span class="p">:</span> <span class="nc">Int32</span> <span class="n">option</span><span class="p">;</span>
-        <span class="nc">Year</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
-        <span class="nc">Era</span> <span class="p">:</span> <span class="nc">Era</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">with</span>
-        <span class="k">static</span> <span class="k">member</span> <span class="nc">Empty</span> <span class="p">=</span> 
-            <span class="p">{</span>
-                <span class="nc">Day</span> <span class="p">=</span> <span class="nc">None</span><span class="p">;</span>
-                <span class="nc">Month</span> <span class="p">=</span> <span class="nc">None</span><span class="p">;</span>
-                <span class="nc">Year</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
-                <span class="nc">Era</span> <span class="p">=</span> <span class="nn">Era</span><span class="p">.</span><span class="nc">CE</span><span class="p">;</span>
-            <span class="p">}</span>
+  <span class="c1">///Describes a basic fuzzy date</span>
+  <span class="k">type</span> <span class="nc">Data</span> <span class="p">=</span> <span class="p">{</span>
+    <span class="nc">Day</span> <span class="p">:</span> <span class="nc">Int32</span> <span class="n">option</span><span class="p">;</span>
+    <span class="nc">Month</span> <span class="p">:</span> <span class="nc">Int32</span> <span class="n">option</span><span class="p">;</span>
+    <span class="nc">Year</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+    <span class="nc">Era</span> <span class="p">:</span> <span class="nc">Era</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">with</span>
+    <span class="k">static</span> <span class="k">member</span> <span class="nc">Empty</span> <span class="p">=</span> 
+      <span class="p">{</span>
+        <span class="nc">Day</span> <span class="p">=</span> <span class="nc">None</span><span class="p">;</span>
+        <span class="nc">Month</span> <span class="p">=</span> <span class="nc">None</span><span class="p">;</span>
+        <span class="nc">Year</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="nc">Era</span> <span class="p">=</span> <span class="nn">Era</span><span class="p">.</span><span class="nc">CE</span><span class="p">;</span>
+      <span class="p">}</span>
 
-    <span class="c1">///Instance union type</span>
-    <span class="k">type</span> <span class="nc">Instance</span> <span class="p">=</span> <span class="nc">FuzzyDate</span> <span class="k">of</span> <span class="nc">Data</span>
+  <span class="c1">///Instance union type</span>
+  <span class="k">type</span> <span class="nc">Instance</span> <span class="p">=</span> <span class="nc">FuzzyDate</span> <span class="k">of</span> <span class="nc">Data</span>
 </code></pre></div></div>
 
 <p>All dates using this model must have an era and year but the month and day are optional. We can define some functions to act as constructors for the patterns we want
@@ -321,33 +321,33 @@ to support. I have created a <code class="highlighter-rouge">Outcome&lt;T&gt;</c
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Validate a given date's components</span>
 <span class="k">let</span> <span class="k">private</span> <span class="p">_</span><span class="n">validate</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span> <span class="p">=</span> 
 
-	<span class="k">let</span> <span class="n">month'</span> <span class="p">=</span> <span class="nn">Option</span><span class="p">.</span><span class="n">unwrap</span> <span class="mi">1</span> <span class="n">month</span>
-	<span class="k">let</span> <span class="n">day'</span> <span class="p">=</span> <span class="nn">Option</span><span class="p">.</span><span class="n">unwrap</span> <span class="mi">1</span> <span class="n">day</span>
+  <span class="k">let</span> <span class="n">month'</span> <span class="p">=</span> <span class="nn">Option</span><span class="p">.</span><span class="n">unwrap</span> <span class="mi">1</span> <span class="n">month</span>
+  <span class="k">let</span> <span class="n">day'</span> <span class="p">=</span> <span class="nn">Option</span><span class="p">.</span><span class="n">unwrap</span> <span class="mi">1</span> <span class="n">day</span>
 
-	<span class="k">if</span> <span class="p">(</span><span class="n">year</span> <span class="p">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">then</span> 
-		<span class="p">(</span><span class="nc">Some</span> <span class="s2">"The year cannot be less than 1."</span><span class="p">)</span>
-	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">month'</span> <span class="p">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">month'</span> <span class="p">&gt;</span> <span class="mi">12</span><span class="p">)</span> <span class="k">then</span> 
-		<span class="p">(</span><span class="nc">Some</span> <span class="s2">"The month must be between 1 and 12."</span><span class="p">)</span>
-	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">day'</span> <span class="p">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">day'</span> <span class="p">&gt;</span> <span class="p">(</span><span class="nn">Month</span><span class="p">.</span><span class="n">getDayCount</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month'</span><span class="o">))</span> <span class="k">then</span> 
-		<span class="p">(</span><span class="nc">Some</span> <span class="s2">"The day is not valid for the given month and year."</span><span class="p">)</span>
-	<span class="k">else</span> <span class="nc">None</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">year</span> <span class="p">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">then</span> 
+    <span class="p">(</span><span class="nc">Some</span> <span class="s2">"The year cannot be less than 1."</span><span class="p">)</span>
+  <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">month'</span> <span class="p">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">month'</span> <span class="p">&gt;</span> <span class="mi">12</span><span class="p">)</span> <span class="k">then</span> 
+    <span class="p">(</span><span class="nc">Some</span> <span class="s2">"The month must be between 1 and 12."</span><span class="p">)</span>
+  <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">day'</span> <span class="p">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">day'</span> <span class="p">&gt;</span> <span class="p">(</span><span class="nn">Month</span><span class="p">.</span><span class="n">getDayCount</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month'</span><span class="o">))</span> <span class="k">then</span> 
+    <span class="p">(</span><span class="nc">Some</span> <span class="s2">"The day is not valid for the given month and year."</span><span class="p">)</span>
+  <span class="k">else</span> <span class="nc">None</span>
 
 <span class="c1">///Validate a date's components and then create a success result if valid</span>
 <span class="k">let</span> <span class="k">private</span> <span class="p">_</span><span class="n">create</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span> <span class="p">=</span> 
-	<span class="k">match</span> <span class="o">(_</span><span class="n">validate</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span><span class="p">)</span> <span class="k">with</span>
-	<span class="p">|</span> <span class="nc">Some</span> <span class="n">message</span> <span class="p">-&gt;</span> <span class="nc">Error</span> <span class="n">message</span>
-	<span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> 
-		<span class="k">let</span> <span class="n">date</span> <span class="p">=</span> 
-			<span class="nc">FuzzyDate</span> <span class="p">(</span>
-				<span class="p">{</span> <span class="nn">Data</span><span class="p">.</span><span class="nc">Empty</span> 
-					<span class="k">with</span> 
-						<span class="nc">Day</span> <span class="p">=</span> <span class="n">day</span><span class="p">;</span> 
-						<span class="nc">Month</span> <span class="p">=</span> <span class="n">month</span><span class="p">;</span> 
-						<span class="nc">Year</span> <span class="p">=</span> <span class="n">year</span><span class="p">;</span> 
-						<span class="nc">Era</span> <span class="p">=</span> <span class="n">era</span><span class="p">;</span> 
-				<span class="p">}</span>
-			<span class="p">)</span>
-		<span class="k">in</span> <span class="p">(</span><span class="nc">Success</span> <span class="n">date</span><span class="p">)</span>
+  <span class="k">match</span> <span class="o">(_</span><span class="n">validate</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span><span class="p">)</span> <span class="k">with</span>
+  <span class="p">|</span> <span class="nc">Some</span> <span class="n">message</span> <span class="p">-&gt;</span> <span class="nc">Error</span> <span class="n">message</span>
+  <span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> 
+    <span class="k">let</span> <span class="n">date</span> <span class="p">=</span> 
+      <span class="nc">FuzzyDate</span> <span class="p">(</span>
+        <span class="p">{</span> <span class="nn">Data</span><span class="p">.</span><span class="nc">Empty</span> 
+          <span class="k">with</span> 
+            <span class="nc">Day</span> <span class="p">=</span> <span class="n">day</span><span class="p">;</span> 
+            <span class="nc">Month</span> <span class="p">=</span> <span class="n">month</span><span class="p">;</span> 
+            <span class="nc">Year</span> <span class="p">=</span> <span class="n">year</span><span class="p">;</span> 
+            <span class="nc">Era</span> <span class="p">=</span> <span class="n">era</span><span class="p">;</span> 
+        <span class="p">}</span>
+      <span class="p">)</span>
+    <span class="k">in</span> <span class="p">(</span><span class="nc">Success</span> <span class="n">date</span><span class="p">)</span>
 
 <span class="c1">///Create a day, or fully specified date - e.g. 31st Jan 42B CE</span>
 <span class="k">let</span> <span class="n">createDay</span> <span class="n">era</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span> <span class="p">=</span> <span class="p">_</span><span class="n">create</span> <span class="n">era</span> <span class="n">year</span> <span class="p">(</span><span class="nc">Some</span> <span class="n">month</span><span class="p">)</span> <span class="p">(</span><span class="nc">Some</span> <span class="n">day</span><span class="p">)</span>
@@ -382,15 +382,15 @@ that an event started and finished on the dates given.</em></p>
 <span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
 <span class="k">module</span> <span class="nc">EventDate</span> <span class="p">=</span>
 
-    <span class="c1">///Union describing various types of event date</span>
-    <span class="k">type</span> <span class="nc">Data</span> <span class="p">=</span> 
-        <span class="p">|</span> <span class="nc">Specific</span> <span class="k">of</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span>
-        <span class="p">|</span> <span class="nc">Before</span> <span class="k">of</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span>
-        <span class="p">|</span> <span class="nc">After</span> <span class="k">of</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span>
-        <span class="p">|</span> <span class="nc">Between</span> <span class="k">of</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span> <span class="p">*</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span><span class="p">)</span>
+  <span class="c1">///Union describing various types of event date</span>
+  <span class="k">type</span> <span class="nc">Data</span> <span class="p">=</span> 
+    <span class="p">|</span> <span class="nc">Specific</span> <span class="k">of</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span>
+    <span class="p">|</span> <span class="nc">Before</span> <span class="k">of</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span>
+    <span class="p">|</span> <span class="nc">After</span> <span class="k">of</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span>
+    <span class="p">|</span> <span class="nc">Between</span> <span class="k">of</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span> <span class="p">*</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="nc">Instance</span><span class="p">)</span>
 
-    <span class="c1">///Instance union type</span>
-    <span class="k">type</span> <span class="nc">Instance</span> <span class="p">=</span> <span class="nc">EventDate</span> <span class="k">of</span> <span class="nc">Data</span>
+  <span class="c1">///Instance union type</span>
+  <span class="k">type</span> <span class="nc">Instance</span> <span class="p">=</span> <span class="nc">EventDate</span> <span class="k">of</span> <span class="nc">Data</span>
 </code></pre></div></div>
 
 <p>Using this model we can represent events that occurred on a specific date, before a date, after a date or at some point between two dates. Again we can add some constructor functions.</p>
@@ -407,13 +407,13 @@ that an event started and finished on the dates given.</em></p>
 <span class="c1">///Creates a date range - e.g. 13BCE - 14th Jun 34 CE</span>
 <span class="k">let</span> <span class="n">createBetween</span> <span class="n">first</span> <span class="n">last</span> <span class="p">=</span> 
 
-	<span class="k">let</span> <span class="n">firstValue</span> <span class="p">=</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">getSortValue</span> <span class="n">first</span>
-	<span class="k">let</span> <span class="n">secondValue</span> <span class="p">=</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">getSortValue</span> <span class="n">last</span>
+  <span class="k">let</span> <span class="n">firstValue</span> <span class="p">=</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">getSortValue</span> <span class="n">first</span>
+  <span class="k">let</span> <span class="n">secondValue</span> <span class="p">=</span> <span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">getSortValue</span> <span class="n">last</span>
 
-	<span class="k">if</span> <span class="p">(</span><span class="n">firstValue</span> <span class="p">&gt;</span> <span class="n">secondValue</span><span class="p">)</span> <span class="k">then</span>
-		<span class="nc">Error</span> <span class="s2">"The second date cannot come before the first."</span>
-	<span class="k">else</span>        
-		<span class="nc">Success</span> <span class="p">(</span><span class="nc">EventDate</span> <span class="p">(</span><span class="nc">Between</span> <span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="o">)))</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">firstValue</span> <span class="p">&gt;</span> <span class="n">secondValue</span><span class="p">)</span> <span class="k">then</span>
+    <span class="nc">Error</span> <span class="s2">"The second date cannot come before the first."</span>
+  <span class="k">else</span>    
+    <span class="nc">Success</span> <span class="p">(</span><span class="nc">EventDate</span> <span class="p">(</span><span class="nc">Between</span> <span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="o">)))</span>
 </code></pre></div></div>
 
 <p>We can now model a variety of vague historical dates.</p>
@@ -423,9 +423,9 @@ that an event started and finished on the dates given.</em></p>
 
 <span class="c1">//Between Jan and 3rd Feb 1701 CE</span>
 <span class="k">let</span> <span class="n">quiteVague</span> <span class="p">=</span> 
-	<span class="nn">EventDate</span><span class="p">.</span><span class="n">createRange</span> 
-	<span class="p">&lt;|</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createMonth</span> <span class="nc">CE</span> <span class="mi">1701</span> <span class="mi">1</span><span class="p">)</span> 
-	<span class="p">&lt;|</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createDay</span> <span class="nc">CE</span> <span class="mi">1701</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span>
+  <span class="nn">EventDate</span><span class="p">.</span><span class="n">createRange</span> 
+  <span class="p">&lt;|</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createMonth</span> <span class="nc">CE</span> <span class="mi">1701</span> <span class="mi">1</span><span class="p">)</span> 
+  <span class="p">&lt;|</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createDay</span> <span class="nc">CE</span> <span class="mi">1701</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span>
 
 <span class="c1">//Before 700 BCE</span>
 <span class="k">let</span> <span class="n">reallyVague</span> <span class="p">=</span> <span class="nn">EventDate</span><span class="p">.</span><span class="n">createBefore</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">createYear</span> <span class="nc">BCE</span> <span class="mi">700</span><span class="p">)</span>
@@ -442,36 +442,36 @@ that an event started and finished on the dates given.</em></p>
 and the mix of BCE and CE dates complicate sorting somewhat.</p>
 
 <p>In order to support sorting of <code class="highlighter-rouge">FuzzyDate</code> I added the <code class="highlighter-rouge">getSortValue</code> function which returns an integer which can used when sorting - e.g. using <code class="highlighter-rouge">Seq.sortBy</code>. The value 
-returned is the difference, in days, between the date provided and 1st Jan 1 BCE (the beginning of <a href="http://en.wikipedia.org/wiki/Astronomical_year_numbering">astronomical year</a> zero).  When dealing with partial dates a default value of 1 is simply used 
+returned is the difference, in days, between the date provided and 1st Jan 1 BCE (the beginning of <a href="http://en.wikipedia.org/wiki/Astronomical_year_numbering">astronomical year</a> zero). When dealing with partial dates a default value of 1 is simply used 
 for the missing part(s) of the date so both Jan 1 BCE and 1 BCE become 1st Jan 1 BCE. The table below contains examples of the result of <code class="highlighter-rouge">FuzzyDate.getSortValue</code>,</p>
 
 <table class="left-align">
-	<thead>
-		<th>Date</th>		
-		<th>Sort value</th>
-	</thead>
-	<tbody>
-		<tr>
-			<td>1 Jan 2 BCE</td>
-			<td>-365</td>
-		</tr>
-		<tr>
-			<td>31st Dec 2 BCE</td>
-			<td>-1</td>
-		</tr>
-		<tr>
-			<td>1st Jan 1 BCE</td>
-			<td>0</td>
-		</tr>
-		<tr>
-			<td>2nd Jan 1 BCE</td>
-			<td>1</td>
-		</tr>
-		<tr>
-			<td>1st Jan 1 CE</td>
-			<td>365</td>
-		</tr>
-	</tbody>
+  <thead>
+    <th>Date</th>    
+    <th>Sort value</th>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 Jan 2 BCE</td>
+      <td>-365</td>
+    </tr>
+    <tr>
+      <td>31st Dec 2 BCE</td>
+      <td>-1</td>
+    </tr>
+    <tr>
+      <td>1st Jan 1 BCE</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>2nd Jan 1 BCE</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1st Jan 1 CE</td>
+      <td>365</td>
+    </tr>
+  </tbody>
 </table>
 
 <p>The method for calculating the number of days since 1st Jan 1 BCE for a date differs slightly depending on whether the date is BCE or CE. For CE dates we can simply sum 
@@ -481,13 +481,13 @@ the number of days since 1st Jan 1 CE and then add the number of days in 1 BCE.<
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//The sum of all days to date in the CE era plus the number of days in 1 BCE</span>
 <span class="k">let</span> <span class="n">dayCountCe</span> <span class="p">=</span> 
-	<span class="p">[</span> <span class="mi">1</span> <span class="p">..</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span> <span class="p">]</span>
-	<span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">sumBy</span> <span class="p">(</span><span class="k">fun</span> <span class="n">year</span> <span class="p">-&gt;</span>
-			<span class="k">if</span> <span class="p">(</span><span class="n">year</span> <span class="p">=</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span><span class="p">)</span> <span class="k">then</span>
-				<span class="p">(</span><span class="nn">Year</span><span class="p">.</span><span class="n">getDayNumber</span> <span class="nc">CE</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span><span class="p">)</span> <span class="p">-</span> <span class="mi">1</span>
-			<span class="k">else</span>
-				<span class="nn">Year</span><span class="p">.</span><span class="n">getDayCount</span> <span class="nc">CE</span> <span class="n">year</span>
-		<span class="p">)</span>
+  <span class="p">[</span> <span class="mi">1</span> <span class="p">..</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span> <span class="p">]</span>
+  <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">sumBy</span> <span class="p">(</span><span class="k">fun</span> <span class="n">year</span> <span class="p">-&gt;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">year</span> <span class="p">=</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span><span class="p">)</span> <span class="k">then</span>
+        <span class="p">(</span><span class="nn">Year</span><span class="p">.</span><span class="n">getDayNumber</span> <span class="nc">CE</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span><span class="p">)</span> <span class="p">-</span> <span class="mi">1</span>
+      <span class="k">else</span>
+        <span class="nn">Year</span><span class="p">.</span><span class="n">getDayCount</span> <span class="nc">CE</span> <span class="n">year</span>
+    <span class="p">)</span>
 <span class="k">in</span> <span class="p">(</span><span class="n">dayCountCe</span> <span class="o">+</span> <span class="p">(</span><span class="nn">Year</span><span class="p">.</span><span class="n">getDayCount</span> <span class="nc">BCE</span> <span class="mi">1</span><span class="o">))</span>
 </code></pre></div></div>
 
@@ -498,11 +498,11 @@ method. For any other year, Y, we sum the number of days in the the years betwee
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Remember that BCE dates are backwards - e.g. 31st Dec 3BCE moves to 1st Jan 2BCE. </span>
 <span class="p">[</span> <span class="mi">2</span> <span class="p">..</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span> <span class="p">]</span>
 <span class="p">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">sumBy</span> <span class="p">(</span><span class="k">fun</span> <span class="n">year</span> <span class="p">-&gt;</span>
-		<span class="k">if</span><span class="p">(</span><span class="n">year</span> <span class="p">=</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span><span class="p">)</span> <span class="k">then</span>
-			<span class="p">(</span><span class="nn">Year</span><span class="p">.</span><span class="n">getDaysRemaining</span> <span class="nc">BCE</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-		<span class="k">else</span>
-			<span class="nn">Year</span><span class="p">.</span><span class="n">getDayCount</span> <span class="nc">BCE</span> <span class="n">year</span>
-	<span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">year</span> <span class="p">=</span> <span class="n">data</span><span class="p">.</span><span class="nc">Year</span><span class="p">)</span> <span class="k">then</span>
+      <span class="p">(</span><span class="nn">Year</span><span class="p">.</span><span class="n">getDaysRemaining</span> <span class="nc">BCE</span> <span class="n">year</span> <span class="n">month</span> <span class="n">day</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">else</span>
+      <span class="nn">Year</span><span class="p">.</span><span class="n">getDayCount</span> <span class="nc">BCE</span> <span class="n">year</span>
+  <span class="p">)</span>
 </code></pre></div></div>
 
 <p>The result is then negated for dates prior to 1st Jan 1 BCE.</p>
@@ -513,42 +513,42 @@ and between cases are placed appropriately - e.g. “before 18 BCE” should app
 <code class="highlighter-rouge">EventDate.getSortValue</code>.</p>
 
 <table class="left-align">
-	<thead>
-		<th>Date</th>		
-		<th>Sort value</th>
-	</thead>
-	<tbody>
-		<tr>
-			<td>Before 2nd Jan 1 BCE</td>
-			<td>0.9</td>
-		</tr>
-	
-		<tr>
-			<td>On 2nd Jan 1 BCE</td>
-			<td>1.0</td>		
-		</tr>
-		
-		<tr>
-			<td>After 2nd Jan 1 BCE</td>
-			<td>1.1</td>
-		</tr>
-		
-		<tr>
-			<td>Between 2nd Jan 1 BCE and 2nd Feb 1 BCE</td>
-			<td>1.1</td>
-		</tr>
-	</tbody>
+  <thead>
+    <th>Date</th>    
+    <th>Sort value</th>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Before 2nd Jan 1 BCE</td>
+      <td>0.9</td>
+    </tr>
+  
+    <tr>
+      <td>On 2nd Jan 1 BCE</td>
+      <td>1.0</td>    
+    </tr>
+    
+    <tr>
+      <td>After 2nd Jan 1 BCE</td>
+      <td>1.1</td>
+    </tr>
+    
+    <tr>
+      <td>Between 2nd Jan 1 BCE and 2nd Feb 1 BCE</td>
+      <td>1.1</td>
+    </tr>
+  </tbody>
 </table>
 
 <p>In the code below <code class="highlighter-rouge">data</code> is of type <code class="highlighter-rouge">EventDate.Data</code>.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">getSortValue</span> <span class="p">=</span> <span class="p">_</span><span class="n">apply</span> <span class="p">(</span><span class="k">fun</span> <span class="n">data</span> <span class="p">-&gt;</span>
-	<span class="k">let</span> <span class="n">date</span><span class="p">,</span> <span class="n">adjustment</span> <span class="p">=</span> 
-		<span class="k">match</span> <span class="n">data</span> <span class="k">with</span>
-		<span class="p">|</span> <span class="nc">Specific</span> <span class="n">date</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="nc">M</span><span class="p">)</span>                                 <span class="c1">//Absolute date</span>
-		<span class="p">|</span> <span class="nc">Before</span> <span class="n">date</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="p">-</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="nc">M</span><span class="p">)</span>                                  <span class="c1">//Just before events on date</span>
-		<span class="p">|</span> <span class="nc">Between</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="o">_)</span> <span class="p">|</span> <span class="nc">After</span> <span class="n">date</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="nc">M</span><span class="p">)</span>                <span class="c1">//Just after events on date</span>
-	<span class="k">in</span> <span class="p">(</span><span class="n">decimal</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">getSortValue</span> <span class="n">date</span><span class="o">))</span> <span class="o">+</span> <span class="n">adjustment</span>
+  <span class="k">let</span> <span class="n">date</span><span class="p">,</span> <span class="n">adjustment</span> <span class="p">=</span> 
+    <span class="k">match</span> <span class="n">data</span> <span class="k">with</span>
+    <span class="p">|</span> <span class="nc">Specific</span> <span class="n">date</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="nc">M</span><span class="p">)</span>                 <span class="c1">//Absolute date</span>
+    <span class="p">|</span> <span class="nc">Before</span> <span class="n">date</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="p">-</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="nc">M</span><span class="p">)</span>                 <span class="c1">//Just before events on date</span>
+    <span class="p">|</span> <span class="nc">Between</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="o">_)</span> <span class="p">|</span> <span class="nc">After</span> <span class="n">date</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="nc">M</span><span class="p">)</span>        <span class="c1">//Just after events on date</span>
+  <span class="k">in</span> <span class="p">(</span><span class="n">decimal</span> <span class="p">(</span><span class="nn">FuzzyDate</span><span class="p">.</span><span class="n">getSortValue</span> <span class="n">date</span><span class="o">))</span> <span class="o">+</span> <span class="n">adjustment</span>
 <span class="p">)</span>
 </code></pre></div></div>
 
@@ -585,8 +585,8 @@ the time would have done so. This means no leap years prior to 46 BCE and “fud
 <p>To calculate leap years we first we need to convert our era-based year into an astronomical year. This allows us to easily calculate leap years using the modulo operation.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">getAstronomicalYear</span> <span class="n">year</span> <span class="p">=</span> <span class="k">function</span>
-	<span class="p">|</span> <span class="nc">CE</span> <span class="p">-&gt;</span> <span class="n">year</span>
-	<span class="p">|</span> <span class="nc">BCE</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">year</span> <span class="p">-</span> <span class="mi">1</span><span class="p">)</span> <span class="p">*</span> <span class="p">-</span><span class="mi">1</span>
+  <span class="p">|</span> <span class="nc">CE</span> <span class="p">-&gt;</span> <span class="n">year</span>
+  <span class="p">|</span> <span class="nc">BCE</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">year</span> <span class="p">-</span> <span class="mi">1</span><span class="p">)</span> <span class="p">*</span> <span class="p">-</span><span class="mi">1</span>
 </code></pre></div></div>
 
 <p>Next we need a way of deciding which leap year system to use. I implement this as an <a href="https://msdn.microsoft.com/en-us/library/dd233248.aspx">active pattern</a>, one of F#’s handiest features.</p>
@@ -594,27 +594,27 @@ the time would have done so. This means no leap years prior to 46 BCE and “fud
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///Contains the starting years for various leap year calculations</span>
 <span class="p">[&lt;</span><span class="nc">RequireQualifiedAccess</span><span class="p">&gt;]</span>
 <span class="k">module</span> <span class="nc">StartYears</span> <span class="p">=</span> 
-	<span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">Triennial</span> <span class="p">=</span> <span class="p">-</span><span class="mi">45</span>
-	<span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">Julian</span> <span class="p">=</span> <span class="mi">4</span>
-	<span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">Gregorian</span> <span class="p">=</span> <span class="mi">1582</span>
+  <span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">Triennial</span> <span class="p">=</span> <span class="p">-</span><span class="mi">45</span>
+  <span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">Julian</span> <span class="p">=</span> <span class="mi">4</span>
+  <span class="k">let</span> <span class="p">[&lt;</span><span class="nc">Literal</span><span class="p">&gt;]</span> <span class="nc">Gregorian</span> <span class="p">=</span> <span class="mi">1582</span>
 
 <span class="c1">///Active pattern used to decide on the leap year calculation to be used</span>
 <span class="k">let</span> <span class="o">(|</span><span class="nc">None</span><span class="p">|</span><span class="nc">Triennial</span><span class="p">|</span><span class="nc">Julian</span><span class="p">|</span><span class="nc">Gregorian</span><span class="o">|)</span> <span class="n">astronomicalYear</span> <span class="p">=</span> 
-	<span class="k">if</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">&gt;=</span> <span class="nn">StartYears</span><span class="p">.</span><span class="nc">Gregorian</span><span class="p">)</span> <span class="k">then</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">&gt;=</span> <span class="nn">StartYears</span><span class="p">.</span><span class="nc">Gregorian</span><span class="p">)</span> <span class="k">then</span>
 
-		<span class="nc">Gregorian</span>
+    <span class="nc">Gregorian</span>
 
-	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">&gt;=</span> <span class="nn">StartYears</span><span class="p">.</span><span class="nc">Julian</span><span class="p">)</span> <span class="k">then</span>
+  <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">&gt;=</span> <span class="nn">StartYears</span><span class="p">.</span><span class="nc">Julian</span><span class="p">)</span> <span class="k">then</span>
 
-		<span class="nc">Julian</span>
+    <span class="nc">Julian</span>
 
-	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">&gt;=</span> <span class="nn">StartYears</span><span class="p">.</span><span class="nc">Triennial</span><span class="p">)</span> <span class="k">then</span>
+  <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">&gt;=</span> <span class="nn">StartYears</span><span class="p">.</span><span class="nc">Triennial</span><span class="p">)</span> <span class="k">then</span>
 
-		<span class="nc">Triennial</span>
+    <span class="nc">Triennial</span>
 
-	<span class="k">else</span>
-	
-		<span class="nc">None</span>
+  <span class="k">else</span>
+  
+    <span class="nc">None</span>
 </code></pre></div></div>
 
 <p>Now that we know which method we want to use we need some functions to actually determine whether a given astronomical year is a leap year.</p>
@@ -622,20 +622,20 @@ the time would have done so. This means no leap years prior to 46 BCE and “fud
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///True if a year is an erroneous triennial leap year in the period between 46 BCE and 4 CE</span>
 <span class="k">let</span> <span class="n">isTriennialLeapYear</span> <span class="p">=</span> 
 
-	<span class="k">let</span> <span class="n">triennialLeapYears</span> <span class="p">=</span> <span class="p">[</span> <span class="p">-</span><span class="mi">43</span> <span class="p">..</span> <span class="mi">3</span> <span class="p">..</span> <span class="p">-</span><span class="mi">7</span> <span class="p">]</span> <span class="c1">//Every 3 years between 44 BCE and 8 BCE</span>
+  <span class="k">let</span> <span class="n">triennialLeapYears</span> <span class="p">=</span> <span class="p">[</span> <span class="p">-</span><span class="mi">43</span> <span class="p">..</span> <span class="mi">3</span> <span class="p">..</span> <span class="p">-</span><span class="mi">7</span> <span class="p">]</span> <span class="c1">//Every 3 years between 44 BCE and 8 BCE</span>
 
-	<span class="k">fun</span> <span class="n">astronomicalYear</span> <span class="p">-&gt;</span>
-		<span class="nn">List</span><span class="p">.</span><span class="n">exists</span> <span class="o">((=)</span> <span class="n">astronomicalYear</span><span class="p">)</span> <span class="n">triennialLeapYears</span>
+  <span class="k">fun</span> <span class="n">astronomicalYear</span> <span class="p">-&gt;</span>
+    <span class="nn">List</span><span class="p">.</span><span class="n">exists</span> <span class="o">((=)</span> <span class="n">astronomicalYear</span><span class="p">)</span> <span class="n">triennialLeapYears</span>
 
 <span class="c1">///True if a year is a calculated leap year according to the Julian method - e.g. divisible by 4 </span>
 <span class="k">let</span> <span class="n">isJulianLeapYear</span> <span class="n">astronomicalYear</span> <span class="p">=</span> <span class="o">((</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">4</span><span class="p">)</span> <span class="p">=</span> <span class="mi">0</span><span class="p">)</span>
 
 <span class="c1">///True if a year is a calculated leap year according to the Gregorian method - e.g. divisible by 4, and 400 if also divisible by 100</span>
 <span class="k">let</span> <span class="n">isGregorianLeapYear</span> <span class="n">astronomicalYear</span> <span class="p">=</span> 
-	<span class="k">match</span> <span class="o">((</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">4</span><span class="o">),</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">100</span><span class="o">))</span> <span class="k">with</span>
-	<span class="p">|</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">400</span><span class="p">)</span> <span class="p">=</span> <span class="mi">0</span>
-	<span class="p">|</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">_)</span> <span class="p">-&gt;</span> <span class="bp">true</span>                
-	<span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> <span class="bp">false</span>   
+  <span class="k">match</span> <span class="o">((</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">4</span><span class="o">),</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">100</span><span class="o">))</span> <span class="k">with</span>
+  <span class="p">|</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">(</span><span class="n">astronomicalYear</span> <span class="o">%</span> <span class="mi">400</span><span class="p">)</span> <span class="p">=</span> <span class="mi">0</span>
+  <span class="p">|</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">_)</span> <span class="p">-&gt;</span> <span class="bp">true</span>        
+  <span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> <span class="bp">false</span>  
 </code></pre></div></div>
 
 <p>Finally, we can combine everything to create a single function that determines whether a year is a leap year.</p>
@@ -643,13 +643,13 @@ the time would have done so. This means no leap years prior to 46 BCE and “fud
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///True if a year is a leap year</span>
 <span class="k">let</span> <span class="n">isLeapYear</span> <span class="n">era</span> <span class="n">year</span> <span class="p">=</span> 
 
-	<span class="k">let</span> <span class="n">astronomicalYear</span> <span class="p">=</span> <span class="n">getAstronomicalYear</span> <span class="n">year</span> <span class="n">era</span>
+  <span class="k">let</span> <span class="n">astronomicalYear</span> <span class="p">=</span> <span class="n">getAstronomicalYear</span> <span class="n">year</span> <span class="n">era</span>
 
-	<span class="k">match</span> <span class="n">astronomicalYear</span> <span class="k">with</span>
-	<span class="p">|</span> <span class="nc">None</span> <span class="p">-&gt;</span> <span class="bp">false</span>
-	<span class="p">|</span> <span class="nc">Triennial</span> <span class="p">-&gt;</span> <span class="n">isTriennialLeapYear</span> <span class="n">astronomicalYear</span>
-	<span class="p">|</span> <span class="nc">Julian</span> <span class="p">-&gt;</span> <span class="n">isJulianLeapYear</span> <span class="n">astronomicalYear</span>
-	<span class="p">|</span> <span class="nc">Gregorian</span> <span class="p">-&gt;</span> <span class="n">isGregorianLeapYear</span> <span class="n">astronomicalYear</span>  
+  <span class="k">match</span> <span class="n">astronomicalYear</span> <span class="k">with</span>
+  <span class="p">|</span> <span class="nc">None</span> <span class="p">-&gt;</span> <span class="bp">false</span>
+  <span class="p">|</span> <span class="nc">Triennial</span> <span class="p">-&gt;</span> <span class="n">isTriennialLeapYear</span> <span class="n">astronomicalYear</span>
+  <span class="p">|</span> <span class="nc">Julian</span> <span class="p">-&gt;</span> <span class="n">isJulianLeapYear</span> <span class="n">astronomicalYear</span>
+  <span class="p">|</span> <span class="nc">Gregorian</span> <span class="p">-&gt;</span> <span class="n">isGregorianLeapYear</span> <span class="n">astronomicalYear</span> 
 </code></pre></div></div>
 
 <p>We can now use this function when calculating things like the day of the year of any given date, the number of days in a month or the days in a year. As I said I’m sure that 

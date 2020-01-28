@@ -268,61 +268,61 @@ the <code class="highlighter-rouge">StopCollecting</code> message is received th
 
 <div class="language-c# highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">class</span> <span class="nc">ExampleActor</span> <span class="p">:</span> <span class="n">ReceiveActor</span> <span class="p">{</span>
 
-	<span class="k">private</span> <span class="kt">int</span> <span class="n">_count</span><span class="p">;</span>
-	<span class="k">private</span> <span class="k">readonly</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">String</span><span class="p">&gt;</span> <span class="n">_values</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;();</span>
+  <span class="k">private</span> <span class="kt">int</span> <span class="n">_count</span><span class="p">;</span>
+  <span class="k">private</span> <span class="k">readonly</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">String</span><span class="p">&gt;</span> <span class="n">_values</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;();</span>
 
-	<span class="k">public</span> <span class="nf">ExampleActor</span><span class="p">()</span> <span class="p">{</span>
-		<span class="k">this</span><span class="p">.</span><span class="nf">Waiting</span><span class="p">();</span>
-	<span class="p">}</span>
+  <span class="k">public</span> <span class="nf">ExampleActor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nf">Waiting</span><span class="p">();</span>
+  <span class="p">}</span>
 
-	<span class="k">private</span> <span class="k">void</span> <span class="nf">Waiting</span><span class="p">()</span> <span class="p">{</span>
-		<span class="k">this</span><span class="p">.</span><span class="n">Receive</span><span class="p">&lt;</span><span class="n">Messages</span><span class="p">.</span><span class="n">StartCollecting</span><span class="p">&gt;(</span><span class="n">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
+  <span class="k">private</span> <span class="k">void</span> <span class="nf">Waiting</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="n">Receive</span><span class="p">&lt;</span><span class="n">Messages</span><span class="p">.</span><span class="n">StartCollecting</span><span class="p">&gt;(</span><span class="n">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
 
-			<span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">"Starting collection"</span><span class="p">);</span>
+      <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span><span class="s">"Starting collection"</span><span class="p">);</span>
 
-			<span class="n">_values</span><span class="p">.</span><span class="nf">Clear</span><span class="p">();</span>
-			<span class="n">_count</span> <span class="p">=</span> <span class="n">message</span><span class="p">.</span><span class="n">Count</span><span class="p">;</span>
+      <span class="n">_values</span><span class="p">.</span><span class="nf">Clear</span><span class="p">();</span>
+      <span class="n">_count</span> <span class="p">=</span> <span class="n">message</span><span class="p">.</span><span class="n">Count</span><span class="p">;</span>
 
-			<span class="k">this</span><span class="p">.</span><span class="nf">Become</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">Collecting</span><span class="p">);</span>
-		<span class="p">});</span>
-	<span class="p">}</span>
+      <span class="k">this</span><span class="p">.</span><span class="nf">Become</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">Collecting</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
 
-	<span class="k">private</span> <span class="k">void</span> <span class="nf">Collecting</span><span class="p">()</span> <span class="p">{</span>
-		<span class="k">this</span><span class="p">.</span><span class="n">Receive</span><span class="p">&lt;</span><span class="n">Messages</span><span class="p">.</span><span class="n">Collected</span><span class="p">&gt;(</span><span class="n">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
-			
-			<span class="n">_values</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="n">Value</span><span class="p">);</span>
+  <span class="k">private</span> <span class="k">void</span> <span class="nf">Collecting</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="n">Receive</span><span class="p">&lt;</span><span class="n">Messages</span><span class="p">.</span><span class="n">Collected</span><span class="p">&gt;(</span><span class="n">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
+      
+      <span class="n">_values</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="n">Value</span><span class="p">);</span>
 
-			<span class="k">if</span><span class="p">(</span><span class="n">_values</span><span class="p">.</span><span class="nf">Count</span><span class="p">()</span> <span class="p">==</span> <span class="n">_count</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span><span class="p">(</span><span class="n">_values</span><span class="p">.</span><span class="nf">Count</span><span class="p">()</span> <span class="p">==</span> <span class="n">_count</span><span class="p">)</span> <span class="p">{</span>
 
-				<span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span>
-					<span class="s">"Finished collecting ({0}/{0}): {1}"</span><span class="p">,</span> 
-					<span class="n">_count</span><span class="p">,</span> 
-					<span class="n">String</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="s">","</span><span class="p">,</span> <span class="n">_values</span><span class="p">)</span>
-				<span class="p">);</span>
+        <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span>
+          <span class="s">"Finished collecting ({0}/{0}): {1}"</span><span class="p">,</span> 
+          <span class="n">_count</span><span class="p">,</span> 
+          <span class="n">String</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="s">","</span><span class="p">,</span> <span class="n">_values</span><span class="p">)</span>
+        <span class="p">);</span>
 
-				<span class="k">this</span><span class="p">.</span><span class="nf">StopCollecting</span><span class="p">();</span>
-			<span class="p">}</span>
-		<span class="p">});</span>
+        <span class="k">this</span><span class="p">.</span><span class="nf">StopCollecting</span><span class="p">();</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
 
-		<span class="k">this</span><span class="p">.</span><span class="n">Receive</span><span class="p">&lt;</span><span class="n">Messages</span><span class="p">.</span><span class="n">StopCollecting</span><span class="p">&gt;(</span><span class="n">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="n">Receive</span><span class="p">&lt;</span><span class="n">Messages</span><span class="p">.</span><span class="n">StopCollecting</span><span class="p">&gt;(</span><span class="n">message</span> <span class="p">=&gt;</span> <span class="p">{</span>
 
-			<span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span>
-				<span class="s">"Stopped collecting ({0}/{1}): {2}"</span><span class="p">,</span> 
-				<span class="n">_values</span><span class="p">.</span><span class="nf">Count</span><span class="p">(),</span> 
-				<span class="n">_count</span><span class="p">,</span> 
-				<span class="n">String</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="s">","</span><span class="p">,</span> <span class="n">_values</span><span class="p">)</span>
-			<span class="p">);</span>
+      <span class="n">Console</span><span class="p">.</span><span class="nf">WriteLine</span><span class="p">(</span>
+        <span class="s">"Stopped collecting ({0}/{1}): {2}"</span><span class="p">,</span> 
+        <span class="n">_values</span><span class="p">.</span><span class="nf">Count</span><span class="p">(),</span> 
+        <span class="n">_count</span><span class="p">,</span> 
+        <span class="n">String</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="s">","</span><span class="p">,</span> <span class="n">_values</span><span class="p">)</span>
+      <span class="p">);</span>
 
-			<span class="k">this</span><span class="p">.</span><span class="nf">StopCollecting</span><span class="p">();</span>
-		<span class="p">});</span>
-	<span class="p">}</span>
+      <span class="k">this</span><span class="p">.</span><span class="nf">StopCollecting</span><span class="p">();</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
 
-	<span class="k">private</span> <span class="k">void</span> <span class="nf">StopCollecting</span><span class="p">()</span> <span class="p">{</span>
-		<span class="k">this</span><span class="p">.</span><span class="nf">Become</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">Waiting</span><span class="p">);</span>
+  <span class="k">private</span> <span class="k">void</span> <span class="nf">StopCollecting</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nf">Become</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">Waiting</span><span class="p">);</span>
 
-		<span class="c1">//Or stop</span>
-		<span class="c1">//ReceiveActor.Context.Stop(this.Self);</span>
-	<span class="p">}</span>
+    <span class="c1">//Or stop</span>
+    <span class="c1">//ReceiveActor.Context.Stop(this.Self);</span>
+  <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div></div>
 
@@ -333,19 +333,19 @@ the <code class="highlighter-rouge">StopCollecting</code> message is received th
 <p>The basic implementation of an Akka.NET actor in F# is a simple recursive function which receives the next message, processes it and then loops.</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">actor</span> <span class="p">=</span> 
-	<span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="k">fun</span> <span class="n">mailbox</span> <span class="p">-&gt;</span>
-		
-		<span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="bp">()</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
-			
-			<span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
-			
-			<span class="c1">//Process the message</span>
-			
-			<span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="bp">()</span><span class="p">)</span>
-		<span class="p">}</span>
-		
-		<span class="n">run</span> <span class="bp">()</span>
-	<span class="p">)</span>
+  <span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="k">fun</span> <span class="n">mailbox</span> <span class="p">-&gt;</span>
+    
+    <span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="bp">()</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
+      
+      <span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
+      
+      <span class="c1">//Process the message</span>
+      
+      <span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="bp">()</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="n">run</span> <span class="bp">()</span>
+  <span class="p">)</span>
 </code></pre></div></div>
 
 <p>We can use the recursive nature of the <code class="highlighter-rouge">run</code> function to keep a track of the actor’s current state, both in terms of its behaviour and any associated data. We might try
@@ -355,19 +355,19 @@ and implement this like so:</p>
 <span class="k">let</span> <span class="n">initialHandler</span> <span class="p">=</span> <span class="o">...</span>
 
 <span class="k">let</span> <span class="n">actor</span> <span class="p">=</span> 
-	<span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="k">fun</span> <span class="n">mailbox</span> <span class="p">-&gt;</span>
-	
-		<span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="n">data</span> <span class="n">handler</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
-		
-			<span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
-		
-			<span class="k">let</span> <span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span> <span class="p">=</span> <span class="p">(</span><span class="n">handler</span> <span class="n">data</span> <span class="n">message</span><span class="p">)</span>
-			
-			<span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="n">data'</span> <span class="n">handler'</span><span class="p">)</span>
-		<span class="p">}</span>
-	
-		<span class="n">run</span> <span class="n">initialState</span> <span class="n">initialHandler</span>
-	<span class="p">)</span>
+  <span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="k">fun</span> <span class="n">mailbox</span> <span class="p">-&gt;</span>
+  
+    <span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="n">data</span> <span class="n">handler</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
+    
+      <span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
+    
+      <span class="k">let</span> <span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span> <span class="p">=</span> <span class="p">(</span><span class="n">handler</span> <span class="n">data</span> <span class="n">message</span><span class="p">)</span>
+      
+      <span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="n">data'</span> <span class="n">handler'</span><span class="p">)</span>
+    <span class="p">}</span>
+  
+    <span class="n">run</span> <span class="n">initialState</span> <span class="n">initialHandler</span>
+  <span class="p">)</span>
 </code></pre></div></div>
 
 <p>Here the actor’s behaviour is defined by the <code class="highlighter-rouge">handler</code> function which accepts the current state’s data and the message and returns udpated data and the next handler to be used. 
@@ -404,7 +404,7 @@ possible values:</p>
 <span class="k">let</span> <span class="n">initialData</span> <span class="p">=</span> <span class="o">...</span> <span class="c1">//'TData</span>
 
 <span class="k">let</span> <span class="n">actor</span> <span class="p">=</span> 
-	<span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="k">fun</span> <span class="n">mailbox</span> <span class="p">-&gt;</span>
+  <span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="k">fun</span> <span class="n">mailbox</span> <span class="p">-&gt;</span>
 
         <span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="n">data</span> <span class="n">handler</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
 
@@ -413,10 +413,10 @@ possible values:</p>
             <span class="c1">//Process the message</span>
             <span class="k">let</span> <span class="n">next</span><span class="p">,</span> <span class="n">handled</span> <span class="p">=</span> 
                 <span class="k">match</span> <span class="p">(</span><span class="n">handler</span> <span class="n">data</span> <span class="n">message</span><span class="p">)</span> <span class="k">with</span>
-                <span class="p">|</span> <span class="nc">Continue</span> <span class="n">data'</span> <span class="p">-&gt;</span>				<span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">true</span>					
-                <span class="p">|</span> <span class="nc">Become</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>	<span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="o">),</span> <span class="bp">true</span>
-				<span class="p">|</span> <span class="nc">Unhandled</span> <span class="p">-&gt;</span> 					<span class="nc">Some</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">false</span>					
-                <span class="p">|</span> <span class="nc">Stop</span> <span class="p">-&gt;</span> 						<span class="nc">None</span><span class="p">,</span> <span class="bp">true</span>
+                <span class="p">|</span> <span class="nc">Continue</span> <span class="n">data'</span> <span class="p">-&gt;</span>        <span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">true</span>          
+                <span class="p">|</span> <span class="nc">Become</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>  <span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="o">),</span> <span class="bp">true</span>
+        <span class="p">|</span> <span class="nc">Unhandled</span> <span class="p">-&gt;</span>           <span class="nc">Some</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">false</span>          
+                <span class="p">|</span> <span class="nc">Stop</span> <span class="p">-&gt;</span>             <span class="nc">None</span><span class="p">,</span> <span class="bp">true</span>
                 
             <span class="c1">//Report unhandled messages</span>
             <span class="k">if</span> <span class="p">(</span><span class="k">not</span> <span class="n">handled</span><span class="p">)</span> <span class="k">then</span>
@@ -433,7 +433,7 @@ possible values:</p>
         <span class="p">}</span>
 
         <span class="n">run</span> <span class="n">initialData</span> <span class="p">(</span><span class="nn">List</span><span class="p">.</span><span class="n">head</span> <span class="n">handlers</span><span class="p">)</span>
-	<span class="p">)</span>
+  <span class="p">)</span>
 </code></pre></div></div>
 
 <p>Now we have a working stateful actor. The <code class="highlighter-rouge">run</code> function receives a message and passes it and any current data to the handler function. The handler returns
@@ -447,39 +447,39 @@ It also sets a flag indicating whether the current message should be marked as u
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Handler&lt;'TData,'TMessage&gt; list -&gt; 'TData -&gt; Actor&lt;'TMessage&gt; -&gt; Cont&lt;'TMessage, unit&gt;</span>
 <span class="k">let</span> <span class="n">statefulActorOf</span> <span class="n">handlers</span> <span class="n">initialData</span> <span class="p">(</span><span class="n">mailbox</span> <span class="p">:</span> <span class="nc">Actor</span><span class="o">&lt;_&gt;)</span> <span class="p">=</span> 
 
-	<span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="n">data</span> <span class="n">handler</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
+  <span class="k">let</span> <span class="k">rec</span> <span class="n">run</span> <span class="n">data</span> <span class="n">handler</span> <span class="p">=</span> <span class="n">actor</span> <span class="p">{</span>
 
-		<span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
-			
-		<span class="c1">//Process the message</span>
-		<span class="k">let</span> <span class="n">next</span><span class="p">,</span> <span class="n">handled</span> <span class="p">=</span> 
-			<span class="k">match</span> <span class="p">(</span><span class="n">handler</span> <span class="n">data</span> <span class="n">message</span><span class="p">)</span> <span class="k">with</span>
-			<span class="p">|</span> <span class="nc">Continue</span> <span class="n">data'</span> <span class="p">-&gt;</span>				<span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">true</span>					
-			<span class="p">|</span> <span class="nc">Become</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>	<span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="o">),</span> <span class="bp">true</span>
-			<span class="p">|</span> <span class="nc">Unhandled</span> <span class="p">-&gt;</span> 					<span class="nc">Some</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">false</span>					
-			<span class="p">|</span> <span class="nc">Stop</span> <span class="p">-&gt;</span> 						<span class="nc">None</span><span class="p">,</span> <span class="bp">true</span>
-			
-		<span class="c1">//Report unhandled messages</span>
-		<span class="k">if</span> <span class="p">(</span><span class="k">not</span> <span class="n">handled</span><span class="p">)</span> <span class="k">then</span>
-			<span class="n">mailbox</span><span class="p">.</span><span class="nc">Unhandled</span> <span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">let</span><span class="o">!</span> <span class="n">message</span> <span class="p">=</span> <span class="n">mailbox</span><span class="p">.</span><span class="nc">Receive</span> <span class="bp">()</span>
+      
+    <span class="c1">//Process the message</span>
+    <span class="k">let</span> <span class="n">next</span><span class="p">,</span> <span class="n">handled</span> <span class="p">=</span> 
+      <span class="k">match</span> <span class="p">(</span><span class="n">handler</span> <span class="n">data</span> <span class="n">message</span><span class="p">)</span> <span class="k">with</span>
+      <span class="p">|</span> <span class="nc">Continue</span> <span class="n">data'</span> <span class="p">-&gt;</span>        <span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">true</span>          
+      <span class="p">|</span> <span class="nc">Become</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>  <span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="o">),</span> <span class="bp">true</span>
+      <span class="p">|</span> <span class="nc">Unhandled</span> <span class="p">-&gt;</span>           <span class="nc">Some</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">handler</span><span class="o">),</span> <span class="bp">false</span>          
+      <span class="p">|</span> <span class="nc">Stop</span> <span class="p">-&gt;</span>             <span class="nc">None</span><span class="p">,</span> <span class="bp">true</span>
+      
+    <span class="c1">//Report unhandled messages</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">not</span> <span class="n">handled</span><span class="p">)</span> <span class="k">then</span>
+      <span class="n">mailbox</span><span class="p">.</span><span class="nc">Unhandled</span> <span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
-		<span class="c1">//Continue or exit the loop</span>
-		<span class="k">match</span> <span class="n">next</span> <span class="k">with</span>
-		<span class="p">|</span> <span class="nc">None</span> <span class="p">-&gt;</span> 
-			<span class="n">mailbox</span><span class="p">.</span><span class="nn">Context</span><span class="p">.</span><span class="nc">Stop</span> <span class="p">(</span><span class="n">mailbox</span><span class="p">.</span><span class="nc">Self</span><span class="p">)</span>
-			<span class="k">return</span> <span class="bp">()</span>
+    <span class="c1">//Continue or exit the loop</span>
+    <span class="k">match</span> <span class="n">next</span> <span class="k">with</span>
+    <span class="p">|</span> <span class="nc">None</span> <span class="p">-&gt;</span> 
+      <span class="n">mailbox</span><span class="p">.</span><span class="nn">Context</span><span class="p">.</span><span class="nc">Stop</span> <span class="p">(</span><span class="n">mailbox</span><span class="p">.</span><span class="nc">Self</span><span class="p">)</span>
+      <span class="k">return</span> <span class="bp">()</span>
 
-		<span class="p">|</span> <span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>
-			<span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="n">data'</span> <span class="n">handler'</span><span class="p">)</span>
-	<span class="p">}</span>
+    <span class="p">|</span> <span class="nc">Some</span> <span class="p">(</span><span class="n">data'</span><span class="p">,</span> <span class="n">handler'</span><span class="p">)</span> <span class="p">-&gt;</span>
+      <span class="k">return</span><span class="o">!</span> <span class="p">(</span><span class="n">run</span> <span class="n">data'</span> <span class="n">handler'</span><span class="p">)</span>
+  <span class="p">}</span>
 
-	<span class="n">run</span> <span class="n">initialData</span> <span class="p">(</span><span class="nn">List</span><span class="p">.</span><span class="n">head</span> <span class="n">handlers</span><span class="p">)</span>
+  <span class="n">run</span> <span class="n">initialData</span> <span class="p">(</span><span class="nn">List</span><span class="p">.</span><span class="n">head</span> <span class="n">handlers</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>We can now use this function to create stateful actors from a list of handlers and some initial data:</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="n">actor</span> <span class="p">=</span> 
-	<span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="n">statefulActorOf</span> <span class="nn">Example</span><span class="p">.</span><span class="n">handlers</span> <span class="nn">Example</span><span class="p">.</span><span class="n">initialData</span><span class="p">)</span>
+  <span class="n">spawn</span> <span class="n">system</span> <span class="s2">"Actor"</span> <span class="p">(</span><span class="n">statefulActorOf</span> <span class="nn">Example</span><span class="p">.</span><span class="n">handlers</span> <span class="nn">Example</span><span class="p">.</span><span class="n">initialData</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>Finally, we can implement our example actor in a functional style without mutable variables:</p>
@@ -509,13 +509,13 @@ It also sets a flag indicating whether the current message should be marked as u
         <span class="p">|</span> <span class="p">_</span> <span class="p">-&gt;</span> <span class="nc">Unhandled</span>
 
     <span class="k">and</span> <span class="k">private</span> <span class="n">collecting</span> <span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="p">=</span> 
-	
-		<span class="k">let</span> <span class="n">stopCollecting</span> <span class="bp">()</span> <span class="p">=</span> 
+  
+    <span class="k">let</span> <span class="n">stopCollecting</span> <span class="bp">()</span> <span class="p">=</span> 
             <span class="nc">Become</span> <span class="p">(</span><span class="n">initialData</span><span class="p">,</span> <span class="n">waiting</span><span class="p">)</span>
             <span class="c1">//Or stop</span>
             <span class="c1">//Stop</span>
-	
-		<span class="k">function</span>
+  
+    <span class="k">function</span>
         <span class="p">|</span> <span class="nc">Collected</span> <span class="n">value</span> <span class="p">-&gt;</span>
 
             <span class="k">let</span> <span class="n">values'</span> <span class="p">=</span> <span class="n">value</span> <span class="p">::</span> <span class="n">values</span>

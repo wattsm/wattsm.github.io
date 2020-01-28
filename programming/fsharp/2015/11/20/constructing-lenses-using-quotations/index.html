@@ -234,8 +234,8 @@
 record types, most notably when performing updates. However, the lenses themselves contain a fair amount of boilerplate, with most taking the form:</p>
 
 <div class="language-fsharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="k">member</span> <span class="nc">Lens_</span> <span class="p">=</span> 
-	<span class="p">(</span><span class="k">fun</span> <span class="n">source</span> <span class="p">-&gt;</span> <span class="n">source</span><span class="p">.</span><span class="nc">View</span><span class="o">),</span>
-	<span class="p">(</span><span class="k">fun</span> <span class="n">view</span> <span class="n">source</span> <span class="p">-&gt;</span> <span class="p">{</span> <span class="n">source</span> <span class="k">with</span> <span class="nc">View</span> <span class="p">=</span> <span class="n">view</span><span class="p">;</span> <span class="o">})</span>
+  <span class="p">(</span><span class="k">fun</span> <span class="n">source</span> <span class="p">-&gt;</span> <span class="n">source</span><span class="p">.</span><span class="nc">View</span><span class="o">),</span>
+  <span class="p">(</span><span class="k">fun</span> <span class="n">view</span> <span class="n">source</span> <span class="p">-&gt;</span> <span class="p">{</span> <span class="n">source</span> <span class="k">with</span> <span class="nc">View</span> <span class="p">=</span> <span class="n">view</span><span class="p">;</span> <span class="o">})</span>
 </code></pre></div></div>
 
 <p>I was intrigued, then, when I saw <a href="https://medium.com/@devboy_org/generic-lenses-for-f-record-types-6aea9f4cba40">Dominic Graefen’s post</a> about dynamic lenses using quotations and reflection. His post outlines a way to create a type of lens that 
@@ -279,7 +279,7 @@ lenses of type <code class="highlighter-rouge">Lens&lt;'TSource, 'TView&gt;</cod
 
     <span class="p">[&lt;</span><span class="nc">AutoOpen</span><span class="p">&gt;]</span>
     <span class="k">module</span> <span class="k">private</span> <span class="nc">Helpers</span> <span class="p">=</span> 
-		
+    
         <span class="k">let</span> <span class="n">getProperty</span> <span class="p">(</span><span class="n">expr</span> <span class="p">:</span> <span class="nc">Expr</span><span class="p">)</span> <span class="p">=</span> 
             <span class="k">match</span> <span class="n">expr</span> <span class="k">with</span>
             <span class="p">|</span> <span class="nc">Lambda</span> <span class="o">(_,</span> <span class="nc">PropertyGet</span> <span class="o">(_,</span> <span class="n">property</span><span class="p">,</span> <span class="o">_))</span> <span class="p">-&gt;</span> <span class="nc">Some</span> <span class="n">property</span>
@@ -332,45 +332,45 @@ speeds things up slightly. Using a similar approach to the author of the <a href
 
 <span class="c1">//Records</span>
 <span class="k">type</span> <span class="nc">Person</span> <span class="p">=</span> <span class="p">{</span>
-	<span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
-	<span class="nc">Age</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
+  <span class="nc">Name</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+  <span class="nc">Age</span> <span class="p">:</span> <span class="nc">Int32</span><span class="p">;</span>
 <span class="p">}</span>
-<span class="k">with</span>	
-	<span class="k">static</span> <span class="k">member</span> <span class="nc">Age_</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">make</span> <span class="o">&lt;@</span> <span class="k">fun</span> <span class="n">person</span> <span class="p">-&gt;</span> <span class="n">person</span><span class="p">.</span><span class="nc">Age</span> <span class="o">@&gt;</span>
+<span class="k">with</span>  
+  <span class="k">static</span> <span class="k">member</span> <span class="nc">Age_</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">make</span> <span class="o">&lt;@</span> <span class="k">fun</span> <span class="n">person</span> <span class="p">-&gt;</span> <span class="n">person</span><span class="p">.</span><span class="nc">Age</span> <span class="o">@&gt;</span>
 
 <span class="k">type</span> <span class="nc">Employee</span> <span class="p">=</span> <span class="p">{</span>
-	<span class="nc">Payroll</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
-	<span class="nc">Person</span> <span class="p">:</span> <span class="nc">Person</span><span class="p">;</span>
+  <span class="nc">Payroll</span> <span class="p">:</span> <span class="nc">String</span><span class="p">;</span>
+  <span class="nc">Person</span> <span class="p">:</span> <span class="nc">Person</span><span class="p">;</span>
 <span class="p">}</span>
-<span class="k">with</span>	
-	<span class="k">static</span> <span class="k">member</span> <span class="nc">Person_</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">make</span> <span class="o">&lt;@</span> <span class="k">fun</span> <span class="n">employee</span> <span class="p">-&gt;</span> <span class="n">employee</span><span class="p">.</span><span class="nc">Person</span> <span class="o">@&gt;</span>
+<span class="k">with</span>  
+  <span class="k">static</span> <span class="k">member</span> <span class="nc">Person_</span> <span class="p">=</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">make</span> <span class="o">&lt;@</span> <span class="k">fun</span> <span class="n">employee</span> <span class="p">-&gt;</span> <span class="n">employee</span><span class="p">.</span><span class="nc">Person</span> <span class="o">@&gt;</span>
 
 <span class="c1">//Test timer</span>
 <span class="k">let</span> <span class="k">inline</span> <span class="n">time</span> <span class="n">f</span> <span class="n">iterations</span> <span class="p">=</span> 
-	
-	<span class="k">let</span> <span class="n">stopwatch</span> <span class="p">=</span> <span class="nn">Stopwatch</span><span class="p">.</span><span class="nc">StartNew</span> <span class="bp">()</span>
-	
-	<span class="k">for</span> <span class="p">_</span> <span class="k">in</span> <span class="mi">1</span> <span class="p">..</span> <span class="n">iterations</span> <span class="k">do</span>
-		<span class="n">f</span> <span class="bp">()</span> <span class="p">|&gt;</span> <span class="n">ignore</span>
-		
-	<span class="n">stopwatch</span><span class="p">.</span><span class="nc">Stop</span> <span class="bp">()</span>
-	
-	<span class="n">printfn</span> <span class="s2">"%A"</span> <span class="n">stopwatch</span><span class="p">.</span><span class="nc">ElapsedMilliseconds</span>
-	
+  
+  <span class="k">let</span> <span class="n">stopwatch</span> <span class="p">=</span> <span class="nn">Stopwatch</span><span class="p">.</span><span class="nc">StartNew</span> <span class="bp">()</span>
+  
+  <span class="k">for</span> <span class="p">_</span> <span class="k">in</span> <span class="mi">1</span> <span class="p">..</span> <span class="n">iterations</span> <span class="k">do</span>
+    <span class="n">f</span> <span class="bp">()</span> <span class="p">|&gt;</span> <span class="n">ignore</span>
+    
+  <span class="n">stopwatch</span><span class="p">.</span><span class="nc">Stop</span> <span class="bp">()</span>
+  
+  <span class="n">printfn</span> <span class="s2">"%A"</span> <span class="n">stopwatch</span><span class="p">.</span><span class="nc">ElapsedMilliseconds</span>
+  
 <span class="c1">//Test data</span>
 <span class="k">let</span> <span class="n">employee</span> <span class="p">=</span> <span class="p">{</span> <span class="nc">Payroll</span> <span class="p">=</span> <span class="s2">"XXXX"</span><span class="p">;</span> <span class="nc">Person</span> <span class="p">=</span> <span class="p">{</span> <span class="nc">Name</span> <span class="p">=</span>  <span class="s2">"Bob"</span><span class="p">;</span> <span class="nc">Age</span> <span class="p">=</span> <span class="mi">30</span><span class="p">;</span> <span class="o">};</span> <span class="p">}</span>
 
 <span class="c1">//Tests of lenses using Lens.make</span>
 <span class="k">let</span> <span class="n">lens</span> <span class="p">=</span> <span class="p">(</span><span class="nn">Employee</span><span class="p">.</span><span class="nc">Person_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Person</span><span class="p">.</span><span class="nc">Age_</span><span class="p">)</span>
 
-<span class="n">time</span> <span class="p">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="p">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="n">lens</span> <span class="mi">25</span> <span class="n">employee</span><span class="p">)</span> <span class="mi">1000</span> 								<span class="c1">//90 ms</span>
-<span class="n">time</span> <span class="p">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="p">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="p">(</span><span class="nn">Employee</span><span class="p">.</span><span class="nc">Person_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Person</span><span class="p">.</span><span class="nc">Age_</span><span class="p">)</span> <span class="mi">25</span> <span class="n">employee</span><span class="p">)</span> <span class="mi">1000</span> 	<span class="c1">//152 ms</span>
+<span class="n">time</span> <span class="p">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="p">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="n">lens</span> <span class="mi">25</span> <span class="n">employee</span><span class="p">)</span> <span class="mi">1000</span>                 <span class="c1">//90 ms</span>
+<span class="n">time</span> <span class="p">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="p">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="n">put</span> <span class="p">(</span><span class="nn">Employee</span><span class="p">.</span><span class="nc">Person_</span> <span class="o">&gt;=&gt;</span> <span class="nn">Person</span><span class="p">.</span><span class="nc">Age_</span><span class="p">)</span> <span class="mi">25</span> <span class="n">employee</span><span class="p">)</span> <span class="mi">1000</span>   <span class="c1">//152 ms</span>
 
 <span class="c1">//Tests of lenses using Lens.With</span>
 <span class="k">let</span> <span class="n">expr</span> <span class="p">=</span> <span class="o">&lt;@</span> <span class="n">employee</span><span class="p">.</span><span class="nn">Person</span><span class="p">.</span><span class="nc">Age</span> <span class="o">@&gt;</span>
 
-<span class="n">time</span> <span class="p">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="p">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="nc">With</span> <span class="n">expr</span> <span class="mi">25</span><span class="p">)</span> <span class="mi">1000</span> 										<span class="c1">//316 ms</span>
-<span class="n">time</span> <span class="p">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="p">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="nc">With</span> <span class="o">&lt;@</span> <span class="n">employee</span><span class="p">.</span><span class="nn">Person</span><span class="p">.</span><span class="nc">Age</span> <span class="o">@&gt;</span> <span class="mi">25</span><span class="p">)</span> <span class="mi">1000</span> 					<span class="c1">//355 ms</span>
+<span class="n">time</span> <span class="p">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="p">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="nc">With</span> <span class="n">expr</span> <span class="mi">25</span><span class="p">)</span> <span class="mi">1000</span>                     <span class="c1">//316 ms</span>
+<span class="n">time</span> <span class="p">(</span><span class="k">fun</span> <span class="bp">()</span> <span class="p">-&gt;</span> <span class="nn">Lens</span><span class="p">.</span><span class="nc">With</span> <span class="o">&lt;@</span> <span class="n">employee</span><span class="p">.</span><span class="nn">Person</span><span class="p">.</span><span class="nc">Age</span> <span class="o">@&gt;</span> <span class="mi">25</span><span class="p">)</span> <span class="mi">1000</span>           <span class="c1">//355 ms</span>
 </code></pre></div></div>
 
 <p>Both approachs can obviously be optimised further (e.g. via memoization <a href="https://bitbucket.org/rojepp/reflenses/src/0c80f965aeaad6846cf9dddc3952b8d44230ba1c/Reflenses/Reflenses.fs?at=default&amp;fileviewer=file-view-default">as demonstrated here by Reflenses</a>), but the lenses constructed by <code class="highlighter-rouge">Lens.make</code> seem to perform
