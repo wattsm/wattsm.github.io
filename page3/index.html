@@ -217,6 +217,64 @@
   
   <article class="post-body">
     <h2 class="post-title">
+      <a href="/programming/csharp/2014/12/12/testing-web-api-odata-controllers/">
+        Testing Web API OData controllers
+      </a>
+    </h2>
+    <div class="post-meta">
+  <span class="post-date">12 Dec 2014</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        programming
+      
+    
+      &bull;
+
+      
+      
+      
+
+      
+        csharp
+      
+    
+  </span>
+</div>
+
+
+    
+      <p>Microsoft’s <a href="http://msdn.microsoft.com/en-us/data/ef.aspx">Entity Framework</a> is an occasionally handy <a href="https://en.wikipedia.org/wiki/Object-relational_mapping">ORM</a> framework that allows you to query database entities using LINQ and to easily add, update and delete entities via
+a variety of helper classes.</p>
+
+<p>Recently I wrote a set of <a href="http://www.asp.net/web-api">WebAPI</a> controllers to expose an Entity Framework model as <a href="http://www.odata.org/">OData</a> endpoints. Exposing an Entity Framework model as OData using WebAPI is <a href="http://www.asp.net/web-api/overview/odata-support-in-aspnet-web-api/odata-v4/create-an-odata-v4-endpoint">incredibly easy</a>.
+However, when it came to testing my controllers I found that mocking Entity Framework is tricky, due to a combination of erratic use of interfaces and the apparent complexity of <code class="highlighter-rouge">IQueryable&lt;T&gt;</code>.</p>
+
+<p>Luckily my controllers only used a few parts of the EF API, so I decided to write some lightweight wrappers to make testing easier. This had the bonus of also removing dependencies
+on EF from my controllers.</p>
+
+
+    
+
+    
+      
+      
+      
+
+      
+        <a href="/programming/csharp/2014/12/12/testing-web-api-odata-controllers/">More &hellip;</a>
+      
+    
+  </article>
+  
+  <article class="post-body">
+    <h2 class="post-title">
       <a href="/programming/csharp/2014/11/27/testing-dependency-registrations-with-castle-windsor/">
         Testing dependency registrations with Castle Windsor
       </a>
@@ -422,53 +480,6 @@ the scenario, the available options and the solution I eventually arrived at.</p
 
       
         <a href="/programming/csharp/2014/11/07/implementing-a-simple-ihttpactionresult/">More &hellip;</a>
-      
-    
-  </article>
-  
-  <article class="post-body">
-    <h2 class="post-title">
-      <a href="/devops/2014/05/16/tfs-2010-versioned-wix-installers/">
-        Creating versioned installers using Wix and TFS 2010
-      </a>
-    </h2>
-    <div class="post-meta">
-  <span class="post-date">16 May 2014</span>
-  <span class="post-categories">
-    
-      &bull;
-
-      
-      
-      
-
-      
-        devops
-      
-    
-  </span>
-</div>
-
-
-    
-      <p>Recently I created a Wix installer for a product and wanted to include the version number in the installer name – e.g. “My Product.1.2.3.msi”. 
-I found this post which describes how to edit the .wixproj file to add a pre-build task to update the output filename to include a version. 
-This worked perfectly when building the project locally, but not as a part of our TFS 2010 automated build. The reason for this is that TFS 2010 
-outputs builds to the /Binaries/ directory rather than their local /bin/, so the relative paths in the solution given break. In this post I describe how I 
-edited the .wixproj file to work both locally and as a part of a TFS 2010 automated build.</p>
-
-<p>I also wanted my MSI  to use a three part version number rather than the default four part used.</p>
-
-
-    
-
-    
-      
-      
-      
-
-      
-        <a href="/devops/2014/05/16/tfs-2010-versioned-wix-installers/">More &hellip;</a>
       
     
   </article>

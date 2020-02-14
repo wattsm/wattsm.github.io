@@ -201,6 +201,53 @@
   
   <article class="post-body">
     <h2 class="post-title">
+      <a href="/devops/2020/02/14/fake-json-and-xml-transforms/">
+        XML and JSON configuration transforms using FAKE
+      </a>
+    </h2>
+    <div class="post-meta">
+  <span class="post-date">14 Feb 2020</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        devops
+      
+    
+  </span>
+</div>
+
+
+    
+      <p>The ability to transform configuration files can be a useful step in your build pipeline, particularly if
+you use a tool like <a href="https://octopus.com/">Octopus Deploy</a> which uses <code class="highlighter-rouge">#{Placeholders}</code> to
+provide environment specific configuration values during deployment.</p>
+
+<p>While both <code class="highlighter-rouge">msbuild</code> and <code class="highlighter-rouge">dotnet build</code> have support for configuration transforms they are not necessarily
+suitable for all use cases. In this post I will show how to perform arbitrary XML and JSON transforms
+as a part of your build process using <a href="https://fake.build/">FAKE</a>.</p>
+
+
+    
+
+    
+      
+      
+      
+
+      
+        <a href="/devops/2020/02/14/fake-json-and-xml-transforms/">More &hellip;</a>
+      
+    
+  </article>
+  
+  <article class="post-body">
+    <h2 class="post-title">
       <a href="/programming/fsharp/2016/03/11/compilation-representation-attribute-is-your-friend/">
         Why CompilationRepresentationAttribute is your friend
       </a>
@@ -425,62 +472,6 @@ and one of those is stafeul actors.</p>
 
       
         <a href="/programming/fsharp/2015/11/13/stateful-akka-actors-with-fsharp/">More &hellip;</a>
-      
-    
-  </article>
-  
-  <article class="post-body">
-    <h2 class="post-title">
-      <a href="/programming/fsharp/2015/10/15/lenses-in-fsharp/">
-        Lenses in F#
-      </a>
-    </h2>
-    <div class="post-meta">
-  <span class="post-date">15 Oct 2015</span>
-  <span class="post-categories">
-    
-      &bull;
-
-      
-      
-      
-
-      
-        programming
-      
-    
-      &bull;
-
-      
-      
-      
-
-      
-        fsharp
-      
-    
-  </span>
-</div>
-
-
-    
-      <p>I recently came across the concept of lenses in functional programming - a useful tool that can significantly reduce the amount of boilerplate code required when working
-with <a href="https://msdn.microsoft.com/en-us/library/dd233184.aspx">record types</a>. I first noticed them in <a href="http://suave.io/">suave</a>’s source code and, intrigued, did some further research which lead me to <a href="https://www21.in.tum.de/teaching/fp/SS15/papers/17.pdf">this paper</a> by Albert Steckermeier 
-which describes the concept in detail (using Haskell).</p>
-
-<p>As my background is primarily with OO languages I find that I quite often stumble across concepts in functional programming that more experienced practitioners would 
-take for granted. There did not seem to a huge amount of information on lenses out there, so I thought I would write a short post about lenses in F#.</p>
-
-
-    
-
-    
-      
-      
-      
-
-      
-        <a href="/programming/fsharp/2015/10/15/lenses-in-fsharp/">More &hellip;</a>
       
     
   </article>

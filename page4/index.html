@@ -217,6 +217,53 @@
   
   <article class="post-body">
     <h2 class="post-title">
+      <a href="/devops/2014/05/16/tfs-2010-versioned-wix-installers/">
+        Creating versioned installers using Wix and TFS 2010
+      </a>
+    </h2>
+    <div class="post-meta">
+  <span class="post-date">16 May 2014</span>
+  <span class="post-categories">
+    
+      &bull;
+
+      
+      
+      
+
+      
+        devops
+      
+    
+  </span>
+</div>
+
+
+    
+      <p>Recently I created a Wix installer for a product and wanted to include the version number in the installer name – e.g. “My Product.1.2.3.msi”. 
+I found this post which describes how to edit the .wixproj file to add a pre-build task to update the output filename to include a version. 
+This worked perfectly when building the project locally, but not as a part of our TFS 2010 automated build. The reason for this is that TFS 2010 
+outputs builds to the /Binaries/ directory rather than their local /bin/, so the relative paths in the solution given break. In this post I describe how I 
+edited the .wixproj file to work both locally and as a part of a TFS 2010 automated build.</p>
+
+<p>I also wanted my MSI  to use a three part version number rather than the default four part used.</p>
+
+
+    
+
+    
+      
+      
+      
+
+      
+        <a href="/devops/2014/05/16/tfs-2010-versioned-wix-installers/">More &hellip;</a>
+      
+    
+  </article>
+  
+  <article class="post-body">
+    <h2 class="post-title">
       <a href="/devops/2014/02/03/tfs-2010-xunit/">
         Running xUnit tests as a part of a TFS 2010 build
       </a>
